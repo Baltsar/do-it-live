@@ -1,0 +1,8 @@
+.env*
+node_modules
+.next
+sessions
+.backup
+public/gen-test
+library/index.backup-*
+tsconfig.tsbuildinfo

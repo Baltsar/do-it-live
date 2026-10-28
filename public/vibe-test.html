@@ -1,0 +1,259 @@
+<!doctype html><meta charset="utf-8"><title>Vibe test</title><style>
+body{margin:0;background:#0a0a0a;color:#aaa;font:13px system-ui;padding:16px}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.f{aspect-ratio:16/9;background:var(--bg);overflow:hidden;border-radius:10px}
+.mood-hype{--bg:#2b3bff;--fg:#ffd60a;--alt:#ff4fa3}.mood-funny{--bg:#ffd60a;--fg:#0a0a0a;--alt:#2b3bff}.mood-calm{--bg:#8cf5c9;--fg:#0a0a0a;--alt:#2b3bff}
+figure{margin:0}figcaption{padding:6px 2px}svg{display:block}</style><div class="g"><figure><div class="f mood-hype"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #0a0a0a; }
+      .fg { fill: var(--fg); }
+      .alt { fill: var(--alt); }
+      .wht { fill: #ffffff; }
+      .slow { animation: grow 5s ease-in-out infinite alternate; }
+      .boom { animation: pop 0.8s ease-out infinite; }
+      @keyframes grow {
+        from { opacity: 0.2; transform: scaleX(0.3); }
+        to { opacity: 1; transform: scaleX(1); }
+      }
+      @keyframes pop {
+        0%,100% { transform: scale(1) translateY(0); }
+        50% { transform: scale(1.3) translateY(-10px); }
+      }
+    </style>
+  </defs>
+  <rect class="bg" width="160" height="90"/>
+  <!-- Slow growth: three staggered vertical bars -->
+  <rect class="fg slow" x="20" y="30" width="12" height="40" rx="2"/>
+  <rect class="fg slow" x="50" y="35" width="12" height="35" rx="2" delay="1s"/>
+  <rect class="fg slow" x="80" y="40" width="12" height="30" rx="2" delay="2s"/>
+  <!-- Boom: expanding circle -->
+  <circle class="alt boom" cx="140" cy="45" r="1" />
+</svg></div><figcaption>Nemotron-3_5-Lightning · boom · 2.4s</figcaption></figure><figure><div class="f mood-funny"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <style>
+    @keyframes drift {
+      0% { transform: translate(0,0) rotate(0deg); }
+      33% { transform: translate(20px,-10px) rotate(5deg); }
+      66% { transform: translate(-20px,10px) rotate(-5deg); }
+      100% { transform: translate(0,0) rotate(0deg); }
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 0.3; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.3); }
+    }
+    .shape { fill: var(--fg); stroke: var(--fg); stroke-width: 2; }
+    .pulse { fill: var(--alt); }
+    .bg { fill: #0a0a0a; }
+  </style>
+  <g class="bg">
+    <circle cx="80" cy="45" r="42" />
+  </g>
+  <g class="shape" transform="translate(15,25)">
+    <circle r="8" cy="0">
+      <animateTransform attributeName="transform" type="translate" dur="4s" repeatCount="indefinite" values="0,0; 15,-8; -15,8; 0,0"/>
+      <animateTransform attributeName="transform" type="rotate" dur="4s" repeatCount="indefinite" values="0; 5; -5; 0"/>
+    </circle>
+  </g>
+  <g class="shape pulse" transform="translate(55,55)">
+    <circle r="6">
+      <animate attributeName="r" dur="2s" repeatCount="indefinite" values="6; 12; 6"/>
+      <animate attributeName="opacity" dur="2s" repeatCount="indefinite" values="0.3; 1; 0.3"/>
+    </circle>
+  </g>
+  <g class="shape" transform="translate(110,15)">
+    <path d="M0,-8 Q0,-16 0,-24 Q8,-16 8,-8 Z">
+      <animateTransform attributeName="transform" type="translate" dur="5s" repeatCount="indefinite" values="0,0; 10,5; -10,-5; 0,0"/>
+    </path>
+  </g>
+  <g class="shape pulse" transform="translate(90,70)">
+    <circle r="5">
+      <animate attributeName="r" dur="3s" repeatCount="indefinite" values="5; 10; 5"/>
+      <animate attributeName="cy" dur="3s" repeatCount="indefinite" values="70; 65; 70"/>
+    </circle>
+  </g>
+</svg></div><figcaption>Nemotron-3_5-Lightning · silence · 3.3s</figcaption></figure><figure><div class="f mood-calm"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" style="color: var(--fg); background-color: var(--bg);">
+  <style>
+    @keyframes drift {
+      0%   { transform: translate(0,0) rotate(0deg); }
+      100% { transform: translate(140px, 70px) rotate(360deg); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%    { opacity: 0.4; transform: scale(0.6); }
+    }
+    .dot { animation: drift 5s linear infinite; }
+    .pulse { animation: pulse 3s ease-in-out infinite; }
+  </style>
+  <g class="dot" style="fill: var(--alt);">
+    <circle cx="8"  cy="45" r="3"/>
+  </g>
+  <g class="dot" style="fill: #ffffff;">
+    <circle cx="30" cy="12" r="3"/>
+  </g>
+  <g class="dot" style="fill: var(--fg);">
+    <circle cx="70" cy="78" r="3"/>
+  </g>
+  <g class="dot" style="fill: #ffffff;">
+    <circle cx="110" cy="15" r="3"/>
+  </g>
+  <g class="dot pulse" style="fill: var(--alt);">
+    <circle cx="130" cy="50" r="4"/>
+  </g>
+</svg></div><figcaption>Nemotron-3_5-Lightning · fast · 2.3s</figcaption></figure><figure><div class="f mood-hype"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes grow {
+      0%, 33% { transform: scaleY(0.1); transform-origin: center bottom; opacity: 0.3; }
+      33%, 66% { transform: scaleY(0.25); transform-origin: center bottom; opacity: 0.6; }
+      66%, 70% { transform: scaleY(0.3); transform-origin: center bottom; }
+      70%, 85% { transform: scaleY(1.0); transform-origin: center bottom; opacity: 1; }
+      85%, 100% { transform: scaleY(1.0); transform-origin: center bottom; opacity: 1; }
+    }
+    @keyframes pulse {
+      0%, 33%, 66% { opacity: 0.2; }
+      34%, 65% { opacity: 0.5; }
+      70%, 100% { opacity: 1; }
+    }
+    .bar { animation: grow 4s ease-in-out infinite; transform-origin: center bottom; }
+    .bar:nth-child(1) { animation-delay: 0s; }
+    .bar:nth-child(2) { animation-delay: 0s; }
+    .bar:nth-child(3) { animation-delay: 0s; }
+    .label { animation: pulse 4s infinite; }
+  </style>
+  <g fill="var(--fg)">
+    <rect class="bar" x="30" y="70" width="20" height="50"/>
+    <rect class="bar" x="70" y="70" width="20" height="50"/>
+    <rect class="bar" x="110" y="70" width="20" height="50" fill="var(--alt)"/>
+  </g>
+  <g fill="var(--fg)" opacity="0.5">
+    <rect class="label" x="30" y="25" width="20" height="4"/>
+    <rect class="label" x="70" y="45" width="20" height="4"/>
+    <rect class="label" x="110" y="10" width="20" height="4" fill="var(--alt)"/>
+  </g>
+</svg></div><figcaption>Nemotron-3-Ultra-550b-a55b · boom · 3.7s</figcaption></figure><figure><div class="f mood-funny"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes pulse { 0%,100% { opacity:0; r:2; } 50% { opacity:1; r:12; } }
+    @keyframes drift { 0% { cx:80; cy:45; } 100% { cx:80; cy:45; } }
+  </style>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+  </circle>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite" begin="1s"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite" begin="1s"/>
+  </circle>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite" begin="1.5s"/>
+  </circle>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite" begin="2s"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite" begin="2s"/>
+  </circle>
+  <circle cx="80" cy="45" r="2" fill="var(--fg)">
+    <animateTransform attributeName="transform" type="scale" values="1;6;1" dur="3s" repeatCount="indefinite" begin="2.5s"/>
+    <animate attributeName="opacity" values="1;0;0" dur="3s" repeatCount="indefinite" begin="2.5s"/>
+  </circle>
+  <path d="M60 45 Q80 35 100 45" stroke="var(--alt)" stroke-width="2" fill="none" opacity="0.3"/>
+  <path d="M60 45 Q80 55 100 45" stroke="var(--alt)" stroke-width="2" fill="none" opacity="0.3"/>
+</svg></div><figcaption>Nemotron-3-Ultra-550b-a55b · silence · 4.5s</figcaption></figure><figure><div class="f mood-calm"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+<style>
+@keyframes pulse {0%,100%{r:6;opacity:1} 50%{r:18;opacity:0.3}}
+@keyframes dash {to{stroke-dashoffset:-30}}
+@keyframes sweep {0%{stroke-dashoffset:0;opacity:0} 20%{opacity:1} 80%{opacity:1} 100%{stroke-dashoffset:-120;opacity:0}}
+@keyframes orbit {from{transform:rotate(0 80 45)} to{transform:rotate(360 80 45)}}
+</style>
+<circle cx="80" cy="45" r="6" fill="var(--fg)">
+<animate attributeName="r" values="6;18;6" dur="3s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="1;0.3;1" dur="3s" repeatCount="indefinite"/>
+</circle>
+<circle cx="80" cy="45" r="28" fill="none" stroke="var(--alt)" stroke-width="1.5" stroke-dasharray="8 4">
+<animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1.5s" repeatCount="indefinite"/>
+</circle>
+<circle cx="80" cy="45" r="40" fill="none" stroke="var(--fg)" stroke-width="1" stroke-dasharray="60 120">
+<animate attributeName="stroke-dashoffset" from="0" to="-180" dur="4s" repeatCount="indefinite"/>
+<animate attributeName="opacity" values="0;1;1;0" dur="4s" repeatCount="indefinite"/>
+</circle>
+<g stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none">
+<path d="M80 15 L80 30">
+<animate attributeName="stroke-dashoffset" values="0;-15;0" dur="2s" repeatCount="indefinite"/>
+</path>
+<path d="M80 60 L80 75">
+<animate attributeName="stroke-dashoffset" values="0;-15;0" dur="2s" repeatCount="indefinite"/>
+</path>
+<path d="M15 45 L30 45">
+<animate attributeName="stroke-dashoffset" values="0;-15;0" dur="2s" repeatCount="indefinite"/>
+</path>
+<path d="M130 45 L145 45">
+<animate attributeName="stroke-dashoffset" values="0;-15;0" dur="2s" repeatCount="indefinite"/>
+</path>
+</g>
+<g transform-origin="80 45">
+<circle cx="110" cy="45" r="3" fill="var(--alt)">
+<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2s" repeatCount="indefinite"/>
+</circle>
+<circle cx="118" cy="45" r="2" fill="#ffffff">
+<animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="1.2s" repeatCount="indefinite"/>
+</circle>
+</g>
+<polyline points="80,45 100,35 110,35 120,30" fill="none" stroke="var(--fg)" stroke-width="2" stroke-linecap="round" stroke-dasharray="8 4" opacity="0.7">
+<animate attributeName="stroke-dashoffset" from="0" to="-12" dur="1s" repeatCount="indefinite"/>
+</polyline>
+</svg></div><figcaption>Nemotron-3-Ultra-550b-a55b · fast · 5.2s</figcaption></figure><figure><div class="f mood-hype"><p>failed</p></div><figcaption>Kimi-K2.7-Code · boom · 94.1s</figcaption></figure><figure><div class="f mood-funny"><p>failed</p></div><figcaption>Kimi-K2.7-Code · silence · 120.1s</figcaption></figure><figure><div class="f mood-calm"><p>failed</p></div><figcaption>Kimi-K2.7-Code · fast · 114.4s</figcaption></figure><figure><div class="f mood-hype"><p>failed</p></div><figcaption>GLM-5.3-Flash · boom · 120.1s</figcaption></figure><figure><div class="f mood-funny"><p>failed</p></div><figcaption>GLM-5.3-Flash · silence · 120.1s</figcaption></figure><figure><div class="f mood-calm"><p>failed</p></div><figcaption>GLM-5.3-Flash · fast · 120.1s</figcaption></figure><figure><div class="f mood-hype"><p>failed</p></div><figcaption>DeepSeek-V4.1-Flash · boom · 67.9s</figcaption></figure><figure><div class="f mood-funny"><p>failed</p></div><figcaption>DeepSeek-V4.1-Flash · silence · 21.5s</figcaption></figure><figure><div class="f mood-calm"><p>failed</p></div><figcaption>DeepSeek-V4.1-Flash · fast · 55.7s</figcaption></figure><figure><div class="f mood-hype"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <style>
+    @keyframes grow {
+      0% { transform: scaleY(0.04); opacity: 0.8; }
+      5% { transform: scaleY(0.05); }
+      60% { transform: scaleY(0.12); opacity: 1; }
+      75% { transform: scaleY(0.9); }
+      90% { transform: scaleY(1); opacity: 1; }
+      100% { transform: scaleY(1); opacity: 0; }
+    }
+    .bar {
+      transform-box: fill-box;
+      transform-origin: bottom;
+      animation: grow 4s ease-in-out infinite;
+    }
+    .b1 { animation-delay: 0s; }
+    .b2 { animation-delay: 0.3s; }
+    .b3 { animation-delay: 0.6s; }
+  </style>
+  <rect x="0" y="86" width="160" height="4" fill="#0a0a0a"/>
+  <rect class="bar b1" x="35" y="70" width="14" height="16" fill="var(--alt)"/>
+  <rect class="bar b2" x="73" y="68" width="14" height="18" fill="var(--fg)"/>
+  <rect class="bar b3" x="111" y="24" width="14" height="62" fill="#ffffff"/>
+</svg></div><figcaption>Qwen3.8-27B · boom · 1.8s</figcaption></figure><figure><div class="f mood-funny"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    @keyframes nod {
+      0%, 100% { transform: rotate(0deg); }
+      50% { transform: rotate(12deg); }
+    }
+    .head {
+      transform-origin: 80px 35px;
+      animation: nod 2s ease-in-out infinite;
+    }
+  </style>
+  <circle cx="80" cy="35" r="18" fill="var(--fg)" class="head"/>
+  <rect x="70" y="50" width="20" height="30" rx="10" fill="var(--fg)"/>
+  <circle cx="80" cy="35" r="6" fill="var(--alt)" class="head"/>
+</svg></div><figcaption>Qwen3.8-27B · silence · 1.4s</figcaption></figure><figure><div class="f mood-calm"><svg viewBox="0 0 160 90" width="100%" height="100%" preserveAspectRatio="xMidYMid slice">
+  <style>
+    @keyframes dash {
+      from { stroke-dashoffset: 28; }
+      to { stroke-dashoffset: 0; }
+    }
+    .trail {
+      animation: dash 1.2s linear infinite;
+    }
+  </style>
+  <g fill="none" stroke="var(--fg)" stroke-linecap="round">
+    <circle cx="80" cy="45" r="27" stroke-width="12" opacity="0.35"/>
+    <path d="M80 24 A21 21 0 1 1 59 45" stroke-width="3" class="trail"/>
+  </g>
+  <circle cx="80" cy="45" r="11" fill="#0a0a0a"/>
+  <circle cx="80" cy="45" r="5" fill="#ffffff"/>
+</svg></div><figcaption>Qwen3.8-27B · fast · 1.4s</figcaption></figure></div>

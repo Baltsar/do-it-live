@@ -1,0 +1,24 @@
+{
+  "id": "litmus",
+  "name": "Litmus test: one behaviour per line (paste the heads-up first)",
+  "lang": "en-US",
+  "lines": [
+    { "t": 0, "text": "Hi everyone, thanks for coming, give me a second here." },
+    { "t": 7000, "text": "I run a community called OpenSverige." },
+    { "t": 14000, "text": "We are seven hundred builders right now." },
+    { "t": 22000, "text": "And the best part, you can join without a login. No account, no password." },
+    { "t": 33000, "text": "Every morning my inbox explodes. A thousand notifications before coffee." },
+    { "t": 45000, "text": "And I just sit there and scroll, and scroll, and I answer nothing." },
+    { "t": 54000, "text": "Honestly, eighty percent of those messages are from bots." },
+    { "t": 64000, "text": "So I had this idea. Imagine a room. And in that room" },
+    { "t": 71000, "text": "I put a robot that says no to everything. I am going to be a millionaire." },
+    { "t": 83000, "text": "The first week was totally chaotic. Nobody knew who did what." },
+    { "t": 94000, "text": "There are three things I learned." },
+    { "t": 99000, "text": "Ship fast, share everything, and never wait for permission." },
+    { "t": 110000, "text": "Speed matters. Big companies need six months. We did it in a weekend." },
+    { "t": 116000, "text": "Anyway, completely different thing, my dog. He sleeps on my keyboard all day." },
+    { "t": 128000, "text": "And then the investor looked at me and said nothing. He just blinked." },
+    { "t": 139000, "text": "Sweden is one of the most digital countries in the world." },
+    { "t": 147000, "text": "That's it. Thank you." }
+  ]
+}

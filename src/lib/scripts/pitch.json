@@ -1,0 +1,20 @@
+{
+  "id": "pitch",
+  "name": "Product pitch: steps, lists, numbers (test script)",
+  "lang": "en-US",
+  "lines": [
+    { "t": 0, "text": "Welcome everyone, let's get started." },
+    { "t": 5000, "text": "Let me show you how it works. First you talk, then Bill listens, and then the slide appears." },
+    { "t": 13000, "text": "Here is what you get. No clicker, no slides to build, no stage fright, and pure improv." },
+    { "t": 21000, "text": "We built it on four things. Voice, photos, GIFs, and charts." },
+    { "t": 28000, "text": "Eighty percent of our beta testers never opened a slide editor again." },
+    { "t": 35000, "text": "Now let's talk about the money." },
+    { "t": 40000, "text": "A full hour of talking costs us eleven dollars." },
+    { "t": 46000, "text": "Our biggest competitor charges twenty dollars a month for a template." },
+    { "t": 53000, "text": "That is a joke, and we are the punchline." },
+    { "t": 58000, "text": "Bill, cats or dogs" },
+    { "t": 63000, "text": "To get started, you need three steps. Sign up, connect your mic, and say hello." },
+    { "t": 71000, "text": "In the future we want to cover every stage in Europe." },
+    { "t": 77000, "text": "Thank you all, see you in the Discord." }
+  ]
+}
