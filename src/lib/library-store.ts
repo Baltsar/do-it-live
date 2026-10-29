@@ -71,7 +71,13 @@ export async function readIndex(): Promise<LibraryItem[]> {
     }
   }
   const prefix = libraryPrefix();
-  return prefix ? (await readBlob(prefix, false)).items : [];
+  if (!prefix) return [];
+  // The director reads this on every spoken line: a store hiccup must cost a GIF, never the slide.
+  try {
+    return (await readBlob(prefix, false)).items;
+  } catch {
+    return recent.get(prefix)?.stored.items ?? [];
+  }
 }
 
 // On disk, changes run one at a time or one of two overlapping uploads is silently lost. In Blob the

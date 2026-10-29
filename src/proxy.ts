@@ -34,7 +34,7 @@ button{font:inherit;font-size:18px;font-weight:700;padding:14px;border:0;border-
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const password = process.env.SITE_PASSWORD;
-  if (!password) return NextResponse.next();
+  if (!password) return withLibraryId(request, NextResponse.next());
   const token = await tokenFor(password);
 
   if (request.nextUrl.pathname === "/unlock" && request.method === "POST") {
