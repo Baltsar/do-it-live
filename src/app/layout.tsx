@@ -17,8 +17,8 @@ const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
 const space = Space_Grotesk({ variable: "--font-space", subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Do it live",
-  description: "A presentation that listens. Talk, and the slides follow.",
+  title: "Do it live: vibe presenting",
+  description: "F*ck it, we'll do it live. Talk on stage and the slides draw themselves while you speak.",
   appleWebApp: { capable: true, title: "Do it live", statusBarStyle: "black-translucent" },
 };
 

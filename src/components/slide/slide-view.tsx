@@ -644,7 +644,7 @@ export function SlideView({ slide, blank, fill, still, idleTitle = "Do it live" 
       ) : (
         <div className="idle">
           <h1>{idleTitle}</h1>
-          <p>Talk. Bill runs the slides.</p>
+          <p>#vibepresenting</p>
         </div>
       )}
       {/* eslint-disable-next-line @next/next/no-img-element -- the speaker's own logo as a data URL */}

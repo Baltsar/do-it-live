@@ -211,7 +211,8 @@ export default function ShowPage() {
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
       <header className="flex items-center gap-2 px-5 py-4">
-        <span className="text-lg font-black tracking-tight [font-stretch:125%]">Do it live</span>
+        <span className="text-lg font-black uppercase tracking-tight [font-stretch:125%]">Do it live</span>
+        <span className="text-sm font-semibold text-white/40 max-sm:hidden">#vibepresenting</span>
         <nav className="ml-auto flex items-center gap-1">
           <button type="button" className={quiet} onClick={() => (phone ? enterStage() : window.open("/screen", "doitlive-audience", "width=1280,height=720"))}>
             Screen
@@ -263,6 +264,7 @@ export default function ShowPage() {
       ) : (
         <main className="flex flex-1 flex-col items-center justify-center gap-8 px-5 pb-12 text-center">
           <div>
+            <p className="mb-5 text-lg font-black uppercase tracking-wide text-[#ffd60a] sm:text-xl">F*ck it, we&apos;ll do it live.</p>
             <h1 className="text-[clamp(96px,22vw,340px)] font-black leading-[0.8] tracking-[-0.06em] [font-stretch:125%]">Talk.</h1>
             <p className="mt-6 text-xl font-semibold text-white/60 sm:text-2xl">The slides make themselves.</p>
           </div>

@@ -6,7 +6,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Do it live",
     short_name: "Do it live",
-    description: "A presentation that listens. Talk, and the slides follow.",
+    description: "F*ck it, we'll do it live. Talk on stage and the slides draw themselves while you speak.",
     start_url: "/",
     display: "fullscreen",
     background_color: "#000000",
