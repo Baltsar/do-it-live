@@ -653,6 +653,315 @@ const RENDER: Record<SceneName, () => ReactNode> = {
       <rect x="0" y="62" width="160" height="2.6" fill={FG} opacity="0.4" />
     </>
   ),
+
+  ship: () => (
+    <>
+      <g className="shp">
+        <polygon points="40,60 120,60 108,74 52,74" fill={FG} />
+        <rect x="68" y="48" width="22" height="12" rx="1.5" fill={FG} />
+        <rect x="92" y="40" width="7" height="20" fill={ALT} />
+        {range(3).map((i) => (
+          <circle key={i} className="shp-sm" cx="95.5" cy="36" r={2.4 + i * 0.6} fill={ALT} style={v({ "--i": i })} />
+        ))}
+      </g>
+      <path className="shp-wv" d="M-20 76 Q -10 70 0 76 T 20 76 T 40 76 T 60 76 T 80 76 T 100 76 T 120 76 T 140 76 T 160 76 T 180 76" fill="none" stroke={FG} strokeWidth="3.4" strokeLinecap="round" />
+      <path className="shp-wv shp-wv2" d="M-20 84 Q -10 78 0 84 T 20 84 T 40 84 T 60 84 T 80 84 T 100 84 T 120 84 T 140 84 T 160 84 T 180 84" fill="none" stroke={FG} strokeWidth="3.4" strokeLinecap="round" opacity="0.5" />
+    </>
+  ),
+
+  bolt: () => (
+    <>
+      {([[40, 30, 30, 22], [120, 30, 130, 22], [36, 58, 26, 62], [124, 58, 134, 62]] as [number, number, number, number][]).map(([x1, y1, x2, y2], i) => (
+        <line key={i} className="bt-ray" x1={x1} y1={y1} x2={x2} y2={y2} stroke={FG} strokeWidth="3.4" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+      <polygon className="bt-b" points="88,8 56,50 76,50 66,82 104,38 84,38 94,8" fill={ALT} stroke={FG} strokeWidth="3" strokeLinejoin="round" />
+    </>
+  ),
+
+  chain: () => (
+    <>
+      {range(5).map((i) => (
+        <rect key={i} className={`chn-lk${i === 2 ? " chn-br" : ""}`} x={18 + i * 26} y="37" width="26" height="16" rx="8" fill="none" stroke={i === 2 ? ALT : FG} strokeWidth="4" style={v({ "--i": i })} />
+      ))}
+      {range(4).map((i) => (
+        <rect key={`j${i}`} className="chn-lk" x={38 + i * 26} y="41" width="12" height="8" rx="4" fill={FG} style={v({ "--i": i + 0.5 })} />
+      ))}
+    </>
+  ),
+
+  domino: () => (
+    <>
+      <rect x="10" y="80" width="140" height="2.6" fill={FG} opacity="0.3" />
+      {range(7).map((i) => (
+        <rect key={i} className={`dm${i < 3 ? " dm-f" : ""}`} x={22 + i * 18} y="52" width="6" height="28" rx="1.5" fill={i === 0 ? ALT : FG} style={v({ "--i": i })} />
+      ))}
+    </>
+  ),
+
+  bubble: () => (
+    <>
+      <g className="bb">
+        <circle cx="80" cy="50" r="24" fill="none" stroke={FG} strokeWidth="4" />
+        <path d="M66 40 A16 16 0 0 1 78 32" fill="none" stroke={ALT} strokeWidth="3.4" strokeLinecap="round" />
+      </g>
+      {([[-26, -22], [26, -24], [-30, 10], [30, 12], [0, -32], [4, 30]] as [number, number][]).map(([dx, dy], i) => (
+        <circle key={i} className="bb-pop" cx="80" cy="38" r="3" fill={ALT} style={v({ "--dx": `${dx}px`, "--dy": `${dy}px` })} />
+      ))}
+    </>
+  ),
+
+  iceberg: () => (
+    <>
+      <polygon points="80,12 97,40 63,40" fill={FG} />
+      <polygon className="ib-deep" points="56,41 104,41 118,64 90,84 60,80 44,60" fill={FG} opacity="0.35" />
+      <rect x="0" y="39" width="160" height="2.6" fill={ALT} />
+      {range(4).map((i) => (
+        <rect key={i} x={10 + i * 40} y={52 + (i % 2) * 20} width="18" height="2" rx="1" fill={ALT} opacity="0.5" />
+      ))}
+    </>
+  ),
+
+  mountain: () => (
+    <>
+      <polygon points="0,84 44,30 70,56 100,16 130,52 160,84" fill={FG} />
+      <polygon points="100,16 93,27 107,27" fill={ALT} />
+      <polygon points="44,30 38,38 50,38" fill={ALT} />
+      <path className="mt-path" d="M10 84 C 40 80, 52 62, 70 56 S 92 30, 100 20" fill="none" stroke={ALT} strokeWidth="3" strokeLinecap="round" strokeDasharray="3 4" pathLength={100} />
+    </>
+  ),
+
+  night: () => (
+    <>
+      <circle cx="120" cy="24" r="12" fill={FG} />
+      <circle cx="126" cy="20" r="11" fill="var(--bg)" />
+      {([[20, 16], [44, 10], [60, 26], [92, 12], [142, 40], [30, 40], [150, 14]] as [number, number][]).map(([x, y], i) => (
+        <circle key={i} className="nt-st" cx={x} cy={y} r="1.8" fill={ALT} style={v({ "--i": i })} />
+      ))}
+      <rect x="54" y="44" width="40" height="40" fill={FG} />
+      {range(9).map((i) => (
+        <rect key={i} className={i === 4 ? "nt-win" : undefined} x={60 + (i % 3) * 11} y={50 + Math.floor(i / 3) * 11} width="6" height="6" fill={i === 4 ? ALT : "var(--bg)"} opacity={i === 4 ? 1 : 0.35} />
+      ))}
+      <rect x="0" y="84" width="160" height="2.6" fill={FG} opacity="0.3" />
+    </>
+  ),
+
+  mic: () => (
+    <>
+      <rect x="70" y="14" width="20" height="36" rx="10" fill={FG} />
+      <path d="M60 42 A20 20 0 0 0 100 42" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <rect x="78.5" y="62" width="3" height="12" fill={FG} />
+      <rect x="66" y="74" width="28" height="4" rx="2" fill={FG} />
+      {range(3).map((i) => (
+        <path key={`l${i}`} className="mc-wv" d={`M${54 - i * 9} ${24 - i * 4} A${16 + i * 9} ${16 + i * 9} 0 0 0 ${54 - i * 9} ${56 + i * 4}`} fill="none" stroke={ALT} strokeWidth="3" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+      {range(3).map((i) => (
+        <path key={`r${i}`} className="mc-wv" d={`M${106 + i * 9} ${24 - i * 4} A${16 + i * 9} ${16 + i * 9} 0 0 1 ${106 + i * 9} ${56 + i * 4}`} fill="none" stroke={ALT} strokeWidth="3" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+    </>
+  ),
+
+  plug: () => (
+    <>
+      <rect x="100" y="27" width="36" height="36" rx="5" fill="none" stroke={FG} strokeWidth="4" />
+      <rect className="pg-glow" x="104" y="31" width="28" height="28" rx="3" fill={ALT} />
+      <rect x="108" y="39" width="8" height="3" fill={FG} />
+      <rect x="108" y="48" width="8" height="3" fill={FG} />
+      <g className="pg">
+        <path d="M30 45 H10" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+        <rect x="30" y="35" width="26" height="20" rx="4" fill={FG} />
+        <rect x="56" y="39" width="12" height="3" fill={FG} />
+        <rect x="56" y="48" width="12" height="3" fill={FG} />
+      </g>
+    </>
+  ),
+
+  gear: () => (
+    <>
+      <circle className="ge-a" cx="66" cy="48" r="20" fill="none" stroke={FG} strokeWidth="10" strokeDasharray="6 6.57" />
+      <circle cx="66" cy="48" r="12" fill="none" stroke={FG} strokeWidth="4" />
+      <circle cx="66" cy="48" r="3" fill={FG} />
+      <circle className="ge-b" cx="106" cy="32" r="13" fill="none" stroke={ALT} strokeWidth="8" strokeDasharray="5.5 6.17" />
+      <circle cx="106" cy="32" r="6.5" fill="none" stroke={ALT} strokeWidth="3.4" />
+      <circle cx="106" cy="32" r="2" fill={ALT} />
+    </>
+  ),
+
+  brain: () => (
+    <>
+      <path d="M80 24 C 70 12, 50 18, 52 32 C 40 36, 42 54, 54 58 C 54 70, 72 74, 80 62 C 88 74, 106 70, 106 58 C 118 54, 120 36, 108 32 C 110 18, 90 12, 80 24 Z" fill="none" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M80 24 V62" fill="none" stroke={FG} strokeWidth="3" />
+      <path d="M58 40 C 64 36, 70 40, 68 46 M92 40 C 98 36, 104 40, 102 46 M60 54 C 66 50, 70 54, 72 58 M88 58 C 92 52, 98 54, 100 58" fill="none" stroke={FG} strokeWidth="2.4" strokeLinecap="round" opacity="0.6" />
+      {([[64, 32], [96, 34], [70, 52], [94, 50], [80, 42]] as [number, number][]).map(([x, y], i) => (
+        <circle key={i} className="bn-sp" cx={x} cy={y} r="3.2" fill={ALT} style={v({ "--i": i })} />
+      ))}
+    </>
+  ),
+
+  bot: () => (
+    <>
+      <g className="bo">
+        <rect x="78.5" y="16" width="3" height="14" fill={FG} />
+        <circle className="bo-ant" cx="80" cy="15" r="4" fill={ALT} />
+        <rect x="48" y="42" width="6" height="14" rx="2" fill={FG} />
+        <rect x="106" y="42" width="6" height="14" rx="2" fill={FG} />
+        <rect x="54" y="30" width="52" height="40" rx="8" fill={FG} />
+        <rect className="bo-eye" x="65" y="43" width="10" height="9" rx="2" fill={ALT} />
+        <rect className="bo-eye" x="85" y="43" width="10" height="9" rx="2" fill={ALT} />
+        <rect x="70" y="59" width="20" height="3.4" rx="1.7" fill={ALT} />
+      </g>
+    </>
+  ),
+
+  empty: () => (
+    <>
+      <path d="M48 44 V78 H112 V44" fill="none" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M48 44 L38 30 M112 44 L122 30" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <path d="M48 44 H112" fill="none" stroke={FG} strokeWidth="4" />
+      <rect className="em-dash" x="60" y="50" width="40" height="20" rx="3" fill="none" stroke={ALT} strokeWidth="2.6" strokeDasharray="5 4" />
+    </>
+  ),
+
+  trash: () => (
+    <>
+      <polygon points="58,36 102,36 97,80 63,80" fill={FG} />
+      {range(3).map((i) => (
+        <rect key={i} x={70 + i * 9} y="44" width="2.4" height="28" fill="var(--bg)" opacity="0.5" />
+      ))}
+      <g className="ts-lid">
+        <rect x="54" y="28" width="52" height="6" rx="2" fill={FG} />
+        <rect x="74" y="23" width="12" height="5" rx="2" fill={FG} />
+      </g>
+      <circle className="ts-ball" cx="80" cy="34" r="6" fill={ALT} />
+    </>
+  ),
+
+  confetti: () => (
+    <>
+      {range(18).map((i) => (
+        <rect key={i} className="cf" x={10 + ((i * 37) % 140)} y={6 + ((i * 23) % 30)} width="4" height="8" rx="1" fill={i % 3 === 0 ? ALT : FG} style={v({ "--i": i })} />
+      ))}
+    </>
+  ),
+
+  door: () => (
+    <>
+      <rect x="62" y="16" width="36" height="66" fill={ALT} />
+      {([[28, -18], [40, 0], [28, 18]] as [number, number][]).map(([dx, dy], i) => (
+        <line key={i} className="dr-ray" x1="98" y1={49 + dy * 0.4} x2={98 + dx} y2={49 + dy} stroke={ALT} strokeWidth="3" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+      <rect className="dr-leaf" x="62" y="16" width="36" height="66" fill={FG} />
+      <rect x="60" y="14" width="40" height="70" fill="none" stroke={FG} strokeWidth="4" />
+    </>
+  ),
+
+  maze: () => (
+    <>
+      <path d="M30 26 V76 H130 V70 M130 62 V14 H30 V18 M40 30 V76 M40 40 H80 M50 60 H100 M100 40 V60 M60 22 H120 V56 M70 60 V76 M100 14 V22" fill="none" stroke={FG} strokeWidth="3.4" strokeLinecap="round" strokeLinejoin="round" />
+      <rect x="128" y="62" width="4" height="8" fill={ALT} />
+      <circle className="mz-dot" cx="32" cy="22" r="4" fill={ALT} />
+    </>
+  ),
+
+  umbrella: () => (
+    <>
+      {range(10).map((i) => (
+        <line key={i} className="um-rn" x1={34 + i * 10} y1="6" x2={32 + i * 10} y2="14" stroke={ALT} strokeWidth="2.6" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+      <path d="M44 50 A36 36 0 0 1 116 50 Z" fill={FG} />
+      <path d="M80 50 V76 A6 6 0 0 1 68 76" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <rect x="78" y="10" width="4" height="6" rx="2" fill={FG} />
+    </>
+  ),
+
+  lighthouse: () => (
+    <>
+      <polygon className="lh-beam" points="80,26 158,4 158,48" fill={ALT} opacity="0.4" />
+      <polygon points="72,80 88,80 84,30 76,30" fill={FG} />
+      <rect x="70" y="22" width="20" height="8" rx="1.5" fill={FG} />
+      <circle cx="80" cy="26" r="3" fill={ALT} />
+      <rect x="0" y="80" width="160" height="2.6" fill={FG} opacity="0.3" />
+    </>
+  ),
+
+  train: () => (
+    <>
+      <rect x="0" y="74" width="160" height="2.6" fill={FG} opacity="0.35" />
+      {range(15).map((i) => (
+        <rect key={i} className="tn-sl" x={-12 + i * 12} y="77" width="6" height="4" rx="1" fill={FG} opacity="0.3" />
+      ))}
+      <g className="tn">
+        <rect x="76" y="50" width="42" height="20" rx="2" fill={FG} />
+        <rect x="20" y="44" width="52" height="26" rx="3" fill={FG} />
+        <rect x="56" y="34" width="16" height="12" rx="2" fill={FG} />
+        <rect x="26" y="34" width="8" height="12" fill={ALT} />
+        {[32, 58, 86, 108].map((x, i) => (
+          <g key={i} className="tn-wh" style={v({ "--cx": `${x}px` })}>
+            <circle cx={x} cy="72" r="5" fill={ALT} />
+            <line x1={x} y1="67" x2={x} y2="77" stroke="var(--bg)" strokeWidth="1.6" />
+          </g>
+        ))}
+        {range(3).map((i) => (
+          <circle key={`s${i}`} className="shp-sm" cx="30" cy="30" r={2.4 + i * 0.6} fill={ALT} style={v({ "--i": i })} />
+        ))}
+      </g>
+    </>
+  ),
+
+  parachute: () => (
+    <g className="pc">
+      <path d="M50 44 A30 30 0 0 1 110 44 Z" fill={ALT} />
+      <path d="M50 44 L76 68 M80 44 V68 M110 44 L84 68" fill="none" stroke={FG} strokeWidth="2.4" strokeLinecap="round" />
+      <rect x="74" y="68" width="12" height="10" rx="1.5" fill={FG} />
+    </g>
+  ),
+
+  compass: () => (
+    <>
+      <circle cx="80" cy="45" r="27" fill="none" stroke={FG} strokeWidth="4" />
+      {range(4).map((i) => (
+        <rect key={i} x={79} y={15} width="2" height="6" fill={i === 0 ? ALT : FG} transform={`rotate(${i * 90} 80 45)`} />
+      ))}
+      <g className="cm-nd">
+        <polygon points="80,24 85.5,45 80,47 74.5,45" fill={ALT} />
+        <polygon points="80,66 85.5,45 80,43 74.5,45" fill={FG} />
+      </g>
+      <circle cx="80" cy="45" r="3" fill={FG} />
+    </>
+  ),
+
+  crown: () => (
+    <g className="cw">
+      <polygon points="40,66 46,30 64,48 80,20 96,48 114,30 120,66" fill={ALT} />
+      <rect x="40" y="64" width="80" height="10" rx="2" fill={FG} />
+      {([[64, 56], [80, 50], [96, 56]] as [number, number][]).map(([x, y], i) => (
+        <circle key={i} className="cw-jw" cx={x} cy={y} r="3.2" fill={FG} style={v({ "--i": i })} />
+      ))}
+    </g>
+  ),
+
+  envelope: () => (
+    <>
+      <rect x="44" y="30" width="72" height="46" rx="3" fill="none" stroke={FG} strokeWidth="4" />
+      <rect className="en-lt" x="56" y="36" width="48" height="32" rx="2" fill={ALT} />
+      <polygon points="44,36 80,62 116,36 116,76 44,76" fill="var(--bg)" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+      <path d="M44 36 L80 62 L116 36" fill="none" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+    </>
+  ),
+
+  network: () => {
+    const nodes: [number, number][] = [[30, 30], [64, 20], [96, 34], [130, 22], [48, 62], [84, 60], [120, 66]];
+    const edges: [number, number][] = [[0, 1], [1, 2], [2, 3], [0, 4], [1, 5], [2, 5], [3, 6], [4, 5], [5, 6]];
+    return (
+      <>
+        {edges.map(([a, b], i) => (
+          <line key={i} className="nw-ed" x1={nodes[a][0]} y1={nodes[a][1]} x2={nodes[b][0]} y2={nodes[b][1]} stroke={FG} strokeWidth="2.6" opacity="0.5" pathLength={100} style={v({ "--i": i })} />
+        ))}
+        {nodes.map(([x, y], i) => (
+          <circle key={i} className="nw-nd" cx={x} cy={y} r="5" fill={FG} style={v({ "--i": i })} />
+        ))}
+      </>
+    );
+  },
 };
 
 /** Wordless animated metaphors. Pure SVG and CSS, drawn in the slide's own colours. */

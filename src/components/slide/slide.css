@@ -690,6 +690,168 @@
 .slide-frame.static .sr-sun { transform: translateY(-22px); }
 .slide-frame.static .sr-ray { opacity: 1; }
 
+/* ship: it rocks, the waves roll, the smoke puffs */
+.shp { transform-box: view-box; transform-origin: 80px 70px; animation: shpRock 3s ease-in-out infinite alternate; }
+.shp-sm { opacity: 0; animation: shpSmoke 2.4s ease-out infinite; animation-delay: calc(var(--i) * 0.8s); }
+.shp-wv { animation: shpWave 2s linear infinite; }
+.shp-wv2 { animation-duration: 2.8s; animation-direction: reverse; }
+@keyframes shpRock { from { transform: rotate(-3deg) translateY(0); } to { transform: rotate(3deg) translateY(-2px); } }
+@keyframes shpSmoke { 0% { opacity: 0; transform: translate(0, 4px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translate(10px, -18px); } }
+@keyframes shpWave { from { transform: translateX(0); } to { transform: translateX(-20px); } }
+.slide-frame.static .shp-sm { opacity: 0.8; transform: translate(4px, -6px); }
+
+/* bolt: flash */
+.bt-b { transform-origin: center; animation: btFlash 2.2s ease-out infinite; }
+.bt-ray { opacity: 0; animation: btRay 2.2s ease-out infinite; animation-delay: calc(var(--i) * 0.03s); }
+@keyframes btFlash { 0%, 18% { opacity: 0; transform: scale(0.9); } 24% { opacity: 1; transform: scale(1.08); } 30% { opacity: 0.6; } 36%, 82% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+@keyframes btRay { 0%, 22% { opacity: 0; } 28%, 60% { opacity: 1; } 78%, 100% { opacity: 0; } }
+.slide-frame.static :is(.bt-b, .bt-ray) { opacity: 1; transform: none; }
+
+/* chain: link by link, then a tug */
+.chn-lk { transform-origin: center; animation: chnLink 4.6s cubic-bezier(0.2, 1.3, 0.3, 1) infinite backwards; animation-delay: calc(var(--i) * 0.16s); }
+.chn-br { animation-name: chnBreak; }
+@keyframes chnLink { 0% { transform: scale(0); opacity: 0; } 10%, 60% { transform: scale(1); opacity: 1; } 64% { transform: scale(1) translateX(3px); } 68% { transform: scale(1) translateX(-2px); } 72%, 88% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+@keyframes chnBreak { 0% { transform: scale(0); opacity: 0; } 10%, 60% { transform: scale(1); opacity: 1; } 64% { transform: scale(1.15) rotate(6deg); } 72%, 88% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+.slide-frame.static .chn-lk { transform: none; opacity: 1; }
+
+/* domino: the first one goes, then all of them */
+.dm { transform-origin: 0% 100%; animation: dmFall 5s cubic-bezier(0.5, 0, 0.8, 0.5) infinite backwards; animation-delay: calc(var(--i) * 0.22s); }
+@keyframes dmFall { 0%, 10% { transform: rotate(0); opacity: 1; } 20%, 84% { transform: rotate(72deg); opacity: 1; } 94%, 100% { transform: rotate(72deg); opacity: 0; } }
+.slide-frame.static .dm-f { transform: rotate(72deg); }
+
+/* bubble: up, swell, pop */
+.bb { transform-box: view-box; transform-origin: 80px 50px; animation: bbRise 4.4s ease-in-out infinite; }
+.bb-pop { opacity: 0; animation: bbPop 4.4s ease-out infinite; }
+@keyframes bbRise { 0% { transform: translateY(14px) scale(0.9); opacity: 0; } 12% { opacity: 1; } 58% { transform: translateY(-12px) scale(1); opacity: 1; } 64% { transform: translateY(-12px) scale(1.2); opacity: 0; } 100% { transform: translateY(-12px) scale(1.2); opacity: 0; } }
+@keyframes bbPop { 0%, 62% { transform: translate(0, 0); opacity: 0; } 64% { opacity: 1; } 82%, 100% { transform: translate(var(--dx), var(--dy)); opacity: 0; } }
+.slide-frame.static .bb { transform: translateY(-12px); opacity: 1; }
+
+/* iceberg: the rest appears */
+.ib-deep { opacity: 0; animation: ibDeep 5s ease-in-out infinite; }
+@keyframes ibDeep { 0%, 30% { opacity: 0; } 50%, 88% { opacity: 0.35; } 100% { opacity: 0; } }
+.slide-frame.static .ib-deep { opacity: 0.35; }
+
+/* mountain: the route to the top */
+.mt-path { stroke-dasharray: 3 4; animation: mtPath 5s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+@keyframes mtPath { 0%, 10% { stroke-dasharray: 0 100; opacity: 1; } 70%, 90% { stroke-dasharray: 100 0; opacity: 1; } 100% { stroke-dasharray: 100 0; opacity: 0; } }
+.slide-frame.static .mt-path { stroke-dasharray: 3 4; }
+
+/* night: stars twinkle, one window stays lit */
+.nt-st { animation: ntStar 2.4s ease-in-out infinite alternate; animation-delay: calc(var(--i) * -0.35s); }
+.nt-win { animation: ntWin 5s ease-out infinite; }
+@keyframes ntStar { from { opacity: 0.25; } to { opacity: 1; } }
+@keyframes ntWin { 0%, 24% { opacity: 0.35; } 32%, 100% { opacity: 1; } }
+
+/* mic: sound waves */
+.mc-wv { opacity: 0; transform-origin: center; animation: mcWave 1.8s ease-out infinite; animation-delay: calc(var(--i) * 0.3s); }
+@keyframes mcWave { 0% { opacity: 0; transform: scale(0.85); } 35% { opacity: 1; } 100% { opacity: 0; transform: scale(1.15); } }
+.slide-frame.static .mc-wv { opacity: 0.85; transform: none; }
+
+/* plug: in it goes, on it comes */
+.pg { animation: pgIn 4.2s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+.pg-glow { opacity: 0; animation: pgGlow 4.2s ease-out infinite; }
+@keyframes pgIn { 0% { transform: translateX(-22px); opacity: 0; } 10% { opacity: 1; } 44%, 88% { transform: translateX(42px); opacity: 1; } 100% { transform: translateX(42px); opacity: 0; } }
+@keyframes pgGlow { 0%, 44% { opacity: 0; } 50%, 88% { opacity: 1; } 100% { opacity: 0; } }
+.slide-frame.static .pg { transform: translateX(42px); opacity: 1; }
+.slide-frame.static .pg-glow { opacity: 1; }
+
+/* gear: two of them, turning against each other */
+.ge-a { transform-box: view-box; transform-origin: 66px 48px; animation: spin 6s linear infinite; }
+.ge-b { transform-box: view-box; transform-origin: 106px 32px; animation: spin 4.2s linear infinite reverse; }
+
+/* brain: neurons fire */
+.bn-sp { opacity: 0.25; transform-origin: center; animation: bnSpark 2.4s ease-out infinite; animation-delay: calc(var(--i) * 0.4s); }
+@keyframes bnSpark { 0%, 70%, 100% { opacity: 0.25; transform: scale(1); } 14% { opacity: 1; transform: scale(1.5); } 30% { opacity: 1; transform: scale(1.1); } }
+.slide-frame.static .bn-sp { opacity: 1; }
+
+/* bot: a tilt, a blink, a flashing antenna */
+.bo { transform-box: view-box; transform-origin: 80px 56px; animation: boTilt 4s ease-in-out infinite alternate; }
+.bo-eye { transform-origin: center; animation: boBlink 3.4s ease-in-out infinite; }
+.bo-ant { animation: boAnt 1s ease-in-out infinite alternate; }
+@keyframes boTilt { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+@keyframes boBlink { 0%, 88%, 100% { transform: scaleY(1); } 93% { transform: scaleY(0.1); } }
+@keyframes boAnt { from { opacity: 0.35; } to { opacity: 1; } }
+
+/* empty: the outline of what should be there */
+.em-dash { animation: emDash 2.2s ease-in-out infinite alternate; }
+@keyframes emDash { from { opacity: 0.35; } to { opacity: 1; } }
+
+/* trash: lid up, ball in */
+.ts-lid { transform-box: view-box; transform-origin: 54px 31px; animation: tsLid 4.4s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+.ts-ball { opacity: 0; animation: tsBall 4.4s cubic-bezier(0.5, 0, 0.8, 0.5) infinite; }
+@keyframes tsLid { 0%, 20% { transform: rotate(0); } 32%, 68% { transform: rotate(-34deg); } 82%, 100% { transform: rotate(0); } }
+@keyframes tsBall { 0%, 30% { transform: translateY(-44px); opacity: 0; } 36% { opacity: 1; } 56% { transform: translateY(0); opacity: 1; } 60%, 100% { transform: translateY(0); opacity: 0; } }
+.slide-frame.static .ts-lid { transform: rotate(-34deg); }
+.slide-frame.static .ts-ball { transform: translateY(-22px); opacity: 1; }
+
+/* confetti: down it comes */
+.cf { transform-origin: center; animation: cfFall 3.6s linear infinite; animation-delay: calc(var(--i) * -0.2s); }
+@keyframes cfFall { 0% { transform: translateY(-20px) rotate(0); opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { transform: translateY(70px) rotate(320deg); opacity: 0; } }
+.slide-frame.static .cf { transform: translateY(calc(var(--i) * 3.2px)) rotate(calc(var(--i) * 40deg)); opacity: 1; }
+
+/* door: it opens, light comes in */
+.dr-leaf { transform-origin: 0% 50%; animation: drOpen 4.6s ease-in-out infinite alternate; }
+.dr-ray { opacity: 0; animation: drRay 4.6s ease-in-out infinite alternate; animation-delay: calc(var(--i) * 0.05s); }
+@keyframes drOpen { 0%, 25% { transform: scaleX(1); } 60%, 100% { transform: scaleX(0.2); } }
+@keyframes drRay { 0%, 45% { opacity: 0; } 70%, 100% { opacity: 1; } }
+.slide-frame.static .dr-leaf { transform: scaleX(0.2); }
+.slide-frame.static .dr-ray { opacity: 1; }
+
+/* maze: the way through */
+.mz-dot { animation: mzDot 6s linear infinite; }
+@keyframes mzDot {
+  0% { transform: translate(0, 0); opacity: 0; } 4% { opacity: 1; } 14% { transform: translate(18px, 0); } 28% { transform: translate(18px, 28px); }
+  50% { transform: translate(58px, 28px); } 62% { transform: translate(58px, 8px); } 72% { transform: translate(78px, 8px); }
+  88% { transform: translate(78px, 44px); opacity: 1; } 97% { transform: translate(100px, 44px); opacity: 1; } 100% { transform: translate(100px, 44px); opacity: 0; }
+}
+.slide-frame.static .mz-dot { transform: translate(58px, 28px); opacity: 1; }
+
+/* umbrella: the rain stops at the canopy */
+.um-rn { animation: umRain 1.4s linear infinite; animation-delay: calc(var(--i) * -0.14s); }
+@keyframes umRain { 0% { transform: translateY(-8px); opacity: 0; } 20% { opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(26px); opacity: 0; } }
+.slide-frame.static .um-rn { transform: translateY(8px); opacity: 0.9; }
+
+/* lighthouse: the beam sweeps */
+.lh-beam { transform-box: view-box; transform-origin: 80px 26px; animation: lhBeam 4s ease-in-out infinite alternate; }
+@keyframes lhBeam { from { transform: rotate(-30deg); } to { transform: rotate(30deg); } }
+.slide-frame.static .lh-beam { transform: rotate(-6deg); }
+
+/* train: the track rushes past, the wheels turn */
+.tn { animation: tnBob 0.5s ease-in-out infinite alternate; }
+.tn-sl { animation: tnTrack 0.5s linear infinite; }
+.tn-wh { transform-box: view-box; transform-origin: var(--cx) 72px; animation: spin 0.8s linear infinite; }
+@keyframes tnBob { from { transform: translateY(0); } to { transform: translateY(-1.2px); } }
+@keyframes tnTrack { from { transform: translateX(0); } to { transform: translateX(-12px); } }
+
+/* parachute: down, gently */
+.pc { transform-box: view-box; transform-origin: 80px 44px; animation: pcDrift 5s ease-in-out infinite; }
+@keyframes pcDrift { 0% { transform: translateY(-12px) rotate(-4deg); opacity: 0; } 10% { opacity: 1; } 50% { transform: translateY(2px) rotate(4deg); } 90% { transform: translateY(12px) rotate(-3deg); opacity: 1; } 100% { transform: translateY(14px) rotate(-3deg); opacity: 0; } }
+.slide-frame.static .pc { transform: none; opacity: 1; }
+
+/* compass: the needle settles */
+.cm-nd { transform-box: view-box; transform-origin: 80px 45px; animation: cmNeedle 4.6s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+@keyframes cmNeedle { 0% { transform: rotate(-70deg); } 30% { transform: rotate(26deg); } 50% { transform: rotate(-10deg); } 65% { transform: rotate(4deg); } 78%, 100% { transform: rotate(0); } }
+
+/* crown: it lands, the jewels catch the light */
+.cw { transform-box: view-box; transform-origin: 80px 70px; animation: cwIn 4.6s cubic-bezier(0.2, 1.3, 0.3, 1) infinite; }
+.cw-jw { animation: cwShine 1.8s ease-in-out infinite alternate; animation-delay: calc(var(--i) * 0.3s); }
+@keyframes cwIn { 0% { transform: translateY(-28px); opacity: 0; } 18%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes cwShine { from { opacity: 0.45; } to { opacity: 1; } }
+.slide-frame.static .cw { transform: none; opacity: 1; }
+
+/* envelope: the letter comes out */
+.en-lt { animation: enLetter 3.2s ease-in-out infinite alternate; }
+@keyframes enLetter { 0%, 20% { transform: translateY(0); } 100% { transform: translateY(-26px); } }
+.slide-frame.static .en-lt { transform: translateY(-26px); }
+
+/* network: it lights up along the edges */
+.nw-ed { stroke-dasharray: 100; animation: nwEdge 4.8s ease-out infinite; animation-delay: calc(var(--i) * 0.2s); }
+.nw-nd { transform-origin: center; animation: nwNode 4.8s ease-out infinite; animation-delay: calc(var(--i) * 0.35s); }
+@keyframes nwEdge { 0% { stroke-dashoffset: 100; } 30%, 100% { stroke-dashoffset: 0; } }
+@keyframes nwNode { 0%, 10% { fill: var(--fg); transform: scale(1); } 20% { fill: var(--alt); transform: scale(1.5); } 30%, 70% { fill: var(--alt); transform: scale(1.15); } 85%, 100% { fill: var(--fg); transform: scale(1); } }
+.slide-frame.static .nw-ed { stroke-dashoffset: 0; }
+.slide-frame.static .nw-nd:nth-of-type(odd) { fill: var(--alt); }
+
 /* ---- Look: Scribble. The same templates, drawn with a marker on a whiteboard. ----
    Skin only, and every rule is scoped to the look, so Pop renders exactly as before.
    Marks are masks filled with the field's accent: they take the style guide's colours. */
