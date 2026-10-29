@@ -3,19 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Mic, Square, X } from "lucide-react";
+import { LANGUAGES, LanguageSelect } from "@/components/language-select";
+import { MediaDropzone } from "@/components/media-dropzone";
 import { SlideView } from "@/components/slide/slide-view";
+import { Textarea } from "@/components/ui/textarea";
 import { useMediaDrop } from "@/hooks/use-media-drop";
 import { useStage } from "@/hooks/use-stage";
 import { SAMPLES } from "@/lib/samples";
 import { MAX_BRIEF } from "@/lib/settings";
 import { cn } from "@/lib/utils";
 
-// The language the speaker will talk in. Speech to text is held to it, so a Swedish talk is never read as
-// English nonsense (or a pause as Chinese), and the speaker picks it before pressing the mic.
-const LANGUAGES: [code: string, label: string][] = [
-  ["en-US", "English"],
-  ["sv-SE", "Svenska"],
-];
 const LANG_KEY = "doitlive-lang";
 
 const quiet = "rounded-full px-4 py-2 text-sm font-semibold text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60";
@@ -26,7 +23,9 @@ const quiet = "rounded-full px-4 py-2 text-sm font-semibold text-white/70 outlin
  */
 export default function ShowPage() {
   const { stage, snap } = useStage();
-  const media = useMediaDrop();
+  // Unknown until the status arrives: assume a disk, the server refuses the upload quickly if there is none.
+  const uploads = snap.status.uploads !== false;
+  const media = useMediaDrop(uploads);
   const picker = useRef<HTMLInputElement>(null);
   const ring = useRef<HTMLSpanElement>(null);
   const [voice, setVoice] = useState(true);
@@ -45,7 +44,7 @@ export default function ShowPage() {
       setHollowVoice(brands.includes("Chromium") && !brands.some((b) => b === "Google Chrome" || b === "Microsoft Edge"));
       try {
         const saved = localStorage.getItem(LANG_KEY);
-        if (saved && LANGUAGES.some(([code]) => code === saved)) stage.setLang(saved);
+        if (saved && LANGUAGES.some((l) => l.ready && l.code === saved)) stage.setLang(saved);
       } catch {
         // No storage (private window): the default language stands.
       }
@@ -171,26 +170,6 @@ export default function ShowPage() {
     }
   };
 
-  const languagePicker = (
-    <div role="radiogroup" aria-label="The language you will speak" className="flex items-center gap-1 rounded-full bg-white/[0.06] p-1 text-sm font-semibold">
-      {LANGUAGES.map(([code, label]) => {
-        const active = snap.lang.slice(0, 2) === code.slice(0, 2);
-        return (
-          <button
-            key={code}
-            type="button"
-            role="radio"
-            aria-checked={active}
-            onClick={() => chooseLanguage(code)}
-            className={cn("rounded-full px-4 py-1.5 outline-none transition-colors focus-visible:ring-2 focus-visible:ring-white/60", active ? "bg-white text-black" : "text-white/55 hover:text-white")}
-          >
-            {label}
-          </button>
-        );
-      })}
-    </div>
-  );
-
   const micButton = (size: "hero" | "small") => (
     <button
       type="button"
@@ -269,16 +248,20 @@ export default function ShowPage() {
             <p className="mt-6 text-xl font-semibold text-white/60 sm:text-2xl">The slides make themselves.</p>
           </div>
           {micButton("hero")}
-          {languagePicker}
+          <LanguageSelect lang={snap.lang} onChange={chooseLanguage} />
           {micStatus}
-          <textarea
-            value={snap.brief}
-            onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
-            rows={snap.brief.length > 70 ? 3 : 1}
-            placeholder="Optional: what will you talk about? A few sentences and I get slides ready."
-            aria-label="What will you talk about"
-            className="w-full max-w-2xl resize-none border-b-2 max-sm:min-h-[4.25rem] border-white/15 bg-transparent px-2 pb-2 text-center text-lg font-semibold leading-snug outline-none transition-colors placeholder:font-normal placeholder:text-white/35 focus:border-[#ffd60a]"
-          />
+          <label className="block w-full max-w-2xl text-left">
+            <span className="mb-2 flex items-baseline justify-between gap-3 px-1">
+              <span className="text-sm font-semibold text-white/80">What will you talk about?</span>
+              <span className="text-xs font-semibold uppercase tracking-wide text-white/35">Optional</span>
+            </span>
+            <Textarea
+              value={snap.brief}
+              onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
+              placeholder="A few sentences, and I get slides ready before you start. For example: how our meetup grew from 12 to 700 builders in a year."
+              className="min-h-24 resize-none rounded-2xl border-white/15 bg-white/[0.04] px-4 py-3 text-base leading-snug text-white placeholder:text-white/35 hover:border-white/25 focus-visible:border-[#ffd60a] focus-visible:ring-[#ffd60a]/20 md:text-base dark:bg-white/[0.04]"
+            />
+          </label>
           {snap.preparing || snap.prepared.length > 0 ? (
             <div className="w-full max-w-3xl">
               <p className="mb-2 text-sm text-white/50">
@@ -293,13 +276,8 @@ export default function ShowPage() {
               </div>
             </div>
           ) : null}
+          <MediaDropzone media={media} enabled={uploads} onBrowse={() => picker.current?.click()} />
           <p className="text-sm leading-relaxed text-white/50">
-            Drop your own photos, GIFs and clips anywhere, or{" "}
-            <button type="button" className="font-semibold text-white underline underline-offset-4 outline-none hover:text-[#ffd60a] focus-visible:ring-2 focus-visible:ring-white/60" onClick={() => picker.current?.click()}>
-              choose files
-            </button>
-            .
-            <br />
             {canTalk ? "No mic right now? " : "Voice needs Chrome, or Safari on an iPhone. "}
             <button type="button" className="font-semibold text-white underline underline-offset-4 outline-none hover:text-[#ffd60a] focus-visible:ring-2 focus-visible:ring-white/60" onClick={() => stage.replay(SAMPLES[0].lines, 1.6)}>
               Play the demo talk
@@ -312,7 +290,8 @@ export default function ShowPage() {
         <Link href="/lab" className="outline-none hover:text-white/60 focus-visible:text-white/80">
           Lab
         </Link>
-        {mediaStatus ? (
+        {/* On the start screen the drop zone shows this itself. */}
+        {live && mediaStatus ? (
           <Link href="/library" className={cn("ml-auto outline-none hover:text-white focus-visible:text-white", media.progress || media.report ? "text-white/80" : "text-white/40")} aria-live="polite">
             {mediaStatus}
           </Link>

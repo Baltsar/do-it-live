@@ -14,8 +14,11 @@ export interface MediaDrop {
   add(files: File[]): Promise<void>;
 }
 
-/** Makes the whole window a drop target for the speaker's own media. */
-export function useMediaDrop(): MediaDrop {
+/**
+ * Makes the whole window a drop target for the speaker's own media. Disabled (a host with no disk),
+ * files dropped on the page are still caught, so the browser does not open them, but not uploaded.
+ */
+export function useMediaDrop(enabled = true): MediaDrop {
   const [dragging, setDragging] = useState(false);
   const [progress, setProgress] = useState<MediaDrop["progress"]>(null);
   const [report, setReport] = useState<UploadReport | null>(null);
@@ -48,7 +51,7 @@ export function useMediaDrop(): MediaDrop {
     const id = setTimeout(() => void refresh(), 0);
     const hasFiles = (e: DragEvent): boolean => Boolean(e.dataTransfer?.types.includes("Files"));
     const enter = (e: DragEvent): void => {
-      if (!hasFiles(e)) return;
+      if (!hasFiles(e) || !enabled) return;
       depth.current += 1;
       setDragging(true);
     };
@@ -66,7 +69,7 @@ export function useMediaDrop(): MediaDrop {
       e.preventDefault();
       depth.current = 0;
       setDragging(false);
-      void filesFromDrop(e.dataTransfer).then(add);
+      if (enabled) void filesFromDrop(e.dataTransfer).then(add);
     };
     window.addEventListener("dragenter", enter);
     window.addEventListener("dragleave", leave);
@@ -79,7 +82,7 @@ export function useMediaDrop(): MediaDrop {
       window.removeEventListener("dragover", over);
       window.removeEventListener("drop", drop);
     };
-  }, [add, refresh]);
+  }, [add, refresh, enabled]);
 
   return { dragging, progress, report, count, add };
 }
