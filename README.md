@@ -186,6 +186,10 @@ Built in Stockholm by [Gustaf Garnow](https://github.com/Baltsar) for the [Nebiu
 
 The models run as a service on Nebius Token Factory, each under its own licence. Speech to text is AssemblyAI, web search is Tavily, and the interface uses shadcn/ui, Lucide and Motion.
 
+## Contribute a picture
+
+The engine's vocabulary is open: a scene, a look or an interface card is a small pull request. [CONTRIBUTING.md](CONTRIBUTING.md) has the three-file pattern and the back-row rules.
+
 ## License
 
 [MIT](LICENSE)

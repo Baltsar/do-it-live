@@ -505,25 +505,6 @@ function renderContent(slide: Slide, still: boolean): { node: ReactNode; flush: 
         ),
       };
 
-    case "MEME":
-      if (!slide.gif) break;
-      return {
-        flush: true,
-        node: (
-          <>
-            <Media src={slide.gif} className="gif-media" />
-            <div className="meme top">
-              <FitText text={slide.headline} w={92} h={22} max={10} align="center" slam={false} className="meme-text" />
-            </div>
-            {slide.body ? (
-              <div className="meme bottom">
-                <FitText text={slide.body} w={92} h={22} max={9} align="center" slam={false} className="meme-text" />
-              </div>
-            ) : null}
-          </>
-        ),
-      };
-
     case "GIF_REACTION":
       if (!slide.gif) break;
       return {

@@ -6,7 +6,6 @@ export async function GET(): Promise<Response> {
   return Response.json({
     nebius: providers.nebius(),
     tavily: providers.tavily(),
-    klipy: providers.klipy(),
     pexels: providers.pexels(),
     assemblyai: Boolean(process.env.ASSEMBLYAI_API_KEY),
     // The media library lives on local disk; a Vercel deploy has none to write to.

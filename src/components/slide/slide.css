@@ -271,18 +271,11 @@
 .grid-disc { width: 17cqw; height: 17cqw; border-radius: 50%; background: var(--fg); color: var(--bg); display: grid; place-items: center; }
 .grid-glyph { width: 9cqw; height: 9cqw; }
 
-/* MEME: top and bottom captions in outlined type over the GIF */
-.meme { position: absolute; left: 4cqw; right: 4cqw; z-index: 2; display: flex; justify-content: center; }
-.meme.top { top: 3cqh; }
-.meme.bottom { bottom: 3cqh; }
-.meme-text .type { color: #fff; text-transform: uppercase; -webkit-text-stroke: 0.5cqw #000; paint-order: stroke fill; letter-spacing: -0.01em; }
-
 /* PHOTO split and mirror */
 .photo { position: absolute; inset: 0; display: flex; }
 .photo.flip { flex-direction: row-reverse; }
 .photo.flip .photo-img { right: auto; left: 0; clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%); }
 .gif-slab.right { left: auto; right: 0; padding: 2.4cqh 6cqw 2.8cqh 3cqw; animation-name: slideInR; }
-.fit.meme-text { width: 92cqw; }
 
 .slide-frame.static *, .slide-frame.static { animation: none !important; }
 

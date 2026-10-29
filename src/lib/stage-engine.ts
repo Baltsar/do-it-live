@@ -44,7 +44,6 @@ export interface ShelfItem {
 export interface ProviderStatus {
   nebius: boolean;
   tavily: boolean;
-  klipy: boolean;
   /** Speech to text runs on AssemblyAI instead of the browser's own recogniser. */
   assemblyai?: boolean;
   /** The speaker's own media can be added: false on a host with no disk to keep it on. */
@@ -294,7 +293,7 @@ const INITIAL: StageSnapshot = {
   interim: "",
   heard: "",
   log: [],
-  status: { nebius: false, tavily: false, klipy: false, model: null },
+  status: { nebius: false, tavily: false, model: null },
   mode: "hybrid",
   lang: "en-US",
   listening: false,

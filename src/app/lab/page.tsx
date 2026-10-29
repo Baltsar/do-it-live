@@ -133,8 +133,8 @@ function ReplayPanel({ stage, snap }: { stage: Stage; snap: StageSnapshot }) {
 }
 
 const VISUAL_COPY: Record<VisualMode, string> = {
-  pure: "Images and GIFs only. No words on screen except numbers you say.",
-  minimal: "Full-screen image or GIF with a tiny label. Lists and duels still get a template.",
+  pure: "Drawings, scenes and your own media only. No words on screen except numbers you say.",
+  minimal: "Full-screen picture with a tiny label. Lists and duels still get a template.",
   balanced: "Every template, with text, when the idea needs it.",
 };
 
@@ -270,9 +270,9 @@ export default function LabPage() {
           <ToggleGroupItem value="manual">Manual</ToggleGroupItem>
         </ToggleGroup>
         <div className="ml-auto flex flex-wrap items-center gap-2">
-          {(["nebius", "tavily", "klipy"] as const).map((k) => (
+          {(["nebius", "tavily"] as const).map((k) => (
             <Badge key={k} variant={snap.status[k] ? "secondary" : "outline"} className={snap.status[k] ? "" : "text-muted-foreground"}>
-              {k === "nebius" ? "Nemotron" : k === "tavily" ? "Tavily" : "Klipy"} {snap.status[k] ? "on" : "off"}
+              {k === "nebius" ? "Nemotron" : "Tavily"} {snap.status[k] ? "on" : "off"}
             </Badge>
           ))}
           {snap.model ? <Badge variant="outline">{snap.model.split("/").pop()}</Badge> : null}

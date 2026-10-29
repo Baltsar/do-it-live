@@ -10,7 +10,6 @@ const NEBIUS_BASE = "https://api.tokenfactory.nebius.com/v1";
 export const providers = {
   nebius: () => Boolean(process.env.NEBIUS_API_KEY),
   tavily: () => Boolean(process.env.TAVILY_API_KEY),
-  klipy: () => Boolean(process.env.KLIPY_API_KEY),
   pexels: () => Boolean(process.env.PEXELS_API_KEY),
 };
 
@@ -161,14 +160,13 @@ Output ONLY one JSON object, no prose:
  "wish": "a picture that is NOT in the speaker's library and that you wish it had for THIS line: one concrete, photographable scene in under 10 words, invented for this exact idea. Different for every line. Never describe a library item. Empty string for filler, greetings and announcements.",
  "search_query": "only for fact_lookup: a web search query",
  "slide": {
-   "layout": "SCENE" | "PHOTO" | "GIF_REACTION" | "MEME" | "ICON" | "ICON_GRID" | "CHART" | "BIG_NUMBER" | "SPLIT_STAT" | "VERSUS" | "REVEAL_3" | "PROCESS" | "CHECKLIST" | "TITLE_CARD" | "QUOTE" | "BIG_WORD",
+   "layout": "SCENE" | "PHOTO" | "GIF_REACTION" | "ICON" | "ICON_GRID" | "CHART" | "BIG_NUMBER" | "SPLIT_STAT" | "VERSUS" | "REVEAL_3" | "PROCESS" | "CHECKLIST" | "TITLE_CARD" | "QUOTE" | "BIG_WORD",
    "headline": "max 3 words for PHOTO/GIF_REACTION/ICON/CHART, max 5 otherwise, sentence case",
    "body": "optional, max 12 words, usually empty",
    "metaphor": "one sentence: what the picture shows and why it AMPLIFIES the line (a visual metaphor, not the literal words)",
    "image_query": "PHOTO: 2-4 plain english nouns describing a real, photographable scene (e.g. 'lighthouse in storm')",
    "alt_queries": ["PHOTO: three OTHER photographable scenes, simple and concrete, for the same metaphor"],
-   "gif_query": "GIF_REACTION: english search phrase for a reaction GIF that matches the feeling or joke",
-   "library_id": "PHOTO or GIF_REACTION: id of an item from the speaker's media library, when one truly fits",
+   "library_id": "PHOTO or GIF_REACTION: id of an item from the speaker's media library, when one truly fits. GIF_REACTION is never valid without it",
    "scene": "one scene name from the SCENES list, ONLY when the NEW LINE is really about that feeling. Leave it out otherwise: most lines fit no scene.",
    "icon": "ICON: one name from the icon list",
    "chart": {"kind": "ring" | "bars", "values": [numbers], "labels": ["short"]},
@@ -191,14 +189,13 @@ ${SCENES.map((n) => `  ${n} = ${SCENE_CATALOG[n].means}`).join("\n")}
 Use layout SCENE only when the NEW LINE is clearly about that feeling and no library item is a clear fit. A scene that does not fit is worse than no slide.
 
 Choosing the visual:
-- PHOTO is ONLY for something you could literally photograph: food, an animal, a vehicle, a building or room, a landscape, an object, a crowd or stage. Never for organisations, communities, brands, software, Discord, AI, agents, ideas, verbs or feelings: a photo search finds random unrelated pictures for those. Use ICON, GIF_REACTION or BIG_WORD for them instead.
-- A joke, a feeling, a reaction, awkwardness: GIF_REACTION. If the speaker's own GIF library below has a GIF that fits the moment, ALWAYS use GIF_REACTION with its library_id instead of PHOTO or ICON.
+- PHOTO is ONLY for something you could literally photograph: food, an animal, a vehicle, a building or room, a landscape, an object, a crowd or stage. Never for organisations, communities, brands, software, Discord, AI, agents, ideas, verbs or feelings: a photo search finds random unrelated pictures for those. Use ICON or BIG_WORD for them instead.
+- A joke, a feeling, a reaction, awkwardness: GIF_REACTION ONLY when the speaker's own library below has a clip that fits the moment, with its library_id. There is no GIF search: without a library clip, use ICON or hold.
 - An abstract idea that has a clear symbol (growth, idea, money, speed, security): ICON.
 - A quantity or share that you KNOW from the speaker or a source: CHART (ring for one percentage, bars for 2-5 values) or BIG_NUMBER.
 - A flow or sequence with an order ("first X, then Y, then Z", "from A to B"): PROCESS with the steps in order. A list of what is needed, done, or promised: CHECKLIST. Three or four parallel concepts that each have a clear symbol: ICON_GRID with one icon per item.
 - ONLY a pure topic change with no items ("now let's talk about the money"): TITLE_CARD with the topic in 1-3 words. A line that also lists things is a CHECKLIST, PROCESS or ICON_GRID, never a TITLE_CARD.
 - A number that comes with a thing it measures: SPLIT_STAT (number plus icon or image_query). A number alone: BIG_NUMBER.
-- A joke that wants captions over a GIF (setup in headline, punchline in body): MEME, with library_id when a library GIF fits.
 - A comparison ("X versus Y", "X or Y", "X vs Y"): ALWAYS VERSUS with versus ["X","Y"], never a GIF or photo, even if the speaker orders it. A list or sequence of exactly three things: REVEAL_3 (always, never a photo).
 
 Icon list: ${ICON_NAMES.join(", ")}.
@@ -228,7 +225,7 @@ Rules:
 - One idea per slide. No bullets. No emojis. Never a text wall.
 - Write everything in English: labels, search queries, and the reason. The talk is in English.
 - "hold" when the speaker is mid-setup of a joke or story, is rambling filler, or nothing new deserves a slide. Do not cut a setup off from its punchline. When you hold, omit "slide".
-- Do not repeat a recent slide. Do not use the same layout three times in a row. Vary: photo, GIF, icon, chart, versus, reveal.
+- Do not repeat a recent slide. Do not use the same layout three times in a row. Vary: photo, icon, chart, versus, reveal.
 - NEVER invent facts, statistics, names or dates. If a slide would state a number or claim you cannot know, use "fact_lookup" and give a search_query. If the slide only sets a mood or a joke, set claims_fact false.
 - If an audience QUESTION was asked, prefer an answer slide; use fact_lookup when it needs data.
 - If the speaker addressed you directly ("Bill, <request>"), always return "show" (or fact_lookup) for that request.
@@ -262,8 +259,8 @@ export interface DirectorInput {
 }
 
 const MODE_BRIEF: Record<VisualMode, string> = {
-  pure: "VISUAL MODE: PURE IMAGE. No text on screen. Every slide is a full-screen photo or GIF metaphor (PHOTO or GIF_REACTION), or a CHART/BIG_NUMBER only for a number the speaker said. NEVER BIG_WORD, QUOTE, TITLE_CARD, MEME or any list. Always give metaphor, image_query and alt_queries. The headline is never shown: keep it to 1-2 words.",
-  minimal: "VISUAL MODE: MINIMAL TEXT. Image first: PHOTO or GIF_REACTION full screen with a 1-2 word label. Use text templates (REVEAL_3, PROCESS, CHECKLIST, VERSUS) only when the speaker clearly lists or compares. Avoid BIG_WORD, QUOTE and TITLE_CARD. Always give metaphor, image_query and alt_queries.",
+  pure: "VISUAL MODE: PURE IMAGE. No text on screen. Every slide is a full-screen photo metaphor (PHOTO, or GIF_REACTION with one of the speaker's own clips), or a CHART/BIG_NUMBER only for a number the speaker said. NEVER BIG_WORD, QUOTE, TITLE_CARD or any list. Always give metaphor, image_query and alt_queries. The headline is never shown: keep it to 1-2 words.",
+  minimal: "VISUAL MODE: MINIMAL TEXT. Image first: PHOTO full screen (or the speaker's own clip) with a 1-2 word label. Use text templates (REVEAL_3, PROCESS, CHECKLIST, VERSUS) only when the speaker clearly lists or compares. Avoid BIG_WORD, QUOTE and TITLE_CARD. Always give metaphor, image_query and alt_queries.",
   balanced: "VISUAL MODE: BALANCED. Use any template, but prefer a picture whenever the idea can be shown.",
 };
 
@@ -313,8 +310,8 @@ const STALE_MS = 12_000;
 // scene (3) is enough. When the director wants to hold, only a clear scene (4) overrules it:
 // replaying a real session, every "hold + scene 3" slide was noise ("so that's my talk bye" -> launch).
 const MIN_OUTVOTE_FIT = 4;
-const TEXT_TEMPLATES_PURE = ["BIG_WORD", "QUOTE", "TITLE_CARD", "MEME", "REVEAL_3", "PROCESS", "CHECKLIST", "ICON_GRID", "VERSUS", "ICON"];
-const TEXT_TEMPLATES_MINIMAL = ["BIG_WORD", "QUOTE", "TITLE_CARD", "MEME", "ICON"];
+const TEXT_TEMPLATES_PURE = ["BIG_WORD", "QUOTE", "TITLE_CARD", "REVEAL_3", "PROCESS", "CHECKLIST", "ICON_GRID", "VERSUS", "ICON"];
+const TEXT_TEMPLATES_MINIMAL = ["BIG_WORD", "QUOTE", "TITLE_CARD", "ICON"];
 
 const MOCK_ICONS: [RegExp, string][] = [
   [/rocket|space|launch|ship it/i, "Rocket"],
@@ -358,7 +355,7 @@ async function tavilySearch(query: string): Promise<TavilyResponse> {
   return (await res.json()) as TavilyResponse;
 }
 
-const FACT_SYSTEM = `You turn web search results into ONE slide for a live talk. Output ONLY the JSON object {"slide": {...}} using the same slide schema as before (layout, headline max 5 words, body max 12 words, number, items, versus, gif_query, mood, claims_fact). No emojis.
+const FACT_SYSTEM = `You turn web search results into ONE slide for a live talk. Output ONLY the JSON object {"slide": {...}} using the same slide schema as before (layout, headline max 5 words, body max 12 words, number, items, versus, mood, claims_fact). No emojis.
 Use ONLY the supplied search results. If they contain no reliable number or answer, say so honestly in the headline (for example "No reliable number"). Set "source" to the single best result URL. Write in English.`;
 
 async function factSlide(question: string, searchQuery: string): Promise<{ slide: unknown; ms: number }> {
@@ -701,7 +698,8 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
       layout = String(slide.layout).toUpperCase();
     }
     // Library only: a photo or clip the speaker did not upload is never shown.
-    if (source === "library" && !hasItem && ["PHOTO", "GIF_REACTION", "MEME"].includes(layout)) {
+    // A clip without a library item has nowhere to come from, whatever the source setting.
+    if (!hasItem && (layout === "GIF_REACTION" || (source === "library" && layout === "PHOTO"))) {
       if (sceneFits) {
         slide.layout = "SCENE";
         slide.scene = sceneChoice.scene;
@@ -736,7 +734,7 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
   }
   if (out.slide && typeof out.slide === "object") {
     const slide = out.slide as Record<string, unknown>;
-    if (!["PHOTO", "GIF_REACTION", "MEME"].includes(String(slide.layout ?? "").toUpperCase())) slide.library_id = undefined;
+    if (!["PHOTO", "GIF_REACTION"].includes(String(slide.layout ?? "").toUpperCase())) slide.library_id = undefined;
     // A scene is a stand-in from a fixed kit. When a picture can be drawn for the line itself, the scene is only the fallback.
     if (input.canDraw && !request && String(slide.layout ?? "").toUpperCase() === "SCENE") out.draw = true;
     // The lone icon slide looked weak on stage (speaker's review): the drawing model or an interface element does it better.
@@ -746,33 +744,4 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
     }
   }
   return out;
-}
-
-// Klipy response shape is not verified: parse defensively for the first media URL.
-function firstMediaUrl(node: unknown): string | null {
-  if (typeof node === "string") {
-    return /^https:\/\/\S+\.(gif|webp|mp4)(\?\S*)?$/i.test(node) ? node : null;
-  }
-  if (Array.isArray(node)) {
-    for (const item of node) {
-      const hit = firstMediaUrl(item);
-      if (hit) return hit;
-    }
-    return null;
-  }
-  if (node && typeof node === "object") {
-    for (const value of Object.values(node)) {
-      const hit = firstMediaUrl(value);
-      if (hit) return hit;
-    }
-  }
-  return null;
-}
-
-export async function gifFor(query: string): Promise<string | null> {
-  if (!providers.klipy() || !query) return null;
-  const url = `https://api.klipy.com/api/v1/${process.env.KLIPY_API_KEY}/gifs/search?q=${encodeURIComponent(query)}&per_page=5&customer_id=doitlive`;
-  const res = await fetch(url);
-  if (!res.ok) return null;
-  return firstMediaUrl(await res.json());
 }

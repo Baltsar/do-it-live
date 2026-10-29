@@ -9,7 +9,7 @@ async function getJson<T>(url: string): Promise<T | null> {
 }
 
 /**
- * Fills in the photo or GIF a slide needs. A slide is never left empty: a failed lookup falls
+ * Fills in the photo or clip a slide needs. A slide is never left empty: a failed lookup falls
  * back to the icon, and in text-friendly modes to plain type. Mutates the slide.
  */
 export async function resolveVisuals(slide: Slide, mode: VisualMode = "balanced", source: ImageSource = "library"): Promise<void> {
@@ -24,18 +24,10 @@ export async function resolveVisuals(slide: Slide, mode: VisualMode = "balanced"
     slide.credit = "";
     return;
   }
-  const wantsGif = slide.layout === "GIF_REACTION" || slide.layout === "MEME";
-  if (wantsGif && slide.libraryId) {
-    slide.gif = `/api/library/${slide.libraryId}`;
-  } else if (wantsGif && slide.gifQuery) {
-    const g = await getJson<{ url: string | null }>(`/api/gif?q=${encodeURIComponent(slide.gifQuery)}`);
-    slide.gif = g?.url ?? null;
-    if (!slide.gif) {
-      if (slide.imageQuery && source === "web") slide.layout = "PHOTO";
-      else fallback();
-    }
-  } else if (wantsGif) {
-    if (slide.imageQuery && source === "web") slide.layout = "PHOTO";
+  // A clip only ever comes from the speaker's own library: there is no GIF search.
+  if (slide.layout === "GIF_REACTION") {
+    if (slide.libraryId) slide.gif = `/api/library/${slide.libraryId}`;
+    else if (slide.imageQuery && source === "web") slide.layout = "PHOTO";
     else fallback();
   }
   const query = slide.imageQuery || slide.headline;

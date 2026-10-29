@@ -26,7 +26,7 @@ const LAYOUT_ENTRIES: Entry[] = [
   { code: "L1", name: "Drawn live (LIVE_UI)", when: "Main track: a model draws the point while you talk", raw: { layout: "LIVE_UI", headline: "no login needed" } },
   { code: "L2", name: "Big number", when: "Main track: a figure you say, or a prepared one", raw: { layout: "BIG_NUMBER", number: "700", headline: "builders", mood: "hype" } },
   { code: "L3", name: "Ring chart", when: "Main track: a percentage you say", raw: { layout: "CHART", headline: "80%", chart: { kind: "ring", values: [80] }, mood: "calm" } },
-  { code: "L4", name: "Your GIF", when: "Main track: one of your GIFs that the judge scores 4+", raw: { layout: "GIF_REACTION", headline: "awkward", library_id: BLINK_GIF, mood: "funny" } },
+  { code: "L4", name: "Your own clip", when: "Main track: a clip or GIF you uploaded yourself, when the judge scores it 4+", raw: { layout: "GIF_REACTION", headline: "awkward", library_id: BLINK_GIF, mood: "funny" } },
   { code: "L5", name: "Your photo", when: "Main track: one of your photos that the judge scores 4+", raw: { layout: "PHOTO", headline: "Sweden", library_id: MAP_PHOTO, mood: "serious" } },
   { code: "L6", name: "Scene (animated metaphor)", when: "Fallback only: drawing failed and a scene fits 5 of 5", raw: { layout: "SCENE", scene: "surge", headline: "growth", mood: "hype" } },
   { code: "L7", name: "Bar chart", when: "Only with words on (A few / All), when you list several figures", raw: { layout: "CHART", headline: "Members", chart: { kind: "bars", values: [120, 300, 700], labels: ["2024", "2025", "2026"] }, mood: "serious" } },
@@ -37,9 +37,8 @@ const LAYOUT_ENTRIES: Entry[] = [
   { code: "L12", name: "Three things", when: "With words on, when you list exactly three things", raw: { layout: "REVEAL_3", headline: "Three rules", items: ["We ship", "We share", "We never wait"], mood: "funny" } },
   { code: "L13", name: "Steps", when: "With words on, \"first X, then Y\"", raw: { layout: "PROCESS", headline: "How it works", items: ["Talk", "Bill listens", "Slide appears"], mood: "hype" } },
   { code: "L14", name: "Checklist", when: "With words on, \"you get A, B and C\"", raw: { layout: "CHECKLIST", headline: "What you get", items: ["No clicker", "No slides to build", "Pure improv"], mood: "funny" } },
-  { code: "L16", name: "Icon grid", when: "With words on, four parallel things", raw: { layout: "ICON_GRID", headline: "Four tools", items: ["Voice", "Photos", "GIFs", "Charts"], icons: ["Mic", "Camera", "Film", "ChartPie"], mood: "calm" } },
+  { code: "L16", name: "Icon grid", when: "With words on, four parallel things", raw: { layout: "ICON_GRID", headline: "Four tools", items: ["Voice", "Photos", "Drawings", "Charts"], icons: ["Mic", "Camera", "Pencil", "ChartPie"], mood: "calm" } },
   { code: "L17", name: "Number + icon", when: "With words on, a figure with the thing it counts", raw: { layout: "SPLIT_STAT", number: "80%", headline: "shipped with an agent", icon: "Bot", mood: "serious" } },
-  { code: "L18", name: "Meme (GIF with captions)", when: "With words on, a joke with a setup and punchline", raw: { layout: "MEME", headline: "When the demo works", body: "on the first try", library_id: BLINK_GIF, mood: "funny" } },
   { code: "L19", name: "Moving type", when: "Main track: instead of a card right after a card", raw: { layout: "KINETIC", headline: "Insane", mood: "chaos" } },
   { code: "L20", name: "The speaker's own words", when: "Main track: instead of a card, the point underlined", raw: { layout: "QUOTE", headline: "“you can make the AI insane”", ui: { kind: "alert", text: "insane" }, mood: "calm" } },
 ];
@@ -117,7 +116,7 @@ function TemplatesView() {
     const built: Slide[] = [];
     for (const entry of LAYOUT_ENTRIES) {
       const slide = artDirect(normalizeSlide(entry.raw), built.slice(-2), "balanced");
-      if (slide.libraryId && (slide.layout === "GIF_REACTION" || slide.layout === "MEME")) slide.gif = `/api/library/${slide.libraryId}`;
+      if (slide.libraryId && slide.layout === "GIF_REACTION") slide.gif = `/api/library/${slide.libraryId}`;
       if (slide.libraryId && slide.layout === "PHOTO") slide.image = `/api/library/${slide.libraryId}`;
       built.push(slide);
     }

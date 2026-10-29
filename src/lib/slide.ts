@@ -16,7 +16,6 @@ export const LAYOUTS = [
   "PROCESS",
   "CHECKLIST",
   "ICON_GRID",
-  "MEME",
   "TITLE_CARD",
   "SPLIT_STAT",
   "SCENE",
@@ -80,7 +79,7 @@ export interface Slide {
   items: string[];
   versus: string[];
   mood: Mood;
-  gifQuery: string;
+  /** The speaker's own clip, served from the library. */
   gif: string | null;
   /** Id in the speaker's own GIF library. */
   libraryId: string | null;
@@ -114,7 +113,6 @@ const RawSlide = z.object({
   number: z.union([z.string(), z.number()]).optional(),
   items: z.array(z.string()).optional(),
   versus: z.array(z.string()).optional(),
-  gif_query: z.string().optional(),
   library_id: z.string().optional(),
   icon: z.string().optional(),
   scene: z.string().optional(),
@@ -211,7 +209,7 @@ function coerce(raw: unknown): unknown {
     const value = typeof o.value === "number" ? compact.format(o.value) : String(o.value ?? "");
     r.number = `${value}${typeof o.unit === "string" && o.unit.length <= 4 ? ` ${o.unit}` : ""}`.trim();
   }
-  for (const key of ["headline", "body", "gif_query", "image_query", "icon", "motif", "mood", "layout", "library_id", "metaphor", "scene"]) {
+  for (const key of ["headline", "body", "image_query", "icon", "motif", "mood", "layout", "library_id", "metaphor", "scene"]) {
     if (r[key] !== undefined && typeof r[key] !== "string") r[key] = String(r[key]);
   }
   if (r.source !== undefined && r.source !== null && typeof r.source !== "string") r.source = null;
@@ -275,7 +273,6 @@ export function normalizeSlide(raw: unknown): Slide {
     items,
     versus,
     mood: isMood(s.mood) ? s.mood : MOOD_ALIASES[(s.mood ?? "").toLowerCase()] ?? "hype",
-    gifQuery: (s.gif_query ?? "").slice(0, 80),
     gif: s.gif ?? null,
     libraryId: s.library_id && /^[\w-]{1,40}$/.test(s.library_id) ? s.library_id : null,
     icon,

@@ -14,7 +14,7 @@ const RAW = [
   { layout: "SPLIT_STAT", number: "80%", headline: "shipped with an agent", icon: "Bot", mood: "calm" },
   { layout: "PROCESS", headline: "How it works", items: ["Talk", "Bill listens", "Slide appears"], mood: "hype" },
   { layout: "CHECKLIST", headline: "What you get", items: ["No clicker", "No slides to build", "No stage fright", "Pure improv"], mood: "funny" },
-  { layout: "ICON_GRID", headline: "Four tools", items: ["Voice", "Photos", "GIFs", "Charts"], icons: ["Mic", "Camera", "Film", "ChartPie"], mood: "chaos" },
+  { layout: "ICON_GRID", headline: "Four tools", items: ["Voice", "Photos", "Drawings", "Charts"], icons: ["Mic", "Camera", "Pencil", "ChartPie"], mood: "chaos" },
   { layout: "CHART", headline: "never read it", chart: { kind: "ring", values: [74] }, mood: "calm", source: "https://example.org/study" },
   { layout: "CHART", headline: "Cost per year", chart: { kind: "bars", values: [3, 5, 9, 14], labels: ["2023", "2024", "2025", "2026"] }, mood: "serious", source: "https://example.org/data" },
   { layout: "VERSUS", versus: ["Clicker", "Voice"], headline: "Duel", mood: "hype" },
