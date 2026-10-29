@@ -4,5 +4,7 @@ node_modules
 sessions
 .backup
 public/gen-test
-library/index.backup-*
+# The media library is the speaker's own and stays on this machine: its film and TV GIFs are not ours
+# to publish. The hosted app runs with an empty library.
+/library
 tsconfig.tsbuildinfo

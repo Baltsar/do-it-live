@@ -98,6 +98,21 @@ export default function TemplatesPage() {
 
 function TemplatesView() {
   const [drawing, setDrawing] = useState("drawing a sample…");
+  // The samples that use the speaker's own files are shown only where those files exist: the hosted
+  // app has no media library.
+  const [own, setOwn] = useState<ReadonlySet<string>>(new Set());
+  useEffect(() => {
+    let alive = true;
+    void fetch("/api/library")
+      .then((res) => res.json() as Promise<{ items?: { id: string }[] }>)
+      .then((d) => {
+        if (alive) setOwn(new Set((d.items ?? []).map((item) => item.id)));
+      })
+      .catch(() => undefined);
+    return () => {
+      alive = false;
+    };
+  }, []);
   const layouts = useMemo(() => {
     const built: Slide[] = [];
     for (const entry of LAYOUT_ENTRIES) {
@@ -158,9 +173,11 @@ function TemplatesView() {
       <section className="space-y-4">
         <h2 className="text-2xl font-bold">Slide types (L1 to L{LAYOUT_ENTRIES.length})</h2>
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-          {layouts.map((slide, i) => (
-            <Card key={slide.id} code={LAYOUT_ENTRIES[i].code} name={LAYOUT_ENTRIES[i].name} when={i === 0 ? `${LAYOUT_ENTRIES[i].when}. Sample ${drawing}` : LAYOUT_ENTRIES[i].when} slide={slide} />
-          ))}
+          {layouts.map((slide, i) =>
+            slide.libraryId && !own.has(slide.libraryId) ? null : (
+              <Card key={slide.id} code={LAYOUT_ENTRIES[i].code} name={LAYOUT_ENTRIES[i].name} when={i === 0 ? `${LAYOUT_ENTRIES[i].when}. Sample ${drawing}` : LAYOUT_ENTRIES[i].when} slide={slide} />
+            ),
+          )}
         </div>
       </section>
 

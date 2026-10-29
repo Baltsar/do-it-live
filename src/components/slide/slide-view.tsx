@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode, type SyntheticEvent } from "react";
 import { icons, type LucideIcon } from "lucide-react";
 import { LiveUi } from "@/components/slide/live-ui";
 import { UiHero } from "@/components/slide/ui-hero";
@@ -242,12 +242,17 @@ function Chart({ chart, still }: { chart: ChartData; still: boolean }) {
   );
 }
 
+// A file that is gone (the hosted app has no media library) leaves the colour field, not a broken image.
+const hideMissing = (e: SyntheticEvent<HTMLImageElement | HTMLVideoElement>): void => {
+  e.currentTarget.style.visibility = "hidden";
+};
+
 function Media({ src, className }: { src: string; className: string }) {
   return /\.mp4(\?|$)/i.test(src) ? (
-    <video className={className} src={src} autoPlay loop muted playsInline />
+    <video className={className} src={src} autoPlay loop muted playsInline onError={hideMissing} />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- third-party animated GIF or photo, not optimizable
-    <img className={className} src={src} alt="" />
+    <img className={className} src={src} alt="" onError={hideMissing} />
   );
 }
 
