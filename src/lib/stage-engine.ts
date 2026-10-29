@@ -150,6 +150,18 @@ const DRAW_MIN_CHARS = 300;
 // The slide goes on air once this much of the picture itself exists. Going up at the first word of the
 // answer left an empty coloured frame for up to three seconds while the model wrote its style block.
 const DRAW_VISIBLE_CHARS = 180;
+// The speaker has talked this long and the screen has not changed: the audience notices.
+const DEAD_AIR_MS = 8000;
+// After a drawing found nothing to show, the director's sure scene still goes up once the screen has
+// stood still this long. In a real take the director asked for "clash" three times in a 16 s stretch
+// with nothing new on screen, and each time the drawing's "none" buried it.
+const STILL_MS = 5000;
+// A director answer this late is about words the speaker left long ago, and while it is out no new
+// decision can start: in one test take 8 of 12 answers took 8 to 10 s. A request to Bill may take longer.
+const DIRECTOR_TIMEOUT_MS = 6000;
+// An interface kind among the last this many slides is not used again.
+const UI_KIND_COOLDOWN = 4;
+type DrawOutcome = "drawn" | "declined" | "same" | "refused" | "failed";
 // Each drawn slide takes the next colour field of the style guide, so two in a row never look the same.
 const DRAW_FIELDS = ["serious", "hype", "calm", "chaos", "funny"] as const;
 const countWords = (text: string): number => text.trim().split(/\s+/).filter(Boolean).length;
@@ -343,8 +355,17 @@ export function createStage() {
   // Every decision gets a number. The drawing model and the director are asked at the same moment,
   // and whichever answers second needs to know what the first one did with that decision.
   let decisionCount = 0;
-  const drawOutcome = new Map<number, "drawn" | "declined" | "failed">();
+  // What the drawing came to: a picture, "nothing to show", "still the picture that is up", a card refused
+  // for variety, or no answer at all.
+  const drawOutcome = new Map<number, DrawOutcome>();
   const standIn = new Map<number, Slide>();
+  // When each slide's words were handed to the models, so the log can say how long they took to reach the screen.
+  const askedAt = new Map<string, number>();
+  // The last few decisions in one line each. A stretch where the speaker talks and the screen stands
+  // still is logged with these, so the log says why nothing went up instead of only that nothing did.
+  const outcomes: string[] = [];
+  let deadAirOf = 0;
+  let maxResultGap = 0;
   // The decision whose drawing took the screen, and the handle that stops a drawing still being written.
   let pictureOf = 0;
   let activeDraw: AbortController | null = null;
@@ -441,7 +462,10 @@ export function createStage() {
     if (timer) clearTimeout(timer);
     timer = null;
     nextIsPrepared = false;
+    const prevMs = shownAt ? Date.now() - shownAt : 0;
     shownAt = Date.now();
+    const asked = askedAt.get(incoming.id);
+    askedAt.delete(incoming.id);
     const history = fresh ? [...snap.history.slice(0, snap.idx + 1), slide] : snap.history;
     emit({
       current: slide,
@@ -453,7 +477,22 @@ export function createStage() {
     });
     post();
     // What actually reached the screen, as opposed to what the director decided.
-    record({ kind: "onair", headline: slide.headline, layout: slide.layout, scene: slide.scene, libraryId: slide.libraryId, field: slide.style.field, fresh });
+    record({ kind: "onair", headline: slide.headline, layout: slide.layout, ui: slide.ui?.kind ?? null, scene: slide.scene, libraryId: slide.libraryId, field: slide.style.field, fresh, lagMs: asked ? shownAt - asked : null, prevMs });
+    note(`on air: ${slide.layout}${slide.ui ? `/${slide.ui.kind}` : ""} "${slide.scene ?? slide.headline}"`);
+  }
+
+  const note = (text: string): void => {
+    outcomes.push(`${((Date.now() - sessionStart) / 1000).toFixed(1)}s ${text}`);
+    if (outcomes.length > 8) outcomes.shift();
+  };
+
+  /** Speech goes on while the screen stands still: logged once per slide, with the decisions that led there. */
+  function watchDeadAir(): void {
+    const since = shownAt || listenStartedAt;
+    if (!since || deadAirOf === since || snap.next || Date.now() - since < DEAD_AIR_MS) return;
+    deadAirOf = since;
+    const up = snap.current;
+    record({ kind: "deadair", ms: Date.now() - since, onScreen: up ? up.scene || up.headline || (up.libraryId ? `gif ${up.libraryId}` : up.layout) : "", why: outcomes.slice(-5) });
   }
 
   /** The words said so far have their slide. What is still being spoken counts only from here on. */
@@ -655,14 +694,42 @@ export function createStage() {
   };
 
   /**
+   * The director's scene for a moment the drawing gave nothing for: always when the drawing could not be
+   * reached or its card was refused for variety, after "nothing to show" only once the screen has stood
+   * still a while, and never when the drawing found that the picture up still fits.
+   */
+  function standInScene(scene: Slide, settled: DrawOutcome): void {
+    const onScreen = snap.next ?? snap.current;
+    const wanted = settled === "failed" || settled === "refused" || (settled === "declined" && Date.now() - shownAt >= STILL_MS);
+    if (!wanted || (onScreen?.scene && onScreen.scene === scene.scene)) {
+      note(`scene ${scene.scene ?? ""} unused: drawing ${settled}`);
+      return;
+    }
+    enqueue(scene, false, `stand-in scene: drawing ${settled}`);
+  }
+
+  /**
    * Has a slide drawn for what was just said, at the same moment the director is asked. The model answers
    * "none" within half a second when the words have no point; otherwise the slide goes up as soon as it
    * has a name and builds on screen while the rest is written.
    */
   async function drawLive(line: string, decision: number, mySeq: number): Promise<void> {
     const palette = nextPalette();
-    const shown = snap.history.slice(-4).map((h) => h.scene ?? h.headline).filter(Boolean);
+    // What is up or queued, newest last: the drawing must not repeat it, in subject or in look.
+    const lineup = [...snap.history, ...(snap.next ? [snap.next] : [])];
+    const shown = lineup.slice(-4).map((h) => h.scene ?? h.headline).filter(Boolean);
+    const looks = lineup.slice(-4).flatMap((h) => {
+      const name = h.scene ?? h.headline;
+      const look = h.ui ? h.ui.kind : h.layout === "LIVE_UI" ? "drawing" : h.layout.toLowerCase();
+      return name ? [`${name} [${look}]`] : [];
+    });
+    // Variety: interface cards look alike whatever they say. In one take 16 of 22 slides were cards,
+    // because a card is the quickest answer and the quickest answer won. So no card right after a card,
+    // and no kind that is already among the last few slides.
+    const lastWasCard = lineup.at(-1)?.layout === "UI_HERO";
+    const tired = (kind: string): boolean => lastWasCard || lineup.slice(-UI_KIND_COOLDOWN).some((h) => h.ui?.kind === kind);
     const t0 = performance.now();
+    const asked = Date.now();
     // "Still on the picture that is up" means nothing while nothing is up (seen from the second model).
     const pictureUp = Boolean(snap.next ?? snap.current) && !snap.blank;
     let slide: Slide | null = null;
@@ -670,9 +737,25 @@ export function createStage() {
     let lastPost = 0;
     let winner = -1;
     // Why no slide came of it, when none did. Kept in an object because it is set inside the stream callback.
-    const outcome: { verdict: "declined" | "late" | "repeat" | ""; same: boolean } = { verdict: "", same: false };
-    const contenders = Array.from({ length: DRAW_TIERS }, () => ({ controller: new AbortController(), startedAt: 0, namedAt: 0, done: null as Promise<string | null> | null }));
-    const stopOthers = (keep: number): void => contenders.forEach((c, i) => i !== keep && c.controller.abort());
+    const outcome: { verdict: "declined" | "late" | "repeat" | "tired" | ""; same: boolean } = { verdict: "", same: false };
+    // What a model that took itself out said, for when nobody else finds a picture either.
+    const held: { decline: { same: boolean } | null; repeat: boolean; tired: boolean } = { decline: null, repeat: false, tired: false };
+    // Each model's own answer is kept for the log: "none" from the fast one and "stopped" on the best one
+    // reads very differently from "none" from the best one.
+    const contenders = Array.from({ length: DRAW_TIERS }, () => ({ controller: new AbortController(), startedAt: 0, namedAt: 0, verdict: "", out: false, finished: false, done: null as Promise<string | null> | null }));
+    type Contender = (typeof contenders)[number];
+    const stopOthers = (keep: number): void =>
+      contenders.forEach((c, i) => {
+        if (i === keep) return;
+        if (c.startedAt && !c.verdict) c.verdict = "stopped";
+        c.controller.abort();
+      });
+    const stillDrawing = (c: Contender): boolean => c.startedAt > 0 && !c.finished && !c.out && !c.controller.signal.aborted;
+    // This model is done with this line; the others go on.
+    const out = (me: Contender): false => {
+      me.out = true;
+      return false;
+    };
     const reader = (tier: number) => (text: string): boolean => {
       if (outcome.verdict || (winner !== -1 && winner !== tier)) return false;
       const me = contenders[tier];
@@ -680,10 +763,16 @@ export function createStage() {
       if (label === null) return true;
       if (!me.namedAt) me.namedAt = performance.now();
       if (label === "none") {
-        if (same && !pictureUp) return false;
-        // "Nothing to show" settles it when it comes from one of the two models whose judgement holds up,
-        // unless a better model has already named a picture. The last model only takes itself out.
-        if (tier >= TRUSTED_JUDGES || contenders.slice(0, tier).some((c) => c.namedAt && !c.controller.signal.aborted)) return false;
+        me.verdict = same ? "same" : "none";
+        if (same && !pictureUp) return out(me);
+        // The last model's "nothing to show" is never binding: it says so to almost anything.
+        if (tier >= TRUSTED_JUDGES) return out(me);
+        // Neither is the second model's while the best one is still at work: its quick "none" cut the best
+        // one off 26 times in one 80 s take. It holds only if nobody finds a picture.
+        if (contenders.slice(0, tier).some(stillDrawing)) {
+          held.decline ??= { same: same === true };
+          return out(me);
+        }
         outcome.verdict = "declined";
         outcome.same = same === true;
         stopOthers(-1);
@@ -697,19 +786,33 @@ export function createStage() {
       if (!slide) {
         // Something else took the screen while the model was starting up: a prepared slide, a figure,
         // the speaker's own GIF, or a drawing for newer words.
-        if (mySeq !== seq) outcome.verdict = "late";
-        else if (shown.some((s) => sameLabel(s, label))) outcome.verdict = "repeat";
-        if (outcome.verdict) {
+        if (mySeq !== seq) {
+          outcome.verdict = "late";
+          me.verdict = "late";
           stopOthers(-1);
           return false;
         }
+        // A picture of what was just shown, or one more card of a look the audience just saw: this model
+        // is out, and another may still find something else.
+        if (shown.some((s) => sameLabel(s, label))) {
+          me.verdict = "repeat";
+          held.repeat = true;
+          return out(me);
+        }
+        if (ui && tired(ui.kind)) {
+          me.verdict = `tired:${ui.kind}`;
+          held.tired = true;
+          return out(me);
+        }
         winner = tier;
+        me.verdict = ui ? `ui:${ui.kind}` : "draw";
         stopOthers(tier);
         // A drawing for older words that is still being written stops where it is.
         activeDraw?.abort();
         activeDraw = me.controller;
         slide = normalizeSlide(ui ? { layout: "UI_HERO", headline: label, ui } : { layout: "LIVE_UI", headline: label });
         madeFrom.set(slide.id, line);
+        askedAt.set(slide.id, asked);
         firstMs = Math.round(performance.now() - t0);
         if (!ui) setLive(slide.id, { html, done: false, palette });
         drawOutcome.set(decision, "drawn");
@@ -730,11 +833,13 @@ export function createStage() {
       const me = contenders[tier];
       if (!me || me.done || slide || outcome.verdict || mySeq !== seq) return;
       me.startedAt = performance.now();
-      me.done = requestDrawing(line, palette, shown, me.controller, reader(tier), tier);
+      me.done = requestDrawing(line, palette, looks, me.controller, reader(tier), tier).finally(() => {
+        me.finished = true;
+      });
     };
     const startNext = (): void => {
-      // Only when nobody in the race has named a picture yet.
-      if (contenders.some((c) => c.namedAt)) return;
+      // Only when nobody still in the race has named a picture yet.
+      if (contenders.some((c) => c.namedAt && !c.out)) return;
       start(contenders.findIndex((c) => !c.done));
     };
     // The best model always runs. A model that has been slow lately gets company at once.
@@ -753,8 +858,19 @@ export function createStage() {
       if (contenders.filter((c) => c.done).length === running.length) break;
     }
     timers.forEach(clearTimeout);
+    // A held "none" can only come from the second model while the best one was drawing; a refused card
+    // means some model did find a point to show, so that counts first.
+    if (!slide && !outcome.verdict) {
+      if (held.tired) outcome.verdict = "tired";
+      else if (held.decline) {
+        outcome.verdict = "declined";
+        outcome.same = held.decline.same;
+      } else if (held.repeat) outcome.verdict = "repeat";
+    }
     contenders.forEach((c, tier) => {
-      if (!c.startedAt) return;
+      // A model cut off by the winner before it said anything tells nothing about its speed. Counted as
+      // slow, the best model got the fast one beside it on every line and was cut off by it ever after.
+      if (!c.startedAt || (!c.namedAt && c.verdict === "stopped")) return;
       const quick = c.namedAt > 0 && c.namedAt - c.startedAt <= NEXT_TIER_MS;
       slowStreak[tier] = quick ? 0 : slowStreak[tier] + 1;
     });
@@ -765,7 +881,10 @@ export function createStage() {
     const made = slide as Slide | null;
     const html = made ? (getLive(made.id)?.html ?? "") : "";
     const ok = made !== null && (made.layout === "UI_HERO" || html.length >= DRAW_MIN_CHARS);
-    record({ kind: "draw", said: line, label: made?.headline, ok, by, declined: verdict === "declined", same: outcome.same, skipped: verdict, stalled: raw === null && !made, firstMs, ms: Math.round(performance.now() - t0), chars: html.length });
+    // "m2 none 0-450ms": model 2 started at once and said "nothing to show" after 450 ms.
+    const race = contenders.flatMap((c, i) => (c.startedAt ? [`m${i + 1} ${c.verdict || (c.controller.signal.aborted ? "stalled" : "nothing")} ${Math.round(c.startedAt - t0)}-${c.namedAt ? Math.round(c.namedAt - t0) : "?"}ms`] : []));
+    record({ kind: "draw", said: line, label: made?.headline, ui: made?.ui?.kind ?? null, ok, by, declined: verdict === "declined", same: outcome.same, skipped: verdict, stalled: raw === null && !made, firstMs, ms: Math.round(performance.now() - t0), chars: html.length, race });
+    note(`draw ${verdict || (ok ? "ok" : "failed")}${made ? ` "${made.headline}"` : ""} [${race.join(", ")}]`);
     log(`draw: ${verdict || (ok ? `"${made?.headline}" in ${((performance.now() - t0) / 1000).toFixed(1)}s` : "failed")}`);
     if (made && ok) {
       if (made.layout === "LIVE_UI") {
@@ -775,12 +894,11 @@ export function createStage() {
       return;
     }
     if (!made) {
-      drawOutcome.set(decision, verdict === "declined" || verdict === "repeat" ? "declined" : "failed");
-      if ((verdict === "repeat" || (verdict === "declined" && outcome.same)) && mySeq === seq) spendOnCurrent(line);
-      // The model could not be reached: the director's stand-in scene is better than a dead screen.
-      // When the model chose to show nothing, nothing is shown.
+      const settled = verdict === "tired" ? "refused" : verdict === "repeat" || (verdict === "declined" && outcome.same) ? "same" : verdict === "declined" ? "declined" : "failed";
+      drawOutcome.set(decision, settled);
+      if (settled === "same" && mySeq === seq) spendOnCurrent(line);
       const fallback = standIn.get(decision);
-      if (!verdict && fallback && mySeq === seq) enqueue(fallback, false, "drawing failed: stand-in scene");
+      if (fallback && mySeq === seq) standInScene(fallback, settled);
       return;
     }
     // The slide went up but the drawing never became a picture: take it back.
@@ -862,10 +980,12 @@ export function createStage() {
       emit({ busy: true });
     }
     const t0 = performance.now();
+    const asked = Date.now();
     try {
       const res = await fetch("/api/director", {
         method: "POST",
         headers: { "content-type": "application/json" },
+        signal: addressed ? undefined : AbortSignal.timeout(DIRECTOR_TIMEOUT_MS),
         body: JSON.stringify({
           transcript: windowText(),
           request,
@@ -903,6 +1023,7 @@ export function createStage() {
         ms: Math.round(performance.now() - t0),
         model: out.model,
       });
+      note(`director ${out.action}${made?.layout ? ` ${made.layout}` : ""}${made?.scene ? ` ${made.scene} fit ${String(out.debug?.sceneFit ?? "?")}` : made?.headline ? ` "${made.headline}"` : ""}${out.draw ? " (drawing)" : ""}`);
       // No library picture went on screen for this line: remember what Bill wished for.
       const usedLibrary = Boolean((out.slide as { library_id?: string } | undefined)?.library_id);
       const said = request || latest;
@@ -915,12 +1036,14 @@ export function createStage() {
       const overDrawing = ownMedia && pictureOf === decision && drawOutcome.get(decision) === "drawn";
       if (!addressed && mySeq !== seq && !overDrawing) return; // something else took this moment
       if (!addressed && (out.draw || made?.layout === "SCENE")) {
-        // Nothing concrete from the director: its scene only stands in if the drawing model cannot be reached.
-        // Only a scene the classifier is sure of (5): loose ones looked random on stage.
+        // Nothing concrete from the director: its scene only stands in when the drawing gives nothing (see
+        // standInScene). Only a scene the classifier is sure of (5): loose ones looked random on stage.
         if (out.slide && Number(out.debug?.sceneFit ?? 0) >= 5) {
           const scene = normalizeSlide(out.slide);
-          if (drawOutcome.get(decision) === "failed") enqueue(scene, false, "drawing failed: stand-in scene");
-          else if (!drawOutcome.has(decision)) standIn.set(decision, scene);
+          askedAt.set(scene.id, asked);
+          const settled = drawOutcome.get(decision);
+          if (settled === undefined) standIn.set(decision, scene);
+          else standInScene(scene, settled);
         }
         return;
       }
@@ -945,6 +1068,7 @@ export function createStage() {
       }
       await resolveVisuals(slide, snap.visualMode, snap.imageSource);
       madeFrom.set(slide.id, request || latest);
+      askedAt.set(slide.id, asked);
       if (overDrawing) activeDraw?.abort();
       if (addressed) enqueue(slide, true, out.reason ?? "");
       else acceptLate(latest, slide, overDrawing, out.reason ?? "");
@@ -1243,12 +1367,16 @@ export function createStage() {
     rec.lang = snap.lang;
     listenStartedAt = Date.now();
     resultCount = 0;
+    maxResultGap = 0;
     errorCount = 0;
     finalCount = 0;
     Object.assign(levelStats, { frames: 0, sum: 0, max: 0 });
     rec.onresult = (e) => {
+      // The longest wait between two answers from the recogniser: a caption that freezes mid-sentence shows here.
+      if (resultCount > 0) maxResultGap = Math.max(maxResultGap, Date.now() - lastHeardAt);
       lastHeardAt = Date.now();
       resultCount += 1;
+      watchDeadAir();
       if (snap.micDeaf) emit({ micDeaf: false });
       if (phraseStartedAt === 0) phraseStartedAt = lastHeardAt;
       let interim = "";
@@ -1428,7 +1556,11 @@ export function createStage() {
     recognition = rec;
     lastHeardAt = Date.now();
     emit({ listening: true, quietSec: 0, micBlocked: false, micBusy: false });
-    watchdog = setInterval(() => emit({ quietSec: Math.round((Date.now() - lastHeardAt) / 1000) }), 1000);
+    watchdog = setInterval(() => {
+      emit({ quietSec: Math.round((Date.now() - lastHeardAt) / 1000) });
+      // Only while the speaker is talking: a pause is not dead air.
+      if (Date.now() - lastHeardAt < 2000) watchDeadAir();
+    }, 1000);
     record({ kind: "mic", event: track ? "recogniser fed the checked mic track" : "recogniser opens the mic itself" });
     startedAt = Date.now();
     begin();
@@ -1443,6 +1575,7 @@ export function createStage() {
         ms: Date.now() - listenStartedAt,
         results: resultCount,
         finals: finalCount,
+        maxGapMs: maxResultGap,
         mode: snap.micMode,
         device: snap.micDevice,
         levelMean: levelStats.frames ? Number((levelStats.sum / levelStats.frames).toFixed(3)) : null,
