@@ -1,9 +1,13 @@
+import { after } from "next/server";
+import { budgetOn, flushBudget, spend, visitorOf } from "@/lib/budget";
 import { embed } from "@/lib/director";
 import { addItem, findByHash, loadIndex, setEmbedder, type Upload } from "@/lib/library";
 import { embedDescription, factsOf, framesOf, readMedia, withoutEmbedding } from "@/lib/library-read";
 import { canUpload, inBlob, libraryPrefix, ownUpload, readBytes, removeFile, withLibrary } from "@/lib/library-store";
 
 setEmbedder(embed);
+
+const MAX_ITEMS = 100;
 
 export async function GET(req: Request): Promise<Response> {
   return withLibrary(req, async () => {
@@ -46,6 +50,11 @@ async function receive(req: Request): Promise<Received | null> {
 export async function POST(req: Request): Promise<Response> {
   if (!canUpload()) return Response.json({ error: "Your own media works when you run Do it live yourself." }, { status: 503 });
   return withLibrary(req, async () => {
+    // Reading a file costs five model calls: it comes out of the visitor's minutes, and a library has a size.
+    const { ok, view } = await spend(visitorOf(req), "upload");
+    if (budgetOn()) after(flushBudget);
+    if (!ok) return Response.json({ error: view.siteClosed ? "The site's minutes for today are used up." : "Your free minutes for today are used up. Tomorrow there are more." }, { status: 429 });
+    if ((await loadIndex()).length >= MAX_ITEMS) return Response.json({ error: `A library holds ${MAX_ITEMS} files. Remove some first.` }, { status: 429 });
     const got = await receive(req);
     if (!got) return Response.json({ error: "No file." }, { status: 400 });
     // A file the library turns down must not stay behind in the store.

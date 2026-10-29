@@ -22,6 +22,7 @@ const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFracti
 const COUNTED: Partial<Record<UiKind, string>> = {
   notifications: "notifications", people: "people", like: "likes", balance: "", progress: "", rating: "stars", poll: "",
   battery: "battery", trend: "", error: "", timer: "", post: "likes",
+  stars: "stars", video: "views", tabs: "tabs", table: "rows", receipt: "", temperature: "", pricing: "",
 };
 const PERCENT: readonly UiKind[] = ["progress", "poll", "battery", "trend"];
 
@@ -61,7 +62,17 @@ export function looksFor(ui: UiSpec, line: string): CardLook[] {
   if (ui.count !== null && counted !== undefined) {
     const n = ui.count;
     const sign = ui.kind === "trend" ? (ui.state === "off" ? "-" : "+") : "";
-    const number = PERCENT.includes(ui.kind) ? `${sign}${Math.round(n)}%` : ui.kind === "rating" ? `${n}/5` : ui.kind === "error" ? String(Math.round(n)) : compact.format(n);
+    const number = PERCENT.includes(ui.kind)
+      ? `${sign}${Math.round(n)}%`
+      : ui.kind === "rating"
+        ? `${n}/5`
+        : ui.kind === "temperature"
+          ? `${Math.round(n)}°`
+          : ui.kind === "receipt" || ui.kind === "pricing"
+            ? `$${compact.format(n)}`
+            : ui.kind === "error"
+              ? String(Math.round(n))
+              : compact.format(n);
     const headline = (ui.kind === "poll" ? ui.items[0] : "") || words || counted;
     looks.push({ layout: "BIG_NUMBER", number, headline, mood: "hype", ui });
   }

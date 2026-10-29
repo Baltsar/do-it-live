@@ -9,6 +9,7 @@ import { matchPrepared, type PreparedMoment } from "@/lib/prepared";
 import { detectSignpost, PAYLOAD_WORDS } from "@/lib/signposts";
 import { resolveVisuals } from "@/lib/visuals";
 import { StreamRecognition } from "@/lib/stream-recognition";
+import type { BudgetView } from "@/lib/budget";
 import type { DrawPalette } from "@/lib/draw";
 import { getLive, parseDrawing, setLive, type LiveDrawing } from "@/lib/live-store";
 import { parseTheme, THEME_KEY } from "@/lib/theme";
@@ -48,6 +49,8 @@ export interface ProviderStatus {
   assemblyai?: boolean;
   /** The speaker's own media can be added: false on a host with no disk to keep it on. */
   uploads?: boolean;
+  /** Free minutes left today on the hosted demo; null or absent on a laptop. */
+  budget?: BudgetView | null;
   model: string | null;
   roles?: Record<"fast" | "quality" | "vision" | "embed", string | null>;
 }
@@ -1017,6 +1020,8 @@ export function createStage() {
       const out = (await res.json()) as DirectorResult & { error?: string };
       if (!res.ok) throw new Error(out.error ?? String(res.status));
       emit({ lastMs: Math.round(performance.now() - t0), model: out.model ?? snap.model });
+      // The meter on the hosted demo: every answer carries what is left.
+      if (out.budget) emit({ status: { ...snap.status, budget: out.budget } });
       log(`${out.action}${out.mock ? " (mock)" : ""}: ${out.reason ?? ""}`);
       const made = out.slide as { headline?: string; layout?: string; scene?: string; library_id?: string } | undefined;
       record({

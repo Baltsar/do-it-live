@@ -140,6 +140,13 @@ Without `ASSEMBLYAI_API_KEY` the app falls back to the browser's own speech reco
 
 On a phone, **Screen** turns the phone itself into the audience screen: the slide alone, full screen. Plug the phone into a TV over USB-C and it mirrors, so you talk into the phone and the slides appear on the TV.
 
+### The open demo and its limits
+
+The hosted demo runs on our Token Factory credits, so each visitor gets `FREE_MINUTES` of stage time a
+day (15) and the site has a daily ceiling (`DAILY_STAGE_MINUTES`, 180). The meter sits under the mic.
+Run it yourself with your own key and there is no budget. How a show is priced after the hackathon:
+[AFTER-THE-HACKATHON.md](AFTER-THE-HACKATHON.md).
+
 ### Deploy
 
 `vercel deploy` works as is. `vercel.json` pins the Stockholm region. Set the same environment variables in the Vercel project.

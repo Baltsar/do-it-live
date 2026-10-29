@@ -144,8 +144,30 @@ export default function ShowPage() {
             ? `${snap.micDevice ?? "This input"} is a Bluetooth headset in call mode (${(snap.micRate ?? 0) / 1000} kHz), which garbles names. The built-in mic hears you better: System Settings → Sound → Input.`
             : null;
 
+  // The hosted demo runs on our credits: a few free minutes a day each, and a plain word when they are gone.
+  const budget = snap.status.budget ?? null;
+  const outOfMinutes = Boolean(budget && (budget.minutesLeft <= 0 || budget.siteClosed));
+  const minutes = budget ? (
+    outOfMinutes ? (
+      <div className="w-full max-w-xl rounded-2xl border border-[#ffd60a]/40 bg-[#ffd60a]/10 px-5 py-4 text-left">
+        <p className="text-lg font-black leading-tight">{budget.siteClosed ? "The demo has used today's minutes." : `Your free ${budget.minutesPerDay} minutes for today are used up.`}</p>
+        <p className="mt-1 text-sm font-semibold text-white/70">
+          Tomorrow there are {budget.minutesPerDay} more. Buying minutes, and a Mac app that runs on your own keys, are coming. Until then it runs on your own laptop:{" "}
+          <a href="https://github.com/Baltsar/do-it-live#run-it-yourself" className="text-[#ffd60a] underline underline-offset-4 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white/60">
+            github.com/Baltsar/do-it-live
+          </a>
+        </p>
+      </div>
+    ) : (
+      <p className="text-xs font-semibold text-white/40">
+        {budget.minutesLeft} of {budget.minutesPerDay} free minutes left today
+      </p>
+    )
+  ) : null;
+
   const micStatus = (
     <div className="flex max-w-2xl flex-col items-center gap-2 text-center">
+      {minutes}
       {snap.micDevice ? (
         <p className="flex items-center gap-2 text-sm font-semibold text-white/45">
           <span className={cn("size-2 shrink-0 rounded-full", micWarning ? "bg-[#ff4fa3]" : snap.listening ? "bg-white" : "bg-white/25")} />
@@ -290,6 +312,7 @@ export default function ShowPage() {
         <Link href="/lab" className="outline-none hover:text-white/60 focus-visible:text-white/80">
           Lab
         </Link>
+        <span className="max-sm:hidden">Mac app with your own keys: coming soon</span>
         {/* On the start screen the drop zone shows this itself. */}
         {live && mediaStatus ? (
           <Link href="/library" className={cn("ml-auto outline-none hover:text-white focus-visible:text-white", media.progress || media.report ? "text-white/80" : "text-white/40")} aria-live="polite">

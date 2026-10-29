@@ -2,6 +2,7 @@ import { z } from "zod";
 import { isIconName, type IconName } from "@/lib/icons";
 import { isScene, type SceneName } from "@/lib/scene-catalog";
 import { parseUiSpec, type UiSpec } from "@/lib/ui-spec";
+import type { BudgetView } from "@/lib/budget";
 
 export const LAYOUTS = [
   "BIG_WORD",
@@ -306,6 +307,8 @@ export interface DirectorResult {
   ms?: number;
   model?: string;
   mock?: boolean;
+  /** What the visitor has left on the hosted demo; absent on a laptop. */
+  budget?: BudgetView;
 }
 
 export const hostOf = (url: string): string => {

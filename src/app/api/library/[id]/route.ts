@@ -1,3 +1,5 @@
+import { after } from "next/server";
+import { budgetOn, flushBudget, spend, visitorOf } from "@/lib/budget";
 import { itemBytes, loadIndex, removeItem, updateItem } from "@/lib/library";
 import { factsOf, framesOf, readMedia, withoutEmbedding } from "@/lib/library-read";
 import { canUpload, fileBody, withLibrary } from "@/lib/library-store";
@@ -21,6 +23,9 @@ export async function POST(req: Request, { params }: Ctx): Promise<Response> {
   return withLibrary(req, async () => {
     const item = (await loadIndex()).find((i) => i.id === id);
     if (!item) return new Response("not found", { status: 404 });
+    const { ok } = await spend(visitorOf(req), "upload");
+    if (budgetOn()) after(flushBudget);
+    if (!ok) return Response.json({ error: "Your free minutes for today are used up." }, { status: 429 });
     const form = await req.formData();
     const facts = factsOf(await itemBytes(item), Number(form.get("frameCount") ?? 0));
     if (!facts) return Response.json({ error: "Not a picture or a clip." }, { status: 422 });

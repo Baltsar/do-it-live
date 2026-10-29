@@ -8,14 +8,30 @@ import {
   Bell,
   Check,
   CheckCheck,
+  Cloud,
+  CloudRain,
+  Cookie,
+  GitBranch,
+  GitPullRequest,
   Heart,
+  Link as LinkIcon,
+  Lock,
+  LockOpen,
   MapPin,
   MessageCircle,
+  Moon,
   MousePointer2,
+  Phone,
+  PhoneOff,
+  Plane,
+  Play,
   Plus,
+  RefreshCw,
   Repeat2,
   Search,
+  Snowflake,
   Star,
+  Sun,
   TrendingUp,
   TriangleAlert,
   Trophy,
@@ -71,6 +87,7 @@ function useLater(ms: number, still: boolean): boolean {
 }
 
 const SHORT = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
+const compactNumber = (n: number): string => SHORT.format(n);
 
 /**
  * A number that counts up, then shows the exact figure. The spring behind the ticker can come to rest
@@ -857,6 +874,442 @@ function Hero({ spec, still }: { spec: UiSpec; still: boolean }): ReactNode {
               <span className="flex items-center gap-2 opacity-60"><MessageCircle className="size-7" /><Bar w={28} /></span>
             </div>
           </Card>
+        </motion.div>
+      );
+    }
+
+    case "pricing": {
+      const tiers = spec.items.length >= 2 ? spec.items.slice(0, 3) : ["Free", "Pro", "Team"];
+      const pick = Math.min(1, tiers.length - 1);
+      return (
+        <div className="flex items-end gap-3">
+          {tiers.map((tier, i) => (
+            <motion.div key={i} {...enter(still, 0.15 + i * 0.2, { y: 30 })}>
+              <Card className={`items-center gap-3 rounded-2xl px-5 ${i === pick ? "w-[150px] py-6" : "w-[120px] py-4"}`} style={i === pick ? { boxShadow: "0 0 0 3px var(--alt)" } : undefined}>
+                <span className={`text-center leading-tight font-black ${i === pick ? "text-2xl" : "text-lg"}`}>{tier}</span>
+                {i === pick && count ? <span className="text-4xl font-black tabular-nums whitespace-nowrap">${compactNumber(count)}</span> : <Bar w={54} className="h-3.5" />}
+                <Bar w={70} className="opacity-50" />
+                <Bar w={60} className="opacity-50" />
+                {i === pick ? <Button className="mt-1 h-9 w-full rounded-lg text-sm font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>Pick</Button> : <Bar w={80} className="mt-1 h-7 rounded-lg opacity-40" />}
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      );
+    }
+
+    case "merge": {
+      const merged = spec.state !== "error" && spec.state !== "crossed";
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[360px] gap-4 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <GitPullRequest className="size-7 shrink-0" strokeWidth={2.4} style={{ color: merged ? "var(--alt)" : "var(--muted-foreground)" }} />
+              <span className="space-y-1.5">
+                {text ? <span className="block text-2xl leading-tight font-black">{text}</span> : <Bar w={190} className="h-4" />}
+                <Bar w={110} className="opacity-50" />
+              </span>
+            </div>
+            <svg viewBox="0 0 300 60" className="h-[60px] w-full" aria-hidden>
+              <line x1="20" y1="48" x2="280" y2="48" stroke="var(--muted)" strokeWidth="6" strokeLinecap="round" />
+              <motion.path d="M20 12 H150 C 200 12, 200 48, 250 48" fill="none" stroke="var(--alt)" strokeWidth="6" strokeLinecap="round" initial={still ? false : { pathLength: 0 }} animate={{ pathLength: merged ? 1 : 0.55 }} transition={{ duration: 0.9, delay: 0.3, ease: "easeInOut" }} />
+              <circle cx="20" cy="12" r="9" fill="var(--alt)" />
+              <circle cx="20" cy="48" r="9" fill="var(--muted-foreground)" />
+              <motion.circle cx="250" cy="48" r="11" fill={merged ? "var(--alt)" : "var(--muted)"} initial={still ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400, damping: 16, delay: 1.1 }} />
+            </svg>
+            <motion.div {...enter(still, 1.2, { y: 6 })}>
+              <Badge className="h-9 rounded-full px-4 text-base font-black" style={merged ? { background: "var(--alt)", color: "var(--bg)" } : { background: "var(--muted)", color: "var(--fg)" }}>
+                {merged ? <><Check className="size-4" strokeWidth={3} /> Merged</> : <><X className="size-4" strokeWidth={3} /> Changes requested</>}
+              </Badge>
+            </motion.div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "stars": {
+      const n = count ?? 10_000;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[360px] gap-4 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <span className="grid size-10 place-items-center rounded-lg" style={{ background: "var(--muted)" }}><GitBranch className="size-5" /></span>
+              {text ? <span className="truncate text-2xl font-black">{text}</span> : <Bar w={170} className="h-4" />}
+            </div>
+            <Bar w={240} className="opacity-50" />
+            <div className="flex items-center gap-3">
+              <motion.span animate={!still && later ? { scale: [1, 1.25, 1], rotate: [0, -12, 0] } : undefined} transition={{ duration: 0.5 }}>
+                <Button className="h-12 rounded-xl px-4 text-xl font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>
+                  <Star className="size-6" style={{ fill: "var(--bg)" }} /> Star
+                </Button>
+              </motion.span>
+              <span className="text-4xl font-black tabular-nums"><Count value={n} delay={0.5} still={still} compact /></span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "call": {
+      const declined = spec.state === "crossed" || spec.state === "off";
+      return (
+        <motion.div {...enter(still, 0, { y: 40 })} animate={!still && !later ? { opacity: 1, y: 0, x: [0, -3, 3, -3, 3, 0] } : { opacity: 1, y: 0, x: 0 }} transition={{ duration: 0.5, repeat: still || later ? 0 : Infinity, repeatDelay: 0.3 }}>
+          <Card className="w-[300px] items-center gap-5 rounded-[32px] px-6 py-7">
+            <Avatar className="size-20">
+              <AvatarFallback className="text-3xl font-black" style={{ background: "var(--muted)" }}>{(text || "?").slice(0, 1).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <span className="text-center">
+              {text ? <span className="block text-3xl leading-tight font-black">{text}</span> : <Bar w={120} className="h-4" />}
+              <span className="mt-1 block text-base font-bold opacity-60">{declined && later ? "Declined" : "Incoming call"}</span>
+            </span>
+            <div className="flex gap-8">
+              <span className="grid size-16 place-items-center rounded-full" style={{ background: declined ? "var(--alt)" : "var(--muted)", color: declined ? "var(--bg)" : "var(--fg)" }}><PhoneOff className="size-7" /></span>
+              <span className="grid size-16 place-items-center rounded-full" style={{ background: declined ? "var(--muted)" : "var(--alt)", color: declined ? "var(--fg)" : "var(--bg)", opacity: declined && later ? 0.3 : 1 }}><Phone className="size-7" /></span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "playing": {
+      const bars = [18, 34, 26, 44, 30, 50, 22, 40, 28, 46, 20, 36, 24, 42, 32, 48, 26, 38, 22, 30];
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[360px] gap-4 rounded-3xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <span className="grid size-12 shrink-0 place-items-center rounded-xl" style={{ background: "var(--alt)", color: "var(--bg)" }}><Play className="size-6" style={{ fill: "currentColor" }} /></span>
+              <span className="min-w-0 space-y-1.5">
+                {text ? <span className="block truncate text-2xl leading-tight font-black">{text}</span> : <Bar w={170} className="h-4" />}
+                <Bar w={90} className="opacity-50" />
+              </span>
+            </div>
+            <div className="flex h-14 items-center gap-1">
+              {bars.map((h, i) => (
+                <motion.span
+                  key={i}
+                  className="w-2.5 rounded-full"
+                  style={{ background: i < 9 ? "var(--alt)" : "var(--muted)", height: h }}
+                  animate={still ? undefined : { scaleY: [1, 0.5 + ((i * 7) % 5) / 5, 1] }}
+                  transition={{ duration: 0.8 + (i % 3) * 0.2, repeat: Infinity, delay: i * 0.05 }}
+                />
+              ))}
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "video": {
+      const n = count ?? 0;
+      return (
+        <motion.div {...enter(still)} className="w-[380px] space-y-3">
+          <div className="relative aspect-video overflow-hidden rounded-2xl" style={{ background: "var(--fg)" }}>
+            <div className="absolute inset-0 opacity-25" style={{ background: "repeating-linear-gradient(135deg, var(--bg) 0 14px, transparent 14px 28px)" }} />
+            <motion.span className="absolute left-1/2 top-1/2 grid size-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full" style={{ background: "var(--alt)", color: "var(--bg)" }} animate={!still && later ? { scale: [1, 1.15, 1] } : undefined} transition={{ duration: 0.5 }}>
+              <Play className="ml-1 size-9" style={{ fill: "currentColor" }} />
+            </motion.span>
+            <div className="absolute inset-x-4 bottom-3 h-1.5 rounded-full" style={{ background: "var(--muted)" }}>
+              <motion.div className="h-full rounded-full" style={{ background: "var(--alt)" }} initial={still ? false : { width: "0%" }} animate={{ width: "38%" }} transition={{ duration: 1.4, delay: 0.4 }} />
+            </div>
+          </div>
+          <div className="flex items-center justify-between gap-3 px-1">
+            {text ? <span className="truncate text-2xl font-black">{text}</span> : <Bar w={180} className="h-4" />}
+            {n ? <span className="shrink-0 text-xl font-black tabular-nums"><Count value={n} delay={0.6} still={still} compact /> views</span> : null}
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "tabs": {
+      const n = Math.max(2, Math.round(count ?? 47));
+      const shown = Math.min(n, 14);
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[400px] gap-0 overflow-hidden rounded-2xl p-0">
+            <div className="flex items-end gap-0.5 px-3 pt-3" style={{ background: "var(--secondary)" }}>
+              {Array.from({ length: shown }, (_, i) => (
+                <motion.span key={i} {...enter(still, 0.1 + i * 0.05, { y: 10 })} className="h-8 rounded-t-lg" style={{ width: Math.max(14, 160 / Math.sqrt(shown)), background: i === 2 ? "var(--card)" : "var(--muted)", opacity: i === 2 ? 1 : 0.7 }} />
+              ))}
+            </div>
+            <div className="flex items-center gap-3 px-5 py-5">
+              <span className="text-6xl font-black tabular-nums" style={{ color: "var(--alt)" }}><Count value={n} delay={0.4} still={still} /></span>
+              <span className="text-2xl leading-tight font-black">{text || "tabs open"}</span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "cookie": {
+      return (
+        <motion.div {...enter(still, 0, { y: 60 })}>
+          <Card className="w-[400px] gap-4 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <Cookie className="size-8 shrink-0" style={{ color: "var(--alt)" }} />
+              <span className="text-2xl leading-tight font-black">{text || "We use cookies"}</span>
+            </div>
+            <Bar w={300} className="opacity-50" />
+            <Bar w={220} className="opacity-50" />
+            <div className="flex gap-3">
+              <Button variant="secondary" className="h-11 flex-1 rounded-xl text-base font-black opacity-50">Manage</Button>
+              <motion.div className="flex-1" animate={!still && later ? { scale: [1, 1.06, 1] } : undefined} transition={{ duration: 0.4 }}>
+                <Button className="h-11 w-full rounded-xl text-base font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>Accept all</Button>
+              </motion.div>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "captcha": {
+      const failed = spec.state === "error" || spec.state === "crossed";
+      return (
+        <motion.div {...enter(still)} animate={failed && later && !still ? { opacity: 1, y: 0, x: [0, -8, 8, -5, 5, 0] } : { opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <Card className="w-[360px] gap-4 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-4">
+              <motion.span className="grid size-12 shrink-0 place-items-center rounded-lg border-2" style={{ borderColor: failed ? "var(--alt)" : "var(--fg)" }} animate={!still && later && !failed ? { scale: [1, 0.9, 1] } : undefined}>
+                {later || still ? (failed ? <X className="size-8" strokeWidth={3} style={{ color: "var(--alt)" }} /> : <Check className="size-8" strokeWidth={3} style={{ color: "var(--alt)" }} />) : null}
+              </motion.span>
+              <span className="text-2xl leading-tight font-black">{text || "I am not a robot"}</span>
+            </div>
+            <div className="grid grid-cols-3 gap-1.5">
+              {Array.from({ length: 9 }, (_, i) => (
+                <span key={i} className="h-12 rounded-md" style={{ background: "var(--muted)", opacity: [1, 4, 6].includes(i) ? 1 : 0.45 }} />
+              ))}
+            </div>
+            <Bar w={160} className="opacity-50" />
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "update": {
+      return (
+        <motion.div {...enter(still, 0, { scale: 0.9 })}>
+          <Card className="w-[340px] items-center gap-4 rounded-3xl px-6 py-7 text-center">
+            <motion.span animate={still ? undefined : { rotate: 360 }} transition={{ duration: 2.4, repeat: Infinity, ease: "linear" }}>
+              <RefreshCw className="size-14" strokeWidth={2.4} style={{ color: "var(--alt)" }} />
+            </motion.span>
+            <span className="text-3xl leading-tight font-black">{text || "Update available"}</span>
+            <Bar w={180} className="opacity-50" />
+            <div className="flex w-full gap-3">
+              <Button variant="secondary" className="h-11 flex-1 rounded-xl text-base font-black opacity-60">Later</Button>
+              <Button className="h-11 flex-1 rounded-xl text-base font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>Restart now</Button>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "dial": {
+      const level = Math.max(0, Math.min(11, Math.round(count ?? 11)));
+      const angle = -135 + (level / 11) * 270;
+      return (
+        <motion.div {...enter(still)} className="flex items-center gap-6">
+          <div className="relative size-[200px]">
+            <svg viewBox="0 0 200 200" className="absolute inset-0 size-full" aria-hidden>
+              {Array.from({ length: 12 }, (_, i) => {
+                const a = ((-135 + (i / 11) * 270) * Math.PI) / 180;
+                const lit = i <= level;
+                return <circle key={i} cx={100 + Math.sin(a) * 90} cy={100 - Math.cos(a) * 90} r={lit ? 7 : 4.5} fill={lit ? "var(--alt)" : "var(--muted)"} />;
+              })}
+              <circle cx="100" cy="100" r="62" fill="var(--card)" stroke="var(--fg)" strokeWidth="6" />
+            </svg>
+            {/* The needle is a plain element turned about its foot: an SVG line and a transform origin do not agree. */}
+            <motion.span
+              className="absolute left-1/2 top-1/2 block h-[56px] w-2.5 rounded-full"
+              style={{ background: "var(--alt)", translate: "-50% -100%", transformOrigin: "50% 100%" }}
+              initial={still ? false : { rotate: -135 }}
+              animate={{ rotate: angle }}
+              transition={{ type: "spring", stiffness: 60, damping: 12, delay: 0.3 }}
+            />
+            <span className="absolute left-1/2 top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: "var(--fg)" }} />
+          </div>
+          <div>
+            <div className="text-7xl font-black tabular-nums leading-none">{level}</div>
+            {text ? <div className="mt-2 text-2xl font-black opacity-70">{text}</div> : null}
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "table": {
+      const n = count ?? 10_000;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[400px] gap-0 overflow-hidden rounded-2xl p-0">
+            <div className="grid grid-cols-4 gap-px p-px" style={{ background: "var(--border)" }}>
+              {Array.from({ length: 24 }, (_, i) => (
+                <motion.span key={i} {...enter(still, 0.05 + Math.floor(i / 4) * 0.08, { y: 4 })} className="flex h-9 items-center px-2" style={{ background: i < 4 ? "var(--secondary)" : "var(--card)" }}>
+                  <Bar w={i % 4 === 0 ? 22 : 40 + ((i * 13) % 30)} className={i < 4 ? "" : "opacity-50"} />
+                </motion.span>
+              ))}
+            </div>
+            <div className="flex items-center justify-between px-5 py-4" style={{ background: "var(--secondary)" }}>
+              <span className="text-2xl font-black">{text || "rows"}</span>
+              <span className="text-4xl font-black tabular-nums" style={{ color: "var(--alt)" }}><Count value={n} delay={0.5} still={still} compact /></span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "kanban": {
+      const done = spec.state === "done" || spec.state === "on";
+      const columns = ["To do", "Doing", "Done"];
+      const target = done ? 2 : 1;
+      return (
+        <div className="flex gap-3">
+          {columns.map((name, c) => (
+            <motion.div key={c} {...enter(still, 0.1 + c * 0.12, { y: 20 })}>
+              <Card className="min-h-[220px] w-[130px] gap-2 rounded-2xl px-3 py-3" style={{ background: "var(--secondary)" }}>
+                <span className="px-1 text-sm font-black uppercase opacity-60">{name}</span>
+                {c === 0 ? [0, 1].map((i) => <span key={i} className="h-10 rounded-lg" style={{ background: "var(--card)" }} />) : null}
+                {c === target ? (
+                  <motion.span layoutId="kanban-card" initial={still ? false : { x: -140, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ type: "spring", stiffness: 240, damping: 22, delay: 0.8 }} className="flex min-h-12 items-center rounded-lg px-2 text-base leading-tight font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>
+                    {text || <Bar w={70} className="bg-[var(--bg)] opacity-60" />}
+                  </motion.span>
+                ) : null}
+                {c === 2 && !done ? <span className="h-10 rounded-lg" style={{ background: "var(--card)" }} /> : null}
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      );
+    }
+
+    case "receipt": {
+      const n = count ?? 0;
+      return (
+        <motion.div {...enter(still, 0, { y: -40 })}>
+          <div className="w-[300px] px-6 py-6 font-mono" style={{ background: "#fff", color: "#111", clipPath: "polygon(0 0, 100% 0, 100% 96%, 95% 100%, 90% 96%, 85% 100%, 80% 96%, 75% 100%, 70% 96%, 65% 100%, 60% 96%, 55% 100%, 50% 96%, 45% 100%, 40% 96%, 35% 100%, 30% 96%, 25% 100%, 20% 96%, 15% 100%, 10% 96%, 5% 100%, 0 96%)" }}>
+            <div className="mb-4 text-center text-lg font-black uppercase tracking-widest">{text || "Receipt"}</div>
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="mb-2 flex justify-between gap-3">
+                <Bar w={80 + ((i * 29) % 50)} className="bg-[#111] opacity-30" />
+                <Bar w={34} className="bg-[#111] opacity-30" />
+              </div>
+            ))}
+            <div className="my-3 border-t-2 border-dashed border-[#111]" />
+            <div className="flex items-baseline justify-between">
+              <span className="text-base font-black uppercase">Total</span>
+              <span className="text-4xl font-black tabular-nums">${n ? <Count value={n} delay={0.4} still={still} /> : "---"}</span>
+            </div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "ticket": {
+      return (
+        <motion.div {...enter(still, 0, { y: 30 })} className="rotate-[-3deg]">
+          <Card className="w-[400px] flex-row gap-0 overflow-hidden rounded-2xl p-0">
+            <div className="flex flex-1 flex-col gap-3 px-5 py-5">
+              <span className="text-xs font-black uppercase tracking-widest opacity-50">Boarding pass</span>
+              <div className="flex items-center gap-3">
+                <span className="text-3xl font-black">{spec.items[0] || "HERE"}</span>
+                <Plane className="size-7 shrink-0" style={{ color: "var(--alt)" }} />
+                <span className="text-3xl font-black">{text || spec.items[1] || "THERE"}</span>
+              </div>
+              <div className="flex gap-6">
+                <span className="space-y-1"><Bar w={40} className="opacity-40" /><Bar w={56} /></span>
+                <span className="space-y-1"><Bar w={40} className="opacity-40" /><Bar w={44} /></span>
+                <span className="space-y-1"><Bar w={40} className="opacity-40" /><Bar w={30} /></span>
+              </div>
+            </div>
+            <div className="flex w-[110px] flex-col items-center justify-center gap-2 border-l-2 border-dashed px-3" style={{ borderColor: "var(--border)", background: "var(--alt)", color: "var(--bg)" }}>
+              <span className="text-xs font-black uppercase">Gate</span>
+              <span className="text-4xl font-black tabular-nums">{count ? Math.round(count) : "7"}</span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "weather": {
+      const word = text.toLowerCase();
+      const kind = /rain|regn|wet|storm|pour/.test(word) ? "rain" : /snow|snö|cold|ice/.test(word) ? "snow" : /cloud|grey|gray|moln/.test(word) ? "cloud" : "sun";
+      const Icon = kind === "rain" ? CloudRain : kind === "snow" ? Snowflake : kind === "cloud" ? Cloud : Sun;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[320px] items-center gap-3 rounded-3xl px-6 py-7">
+            <motion.span animate={still ? undefined : kind === "sun" ? { rotate: 360 } : { y: [0, -6, 0] }} transition={kind === "sun" ? { duration: 12, repeat: Infinity, ease: "linear" } : { duration: 2.2, repeat: Infinity }}>
+              <Icon className="size-24" strokeWidth={1.8} style={{ color: "var(--alt)", fill: kind === "sun" ? "var(--alt)" : "none" }} />
+            </motion.span>
+            <span className="text-4xl font-black">{text || "Sunny"}</span>
+            {count ? <span className="text-6xl font-black tabular-nums">{Math.round(count)}°</span> : <Bar w={120} className="opacity-50" />}
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "clock": {
+      const hour = count ? Math.round(count) % 24 : 3;
+      const pm = /pm|kväll|evening|night|natt/i.test(text) || hour >= 12;
+      const h12 = hour % 12 || 12;
+      const night = hour >= 21 || hour < 6;
+      return (
+        <motion.div {...enter(still)} className="flex items-center gap-6">
+          <div className="relative size-[200px] rounded-full border-[10px]" style={{ borderColor: "var(--fg)", background: "var(--card)" }}>
+            <motion.span className="absolute left-1/2 top-1/2 h-[64px] w-2.5 origin-bottom -translate-x-1/2 -translate-y-full rounded-full" style={{ background: "var(--fg)" }} initial={still ? false : { rotate: 0 }} animate={{ rotate: (h12 % 12) * 30 }} transition={{ duration: 1.2, ease: "easeInOut" }} />
+            <span className="absolute left-1/2 top-1/2 h-[80px] w-1.5 origin-bottom -translate-x-1/2 -translate-y-full rounded-full" style={{ background: "var(--alt)" }} />
+            <span className="absolute left-1/2 top-1/2 size-4 -translate-x-1/2 -translate-y-1/2 rounded-full" style={{ background: "var(--alt)" }} />
+          </div>
+          <div>
+            <div className="text-6xl font-black tabular-nums leading-none">{h12}:00</div>
+            <div className="mt-2 flex items-center gap-2 text-2xl font-black opacity-70">{night ? <Moon className="size-6" /> : <Sun className="size-6" />} {pm ? "pm" : "am"}</div>
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "lock": {
+      const open = spec.state === "crossed" || spec.state === "off" || spec.state === "error";
+      const Icon = open ? LockOpen : Lock;
+      return (
+        <motion.div {...enter(still)} className="flex flex-col items-center gap-4">
+          <motion.span className="grid size-36 place-items-center rounded-[36px]" style={{ background: open ? "var(--alt)" : "var(--card)", color: open ? "var(--bg)" : "var(--fg)" }} animate={!still && later && open ? { rotate: [0, -6, 6, -4, 4, 0] } : undefined} transition={{ duration: 0.5 }}>
+            <Icon className="size-20" strokeWidth={2.2} />
+          </motion.span>
+          <span className="text-4xl font-black">{text || (open ? "Open" : "Locked")}</span>
+        </motion.div>
+      );
+    }
+
+    case "link": {
+      return (
+        <motion.div {...enter(still, 0, { scale: 0.9 })}>
+          <Card className="w-[380px] flex-row items-center gap-5 rounded-3xl px-6 py-6">
+            <div className="grid shrink-0 grid-cols-7 gap-0.5 rounded-lg p-2" style={{ background: "#fff" }}>
+              {Array.from({ length: 49 }, (_, i) => (
+                <span key={i} className="size-2.5" style={{ background: (i * 7919) % 11 < 5 || [0, 1, 2, 7, 14, 4, 5, 6, 13, 20, 28, 35, 42, 43, 44].includes(i) ? "#111" : "#fff" }} />
+              ))}
+            </div>
+            <span className="min-w-0 space-y-2">
+              <span className="flex items-center gap-2 text-xs font-black uppercase tracking-widest opacity-60"><LinkIcon className="size-4" /> Link</span>
+              {text ? <span className="block break-words text-2xl leading-tight font-black" style={{ color: "var(--alt)" }}>{text}</span> : <Bar w={160} className="h-4" />}
+            </span>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "temperature": {
+      const deg = Math.round(count ?? 40);
+      const hot = deg >= 30;
+      const fill = Math.max(8, Math.min(100, ((deg + 20) / 70) * 100));
+      return (
+        <motion.div {...enter(still)} className="flex items-center gap-6">
+          <div className="relative flex h-[220px] w-14 flex-col items-center">
+            <div className="relative h-[170px] w-6 overflow-hidden rounded-full border-[5px]" style={{ borderColor: "var(--fg)", background: "var(--card)" }}>
+              <motion.div className="absolute inset-x-0 bottom-0" style={{ background: hot ? "var(--alt)" : "var(--fg)" }} initial={still ? false : { height: "8%" }} animate={{ height: `${fill}%` }} transition={{ duration: 1.3, ease: "easeOut", delay: 0.2 }} />
+            </div>
+            <span className="-mt-3 size-14 rounded-full border-[5px]" style={{ borderColor: "var(--fg)", background: hot ? "var(--alt)" : "var(--fg)" }} />
+          </div>
+          <div>
+            <div className="text-7xl font-black tabular-nums leading-none" style={hot ? { color: "var(--alt)" } : undefined}><Count value={deg} delay={0.3} still={still} />°</div>
+            {text ? <div className="mt-2 text-2xl font-black opacity-70">{text}</div> : null}
+          </div>
         </motion.div>
       );
     }
