@@ -13,6 +13,8 @@ export const FONTS = {
   space: { label: "Space Grotesk", css: "var(--font-space)", note: "Clean and technical", weight: 700, tracking: "-0.035em", variation: "normal" },
   // Informal and Bounce are the face's own axes: marker-like letters that sit a little off the line.
   shantell: { label: "Shantell Sans", css: "var(--font-shantell)", note: "Hand-drawn marker", weight: 800, tracking: "-0.01em", variation: '"INFM" 100, "BNCE" 25' },
+  barlow: { label: "Barlow Condensed", css: "var(--font-barlow)", note: "News-desk capitals", weight: 800, tracking: "0em", variation: "normal" },
+  doto: { label: "Doto", css: "var(--font-doto)", note: "Stadium dot matrix", weight: 900, tracking: "0.01em", variation: '"ROND" 100' },
 } as const;
 export type FontKey = keyof typeof FONTS;
 export const isFontKey = (v: unknown): v is FontKey => typeof v === "string" && v in FONTS;
@@ -30,7 +32,7 @@ export interface FieldColors {
  * A look is a whole style guide, like a Keynote theme: colour fields, a typeface, how the slide
  * templates are skinned (slide.css keys on it) and the brief the drawing model gets.
  */
-export const LOOK_KEYS = ["scribble", "pop"] as const;
+export const LOOK_KEYS = ["scribble", "pop", "signal", "redacted", "broadcast", "sticker", "scoreboard"] as const;
 export type LookKey = (typeof LOOK_KEYS)[number];
 export const isLookKey = (v: unknown): v is LookKey => typeof v === "string" && (LOOK_KEYS as readonly string[]).includes(v);
 
@@ -88,6 +90,71 @@ export const LOOKS: Record<LookKey, LookPreset> = {
     },
     font: "archivo",
     drawBrief: "Heavy weights. Rounded corners, flat, modern, confident. No drop shadows heavier than a soft one.",
+  },
+  signal: {
+    label: "Signal",
+    note: "A Swiss grid poster. Hairlines, square corners, one accent.",
+    fields: {
+      hype: { bg: "#2b3bff", fg: "#ffffff", alt: "#0b0b0c" },
+      funny: { bg: "#f4f4f1", fg: "#0b0b0c", alt: "#2b3bff" },
+      calm: { bg: "#d7d8d2", fg: "#0b0b0c", alt: "#2b3bff" },
+      serious: { bg: "#0b0b0c", fg: "#f4f4f1", alt: "#2b3bff" },
+      chaos: { bg: "#ff5a1f", fg: "#0b0b0c", alt: "#ffffff" },
+    },
+    font: "archivo",
+    drawBrief: "Heavy weights. A Swiss grid poster: square corners only, flat fills, 2px hairline rules, no shadows, lots of empty space, the accent colour on one element only.",
+  },
+  redacted: {
+    label: "Redacted",
+    note: "A leaked file. Serif type, black bars, rubber stamps.",
+    fields: {
+      hype: { bg: "#111111", fg: "#edeae2", alt: "#e5261f" },
+      funny: { bg: "#f7f5ef", fg: "#111111", alt: "#e5261f" },
+      calm: { bg: "#d9d1be", fg: "#111111", alt: "#8a7f66" },
+      serious: { bg: "#c8102e", fg: "#ffffff", alt: "#f2e94e" },
+      chaos: { bg: "#f2e94e", fg: "#111111", alt: "#e5261f" },
+    },
+    font: "fraunces",
+    drawBrief: "Heavy serif weights. A leaked document: paper cards with thin black borders, solid black redaction bars over the unimportant words, one rubber stamp (rotated outlined capitals in the accent colour). Square corners, no shadows.",
+  },
+  broadcast: {
+    label: "Broadcast",
+    note: "A news desk. Condensed capitals, lower thirds, a LIVE bug.",
+    fields: {
+      hype: { bg: "#d90a0a", fg: "#ffffff", alt: "#ffc400" },
+      funny: { bg: "#ffc400", fg: "#0b1f4d", alt: "#d90a0a" },
+      calm: { bg: "#dce3f0", fg: "#0b1f4d", alt: "#d90a0a" },
+      serious: { bg: "#0b1f4d", fg: "#ffffff", alt: "#ffc400" },
+      chaos: { bg: "#000000", fg: "#ffffff", alt: "#d90a0a" },
+    },
+    font: "barlow",
+    drawBrief: "Heavy condensed capitals. TV news graphics: square corners, solid colour bars, a lower-third strip under the main element (an accent bar beside a dark label), no rounded corners, no shadows.",
+  },
+  sticker: {
+    label: "Sticker",
+    note: "Found stickers and road signs. Die-cut edges and a tilt.",
+    fields: {
+      hype: { bg: "#2b3bff", fg: "#ffd60a", alt: "#ff8cc6" },
+      funny: { bg: "#ffd60a", fg: "#0a0a0a", alt: "#2b3bff" },
+      calm: { bg: "#8cf5c9", fg: "#0a0a0a", alt: "#2b3bff" },
+      serious: { bg: "#0a0a0a", fg: "#ffffff", alt: "#ffd60a" },
+      chaos: { bg: "#ff4fa3", fg: "#0a0a0a", alt: "#ffffff" },
+    },
+    font: "bricolage",
+    drawBrief: "Heavy weights. Die-cut stickers: every element is a sticker with a thick white outline (box-shadow 0 0 0 10px #fff) and a hard offset shadow, rounded corners, each tilted a little (-6 to 6deg), overlapping slightly.",
+  },
+  scoreboard: {
+    label: "Scoreboard",
+    note: "A stadium board. Dot-matrix capitals that glow.",
+    fields: {
+      hype: { bg: "#050505", fg: "#ffb000", alt: "#ff3b30" },
+      funny: { bg: "#ffb000", fg: "#050505", alt: "#b3261e" },
+      calm: { bg: "#07261a", fg: "#3dff7a", alt: "#ffb000" },
+      serious: { bg: "#101b33", fg: "#ffffff", alt: "#ffb000" },
+      chaos: { bg: "#ff3b30", fg: "#050505", alt: "#ffffff" },
+    },
+    font: "doto",
+    drawBrief: "Heavy capitals. A stadium LED scoreboard: dark panels, text and numbers glow in their own colour (text-shadow), round LED dots for icons, bars and ratings, 8px corners, no outlines.",
   },
 };
 
