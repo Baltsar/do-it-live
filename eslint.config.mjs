@@ -12,6 +12,8 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Rendered frames and videos of the pitch project.
+    "video/out/**",
   ]),
 ]);
 

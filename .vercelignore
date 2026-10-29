@@ -7,4 +7,6 @@ public/gen-test
 # The media library is the speaker's own and stays on this machine: its film and TV GIFs are not ours
 # to publish. The hosted app runs with an empty library.
 /library
+# The pitch video is its own Remotion project, not part of the app.
+/video
 tsconfig.tsbuildinfo

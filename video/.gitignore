@@ -1,0 +1,6 @@
+node_modules
+out
+# Raw recordings are large and personal: they stay on this machine.
+public/*.mp4
+public/*.mov
+public/*.webm
