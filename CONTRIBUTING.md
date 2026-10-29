@@ -62,7 +62,7 @@ earth: () => (
 .slide-frame.static .er { opacity: 1; }
 ```
 
-Then open `/templates`: your scene appears in the S list in the current look. Switch look under `/style` and check it again. Both must hold.
+Then open `/templates`: your scene appears in the S list in the current look. `/templates?look=pop` and `/templates?look=scribble` show it in each look without changing your own setting. Both must hold.
 
 ## Add a look
 

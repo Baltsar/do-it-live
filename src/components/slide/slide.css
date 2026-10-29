@@ -464,6 +464,110 @@
 @keyframes wvDraw { 0% { stroke-dashoffset: 100; } 80%, 100% { stroke-dashoffset: 0; } }
 .slide-frame.static .wv-line { stroke-dashoffset: 0; animation: none; }
 
+/* earth: one dot, then the world */
+.er { opacity: 0; transform-origin: center; animation: erOn 5.2s ease-out infinite; animation-delay: calc(var(--i) * 0.4s); }
+@keyframes erOn { 0% { opacity: 0; transform: scale(0.4); } 10% { opacity: 1; transform: scale(1.5); } 16%, 78% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static .er { opacity: 1; }
+
+/* deal: signed, then stamped */
+.dl-sign { stroke-dasharray: 100; animation: dlSign 5s linear infinite; }
+.dl-stamp { transform-box: view-box; transform-origin: 104px 66px; animation: dlStamp 5s cubic-bezier(0.2, 1.5, 0.3, 1) infinite; }
+@keyframes dlSign { 0%, 8% { stroke-dashoffset: 100; } 40%, 100% { stroke-dashoffset: 0; } }
+@keyframes dlStamp { 0%, 44% { transform: scale(2.4); opacity: 0; } 52%, 90% { transform: scale(1); opacity: 1; } 100% { transform: scale(1); opacity: 0; } }
+.slide-frame.static .dl-sign { stroke-dashoffset: 0; }
+.slide-frame.static .dl-stamp { transform: none; opacity: 1; }
+
+/* money: coin by coin */
+.mn { animation: mnDrop 5.4s cubic-bezier(0.5, 0, 0.8, 0.5) infinite backwards; animation-delay: calc(var(--i) * 0.16s); }
+@keyframes mnDrop { 0% { transform: translateY(-60px); opacity: 1; } 8% { transform: translateY(0); } 11% { transform: translateY(-2px); } 14%, 86% { transform: translateY(0); opacity: 1; } 94%, 100% { transform: translateY(0); opacity: 0; } }
+
+/* clock: the minute hand races, the hour hand follows */
+.ck-m, .ck-h { transform-box: view-box; transform-origin: 80px 45px; }
+.ck-m { animation: spin 4s linear infinite; }
+.ck-h { animation: spin 48s linear infinite; }
+.slide-frame.static .ck-m { transform: rotate(95deg); }
+.slide-frame.static .ck-h { transform: rotate(-50deg); }
+
+/* idea: the bulb comes on */
+.id-glow { opacity: 0; animation: idGlow 4.4s ease-out infinite; }
+.id-ray { opacity: 0; transform-origin: center; animation: idRay 4.4s ease-out infinite; animation-delay: calc(var(--i) * 0.06s); }
+@keyframes idGlow { 0%, 28% { opacity: 0; } 36%, 84% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes idRay { 0%, 34% { opacity: 0; transform: scale(0.3); } 44% { opacity: 1; transform: scale(1.25); } 50%, 84% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static :is(.id-glow, .id-ray) { opacity: 1; }
+
+/* trophy: it rises, then sparkles */
+.tr { transform-box: view-box; transform-origin: 80px 76px; animation: trIn 4.8s cubic-bezier(0.2, 1.3, 0.3, 1) infinite; }
+.tr-sp { opacity: 0; transform-origin: center; animation: trSp 4.8s ease-out infinite; animation-delay: calc(0.6s + var(--i) * 0.25s); }
+@keyframes trIn { 0% { transform: translateY(30px) scale(0.9); opacity: 0; } 14%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes trSp { 0%, 10% { opacity: 0; transform: scale(0); } 18% { opacity: 1; transform: scale(1.3); } 24%, 80% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static .tr { transform: none; opacity: 1; }
+.slide-frame.static .tr-sp { opacity: 1; }
+
+/* speed: across and gone */
+.spd { animation: spdGo 1.9s cubic-bezier(0.4, 0, 0.6, 1) infinite; animation-delay: calc(var(--i) * -0.65s); }
+@keyframes spdGo { 0% { transform: translateX(-190px); } 100% { transform: translateX(90px); } }
+.slide-frame.static .spd { transform: none; opacity: 1; }
+
+/* team: they come in from both sides */
+.tm { animation: tmIn 5s cubic-bezier(0.2, 1, 0.3, 1) infinite; animation-delay: calc(var(--i) * 0.15s); }
+@keyframes tmIn { 0% { transform: translateX(var(--dx)); opacity: 0; } 18%, 86% { transform: none; opacity: 1; } 100% { transform: translateX(var(--dx)); opacity: 0; } }
+.slide-frame.static .tm { transform: none; opacity: 1; }
+
+/* heart: it beats, and smaller ones float up */
+.ht { transform-origin: center; animation: htBeat 1.6s ease-out infinite; }
+.ht-sm { opacity: 0; transform-origin: center; animation: htPop 3.2s ease-out infinite; animation-delay: calc(var(--i) * 1.1s); }
+@keyframes htBeat { 0%, 30%, 100% { transform: scale(1); } 40% { transform: scale(1.12); } 52% { transform: scale(1.02); } 60% { transform: scale(1.1); } 72% { transform: scale(1); } }
+@keyframes htPop { 0% { opacity: 0; transform: scale(0); } 14% { opacity: 1; transform: scale(1); } 60% { opacity: 0; transform: scale(1.1) translateY(-14px); } 100% { opacity: 0; } }
+.slide-frame.static .ht-sm { opacity: 0.9; transform: none; }
+
+/* question: it draws itself, the dot drops in */
+.qs-ln { stroke-dasharray: 100; animation: qsDraw 4.2s ease-in-out infinite; }
+.qs-dot { opacity: 0; transform-origin: center; animation: qsDot 4.2s ease-out infinite; }
+@keyframes qsDraw { 0% { stroke-dashoffset: 100; } 40%, 84% { stroke-dashoffset: 0; } 100% { stroke-dashoffset: 100; } }
+@keyframes qsDot { 0%, 40% { opacity: 0; transform: scale(0); } 50% { opacity: 1; transform: scale(1.4); } 56%, 84% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static .qs-ln { stroke-dashoffset: 0; }
+.slide-frame.static .qs-dot { opacity: 1; }
+
+/* journey: the route draws itself, the pin drops */
+.jn-ln { stroke-dasharray: 100; animation: jnDraw 5s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+.jn-pin { opacity: 0; transform-box: view-box; transform-origin: 124px 30px; animation: jnPin 5s cubic-bezier(0.3, 1.4, 0.4, 1) infinite; }
+@keyframes jnDraw { 0%, 8% { stroke-dashoffset: 100; opacity: 1; } 60%, 90% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes jnPin { 0%, 56% { opacity: 0; transform: translateY(-14px) scale(0.6); } 66%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; transform: none; } }
+.slide-frame.static .jn-ln { stroke-dashoffset: 0; }
+.slide-frame.static .jn-pin { opacity: 1; transform: none; }
+
+/* fire: it flickers, embers rise */
+.fr-out { transform-origin: 50% 100%; animation: frFlick 0.7s ease-in-out infinite alternate; }
+.fr-in { transform-origin: 50% 100%; animation: frFlick 0.5s ease-in-out infinite alternate-reverse; }
+.fr-em { opacity: 0; animation: frEm 2.4s ease-out infinite; animation-delay: calc(var(--i) * 0.8s); }
+@keyframes frFlick { from { transform: scaleY(1); } to { transform: scaleY(1.06) skewX(-2deg); } }
+@keyframes frEm { 0% { opacity: 0; transform: translateY(10px); } 20% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+.slide-frame.static .fr-em { opacity: 0.8; transform: none; }
+
+/* shield: they bounce off */
+.sh-body { transform-origin: center; animation: shPulse 3.6s ease-out infinite; }
+.sh-hit { animation: shHit 3.6s cubic-bezier(0.4, 0, 0.6, 1) infinite; animation-delay: calc(var(--i) * 1.2s); }
+@keyframes shPulse { 0%, 38%, 50%, 100% { transform: scale(1); } 42% { transform: scale(1.04); } }
+@keyframes shHit { 0% { transform: translateX(0); opacity: 0; } 10% { opacity: 1; } 40%, 41% { transform: translateX(38px); opacity: 1; } 70% { transform: translate(10px, -14px); opacity: 0; } 100% { transform: translate(10px, -14px); opacity: 0; } }
+.slide-frame.static .sh-hit { opacity: 1; transform: translateX(26px); }
+
+/* magnet: pulled in */
+.mg-dot { animation: mgPull 2.8s cubic-bezier(0.6, 0, 0.9, 0.6) infinite; animation-delay: calc(var(--i) * 0.45s); }
+@keyframes mgPull { 0% { transform: translateX(0); opacity: 0; } 15% { opacity: 1; } 75% { transform: translateX(-16px); opacity: 1; } 85%, 100% { transform: translateX(-16px); opacity: 0; } }
+.slide-frame.static .mg-dot { opacity: 1; transform: translateX(-10px); }
+
+/* puzzle: the last piece */
+.pz-last { transform-origin: center; animation: pzIn 4.6s cubic-bezier(0.2, 1.2, 0.3, 1) infinite; }
+@keyframes pzIn { 0%, 20% { transform: translate(50px, 14px) rotate(12deg); opacity: 0; } 24% { opacity: 1; } 50%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+.slide-frame.static .pz-last { transform: none; opacity: 1; }
+
+/* key: in it goes */
+.ky { animation: kyIn 4.4s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+.ky-hole { transform-origin: center; animation: kyGlow 4.4s ease-out infinite; }
+@keyframes kyIn { 0% { transform: translateX(-30px); opacity: 0; } 10% { opacity: 1; } 45%, 85% { transform: translateX(20px); opacity: 1; } 100% { transform: translateX(20px); opacity: 0; } }
+@keyframes kyGlow { 0%, 44%, 58%, 100% { transform: scale(1); } 50% { transform: scale(1.6); } }
+.slide-frame.static .ky { transform: translateX(20px); opacity: 1; }
+
 /* ---- Look: Scribble. The same templates, drawn with a marker on a whiteboard. ----
    Skin only, and every rule is scoped to the look, so Pop renders exactly as before.
    Marks are masks filled with the field's accent: they take the style guide's colours. */

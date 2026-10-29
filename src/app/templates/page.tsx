@@ -1,11 +1,12 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { SlideView } from "@/components/slide/slide-view";
 import { artDirect } from "@/lib/art-director";
 import { parseDrawing, setLive } from "@/lib/live-store";
 import { SCENE_CATALOG, SCENES } from "@/lib/scene-catalog";
 import { BACKDROPS, MOODS, normalizeSlide, type Slide } from "@/lib/slide";
+import { applyLook, DEFAULT_THEME, isLookKey, type Theme } from "@/lib/theme";
 
 // Everything the engine can put on screen, numbered, so the speaker can say which to keep, drop or rebuild.
 // Not part of the show.
@@ -71,11 +72,11 @@ const UI_ENTRIES: { code: string; name: string; when: string; ui: Record<string,
 // A drawing made the way the engine makes one live, so the first card shows the real thing.
 const SAMPLE_LINE = "and the best part is you can join without a login, no account needed";
 
-function Card({ code, name, when, slide }: { code: string; name: string; when: string; slide: Slide }) {
+function Card({ code, name, when, slide, theme, still }: { code: string; name: string; when: string; slide: Slide; theme?: Theme; still?: boolean }) {
   return (
     <figure className="space-y-2">
       <div className="overflow-hidden rounded-xl ring-1 ring-white/10">
-        <SlideView slide={slide} />
+        <SlideView slide={slide} theme={theme} still={still} />
       </div>
       <figcaption className="text-sm leading-snug">
         <span className="mr-2 inline-block min-w-10 rounded bg-white px-1.5 py-0.5 text-center font-bold text-black">{code}</span>
@@ -97,6 +98,18 @@ export default function TemplatesPage() {
 
 function TemplatesView() {
   const [drawing, setDrawing] = useState("drawing a sample…");
+  // ?look=pop previews every template in that look without touching the speaker's own setting;
+  // ?still=1 shows the poster frame of each, with no motion, for contact sheets and reviews.
+  const search = useSyncExternalStore(
+    () => () => undefined,
+    () => window.location.search,
+    () => "",
+  );
+  const { preview, still } = useMemo(() => {
+    const params = new URLSearchParams(search);
+    const look = params.get("look");
+    return { preview: isLookKey(look) ? applyLook(DEFAULT_THEME, look) : undefined, still: params.get("still") === "1" };
+  }, [search]);
   // The samples that use the speaker's own files are shown only where those files exist: the hosted
   // app has no media library.
   const [own, setOwn] = useState<ReadonlySet<string>>(new Set());
@@ -170,32 +183,32 @@ function TemplatesView() {
       </header>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Slide types (L1 to L{LAYOUT_ENTRIES.length})</h2>
+        <h2 id="layouts" className="text-2xl font-bold">Slide types (L1 to L{LAYOUT_ENTRIES.length})</h2>
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {layouts.map((slide, i) =>
             slide.libraryId && !own.has(slide.libraryId) ? null : (
-              <Card key={slide.id} code={LAYOUT_ENTRIES[i].code} name={LAYOUT_ENTRIES[i].name} when={i === 0 ? `${LAYOUT_ENTRIES[i].when}. Sample ${drawing}` : LAYOUT_ENTRIES[i].when} slide={slide} />
+              <Card key={slide.id} code={LAYOUT_ENTRIES[i].code} name={LAYOUT_ENTRIES[i].name} when={i === 0 ? `${LAYOUT_ENTRIES[i].when}. Sample ${drawing}` : LAYOUT_ENTRIES[i].when} slide={slide} theme={preview} still={still} />
             ),
           )}
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Interface elements (U1 to U{UI_ENTRIES.length}), new</h2>
+        <h2 id="cards" className="text-2xl font-bold">Interface elements (U1 to U{UI_ENTRIES.length}), new</h2>
         <p className="text-white/60">One big shadcn element instead of a whole screen. Only the word or number that carries the point is readable; the rest are grey bars.</p>
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {uiSlides.map((slide, i) => (
-            <Card key={slide.id} code={UI_ENTRIES[i].code} name={UI_ENTRIES[i].name} when={`For example ${UI_ENTRIES[i].when}`} slide={slide} />
+            <Card key={slide.id} code={UI_ENTRIES[i].code} name={UI_ENTRIES[i].name} when={`For example ${UI_ENTRIES[i].when}`} slide={slide} theme={preview} still={still} />
           ))}
         </div>
       </section>
 
       <section className="space-y-4">
-        <h2 className="text-2xl font-bold">Animated scenes (S1 to S{SCENES.length})</h2>
+        <h2 id="scenes" className="text-2xl font-bold">Animated scenes (S1 to S{SCENES.length})</h2>
         <p className="text-white/60">Since the drawing took over, these only appear when a drawing fails and the scene fits perfectly, or behind a prepared slide that could not be drawn.</p>
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-5">
           {scenes.map((slide, i) => (
-            <Card key={slide.id} code={`S${i + 1}`} name={slide.scene ?? ""} when={slide.scene ? `${SCENE_CATALOG[slide.scene].shows}. Means: ${SCENE_CATALOG[slide.scene].means}` : ""} slide={slide} />
+            <Card key={slide.id} code={`S${i + 1}`} name={slide.scene ?? ""} when={slide.scene ? `${SCENE_CATALOG[slide.scene].shows}. Means: ${SCENE_CATALOG[slide.scene].means}` : ""} slide={slide} theme={preview} still={still} />
           ))}
         </div>
       </section>
@@ -205,7 +218,7 @@ function TemplatesView() {
         <p className="text-white/60">Rotate behind scenes, numbers, icons and big words. Not behind drawn slides.</p>
         <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
           {backdrops.map((slide, i) => (
-            <Card key={slide.id} code={`B${i + 1}`} name={BACKDROPS[i]} when="Background layer" slide={slide} />
+            <Card key={slide.id} code={`B${i + 1}`} name={BACKDROPS[i]} when="Background layer" slide={slide} theme={preview} still={still} />
           ))}
         </div>
       </section>
