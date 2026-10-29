@@ -441,6 +441,218 @@ const RENDER: Record<SceneName, () => ReactNode> = {
       </g>
     </>
   ),
+
+  fall: () => (
+    <>
+      <rect x="10" y="82" width="140" height="2.6" fill={FG} opacity="0.3" />
+      {range(5).map((i) => (
+        <rect key={i} x="10" y={22 + i * 12} width="140" height="1" fill={FG} opacity="0.12" />
+      ))}
+      <path className="fl-ln" d="M14 22 L46 26 L70 40 L96 44 L118 66 L146 76" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" pathLength={100} />
+      <circle className="fl-dot" cx="146" cy="76" r="5" fill={ALT} />
+    </>
+  ),
+
+  target: () => (
+    <>
+      <circle cx="104" cy="45" r="26" fill="none" stroke={FG} strokeWidth="4" />
+      <circle cx="104" cy="45" r="15" fill="none" stroke={FG} strokeWidth="4" />
+      <circle className="tg-eye" cx="104" cy="45" r="5.5" fill={ALT} />
+      <g className="tg-ar">
+        <line x1="22" y1="45" x2="98" y2="45" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+        <polygon points="102,45 92,39.5 92,50.5" fill={FG} />
+        <polygon points="22,45 12,38 17,45 12,52" fill={ALT} />
+      </g>
+    </>
+  ),
+
+  fork: () => (
+    <>
+      <path d="M12 45 H64" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <path d="M64 45 C 84 45, 96 22, 148 22" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <path d="M64 45 C 84 45, 96 68, 148 68" fill="none" stroke={FG} strokeWidth="4" strokeLinecap="round" />
+      <path className="fk-pick" d="M64 45 C 84 45, 96 22, 148 22" fill="none" stroke={ALT} strokeWidth="4" strokeLinecap="round" pathLength={100} />
+      <circle className="fk-dot" cx="12" cy="45" r="5.5" fill={ALT} />
+    </>
+  ),
+
+  bridge: () => (
+    <>
+      <rect x="6" y="56" width="42" height="28" fill={FG} />
+      <rect x="112" y="56" width="42" height="28" fill={FG} />
+      {range(6).map((i) => (
+        <rect key={i} className="br-pl" x={48 + i * 10.7} y="54" width="9" height="4" rx="1" fill={FG} style={v({ "--i": i })} />
+      ))}
+      <circle className="br-dot" cx="28" cy="48" r="5" fill={ALT} />
+    </>
+  ),
+
+  funnel: () => (
+    <>
+      <path d="M34 14 H126 L92 50 V72 H68 V50 Z" fill="none" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+      {range(9).map((i) => (
+        <circle key={i} className="fn-in" cx={44 + i * 9} cy="6" r="3.2" fill={ALT} style={v({ "--i": i % 4 })} />
+      ))}
+      <circle className="fn-out" cx="80" cy="76" r="4" fill={ALT} />
+    </>
+  ),
+
+  crowd: () => (
+    <>
+      {range(27).map((i) => {
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+        const x = 16 + col * 16 + (row % 2) * 8;
+        const y = 28 + row * 21;
+        const alt = i === 4 || i === 13 || i === 23;
+        return (
+          <g key={i} className="cr" style={v({ "--i": i })}>
+            <circle cx={x} cy={y} r="4.6" fill={alt ? ALT : FG} />
+            <rect x={x - 6} y={y + 6} width="12" height="11" rx="5" fill={alt ? ALT : FG} />
+          </g>
+        );
+      })}
+    </>
+  ),
+
+  eye: () => (
+    <>
+      <circle cx="80" cy="45" r="16" fill={FG} />
+      <circle className="ey-pu" cx="80" cy="45" r="7" fill={ALT} />
+      <path className="ey-lid" d="M18 45 C 40 14, 120 14, 142 45 C 120 76, 40 76, 18 45 Z" fill="var(--bg)" />
+      <path d="M18 45 C 40 14, 120 14, 142 45 C 120 76, 40 76, 18 45 Z" fill="none" stroke={FG} strokeWidth="4" strokeLinejoin="round" />
+    </>
+  ),
+
+  chip: () => (
+    <>
+      {range(6).map((i) => (
+        <rect key={`l${i}`} className="cp-pin" x="44" y={25.5 + i * 7.5} width="12" height="3" fill={FG} style={v({ "--i": i })} />
+      ))}
+      {range(6).map((i) => (
+        <rect key={`r${i}`} className="cp-pin" x="104" y={25.5 + i * 7.5} width="12" height="3" fill={FG} style={v({ "--i": i + 6 })} />
+      ))}
+      {range(6).map((i) => (
+        <rect key={`t${i}`} className="cp-pin" x={60.5 + i * 7.5} y="9" width="3" height="12" fill={FG} style={v({ "--i": i + 12 })} />
+      ))}
+      {range(6).map((i) => (
+        <rect key={`b${i}`} className="cp-pin" x={60.5 + i * 7.5} y="69" width="3" height="12" fill={FG} style={v({ "--i": i + 18 })} />
+      ))}
+      <rect x="56" y="21" width="48" height="48" rx="4" fill={FG} />
+      <rect className="cp-core" x="68" y="33" width="24" height="24" rx="2" fill={ALT} />
+    </>
+  ),
+
+  cloud: () => (
+    <>
+      <path d="M44 60 H116 A14 14 0 0 0 112 33 A20 20 0 0 0 74 26 A17 17 0 0 0 44 60 Z" fill={FG} />
+      <path className="cd-up" d="M66 84 V68 M59 75 L66 68 L73 75" fill="none" stroke={ALT} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+      <path className="cd-dn" d="M94 68 V84 M87 77 L94 84 L101 77" fill="none" stroke={ALT} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" />
+    </>
+  ),
+
+  bug: () => (
+    <>
+      {[[60, 22], [84, 36], [50, 50], [72, 64]].map(([w, y], i) => (
+        <rect key={i} className={i === 2 ? "bq-err" : undefined} x="24" y={y} width={w} height="4" rx="2" fill={FG} opacity="0.3" />
+      ))}
+      <g className="bq">
+        {range(3).map((i) => (
+          <line key={`a${i}`} className="bq-leg" x1="36" y1={46 + i * 5} x2="26" y2={42 + i * 5} stroke={FG} strokeWidth="2.4" strokeLinecap="round" />
+        ))}
+        {range(3).map((i) => (
+          <line key={`b${i}`} className="bq-leg" x1="52" y1={46 + i * 5} x2="62" y2={42 + i * 5} stroke={FG} strokeWidth="2.4" strokeLinecap="round" />
+        ))}
+        <ellipse cx="44" cy="50" rx="10" ry="7.5" fill={ALT} />
+        <circle cx="44" cy="40" r="4.5" fill={FG} />
+        <line x1="44" y1="43" x2="44" y2="57" stroke={FG} strokeWidth="1.6" />
+      </g>
+    </>
+  ),
+
+  wall: () => (
+    <>
+      {range(8).map((row) =>
+        range(3).map((col) => (
+          <rect key={`${row}-${col}`} x={94 + col * 24 - (row % 2) * 12} y={8 + row * 10} width="22" height="8" rx="1" fill={FG} />
+        )),
+      )}
+      <polyline className="wl-crack" points="94,45 101,40 98,33 106,28" fill="none" stroke={ALT} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+      <circle className="wl-ball" cx="34" cy="46" r="7" fill={ALT} />
+    </>
+  ),
+
+  gift: () => (
+    <>
+      <rect x="54" y="46" width="52" height="34" rx="2" fill={FG} />
+      <rect x="77" y="46" width="6" height="34" fill={ALT} />
+      <g className="gf-lid">
+        <rect x="50" y="36" width="60" height="12" rx="2" fill={FG} />
+        <rect x="77" y="36" width="6" height="12" fill={ALT} />
+        <circle cx="73" cy="32" r="5" fill={ALT} />
+        <circle cx="87" cy="32" r="5" fill={ALT} />
+      </g>
+      {([[44, 26], [116, 22], [122, 44]] as [number, number][]).map(([x, y], i) => (
+        <polygon key={i} className="gf-sp" points={`${x},${y - 5} ${x + 3},${y} ${x},${y + 5} ${x - 3},${y}`} fill={ALT} style={v({ "--i": i })} />
+      ))}
+    </>
+  ),
+
+  dice: () => (
+    <>
+      <g className="dc dc-a">
+        <rect x="42" y="32" width="26" height="26" rx="5" fill={FG} />
+        {([[48, 38], [62, 38], [55, 45], [48, 52], [62, 52]] as [number, number][]).map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="2.6" fill="var(--bg)" />
+        ))}
+      </g>
+      <g className="dc dc-b">
+        <rect x="92" y="32" width="26" height="26" rx="5" fill={ALT} />
+        {([[98, 38], [105, 45], [112, 52]] as [number, number][]).map(([x, y], i) => (
+          <circle key={i} cx={x} cy={y} r="2.6" fill={FG} />
+        ))}
+      </g>
+    </>
+  ),
+
+  flag: () => (
+    <>
+      <path d="M0 86 C 50 86, 60 52, 80 52 C 100 52, 110 86, 160 86 Z" fill={FG} opacity="0.25" />
+      <g className="fla-pole">
+        <rect x="78.5" y="20" width="3" height="34" fill={FG} />
+        <polygon className="fla-flag" points="81.5,20 110,27.5 81.5,35" fill={ALT} />
+      </g>
+    </>
+  ),
+
+  slow: () => (
+    <>
+      <rect x="10" y="78" width="140" height="2.6" fill={FG} opacity="0.3" />
+      <path className="sl-tr" d="M14 75 H60" fill="none" stroke={ALT} strokeWidth="3" strokeLinecap="round" strokeDasharray="4 5" pathLength={100} />
+      <g className="sl">
+        <rect x="56" y="66" width="44" height="10" rx="5" fill={FG} />
+        <circle cx="98" cy="63" r="6" fill={FG} />
+        <line x1="100" y1="58" x2="104" y2="50" stroke={FG} strokeWidth="2" strokeLinecap="round" />
+        <line x1="95" y1="58" x2="93" y2="50" stroke={FG} strokeWidth="2" strokeLinecap="round" />
+        <circle cx="104" cy="49" r="1.8" fill={FG} />
+        <circle cx="93" cy="49" r="1.8" fill={FG} />
+        <circle cx="72" cy="58" r="13" fill={FG} />
+        <circle cx="72" cy="58" r="7" fill="none" stroke={ALT} strokeWidth="3" />
+        <circle cx="72" cy="58" r="2" fill={ALT} />
+      </g>
+    </>
+  ),
+
+  sunrise: () => (
+    <>
+      {([[-62, 10], [-46, 20], [-26, 27], [0, 30], [26, 27], [46, 20], [62, 10]] as [number, number][]).map(([dx, dy], i) => (
+        <line key={i} className="sr-ray" x1={80 + dx * 0.78} y1={56 - dy * 0.78 - 6} x2={80 + dx} y2={56 - dy - 8} stroke={ALT} strokeWidth="3.4" strokeLinecap="round" style={v({ "--i": i })} />
+      ))}
+      <circle className="sr-sun" cx="80" cy="78" r="18" fill={ALT} />
+      <rect x="0" y="63" width="160" height="27" fill="var(--bg)" />
+      <rect x="0" y="62" width="160" height="2.6" fill={FG} opacity="0.4" />
+    </>
+  ),
 };
 
 /** Wordless animated metaphors. Pure SVG and CSS, drawn in the slide's own colours. */

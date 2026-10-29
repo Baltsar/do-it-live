@@ -6,6 +6,8 @@ export const SCENES = [
   "orbit", "pulse", "grow", "lock", "drain", "stack", "wave", "echo", "outlier", "balance", "loop", "launch",
   "earth", "deal", "money", "clock", "idea", "trophy", "speed", "team", "heart", "question", "journey", "fire",
   "shield", "magnet", "puzzle", "key",
+  "fall", "target", "fork", "bridge", "funnel", "crowd", "eye", "chip", "cloud", "bug", "wall", "gift", "dice",
+  "flag", "slow", "sunrise",
 ] as const;
 
 export type SceneName = (typeof SCENES)[number];
@@ -57,4 +59,20 @@ export const SCENE_CATALOG: Record<SceneName, SceneInfo> = {
   magnet: { shows: "Dots get pulled into the poles of a magnet", means: "attraction: pulling people in, attracting customers or talent, traffic, demand, people keep coming back" },
   puzzle: { shows: "Three puzzle pieces wait and the fourth slides into place", means: "the missing piece: things fitting together, integration, solving it, compatibility, it clicks into place" },
   key: { shows: "A key slides into a keyhole and the keyhole lights up", means: "access: the key to something, unlocking, opening up, permission, getting in, the secret ingredient" },
+  fall: { shows: "A line draws itself downhill and ends in a dot at the bottom", means: "a drop: decline, falling numbers, losing users, sales going down, shrinking, a crash in the chart" },
+  target: { shows: "An arrow flies in and lands in the bullseye", means: "hitting the goal: a target, aim, a KPI, precision, the bullseye, exactly right" },
+  fork: { shows: "A dot reaches a fork in the road, pauses, and takes one path", means: "a decision: two paths, a crossroads, choosing between options, which way to go" },
+  bridge: { shows: "Planks appear across a gap and a dot crosses", means: "connecting two sides: a partnership, integration, bridging a gap, bringing two worlds together" },
+  funnel: { shows: "Many dots pour into a funnel and one comes out", means: "filtering: a funnel, from many to few, qualifying leads, narrowing down, only the best get through" },
+  crowd: { shows: "Rows of people fill the frame", means: "many people: a crowd, thousands of users, the audience, a packed room, everyone, scale in people" },
+  eye: { shows: "An eye looks left and right, and blinks", means: "seeing: attention, visibility, watching, noticing, eyes on it, look at this, insight" },
+  chip: { shows: "A chip whose core pulses while its pins flash in sequence", means: "compute: a chip, GPUs, hardware, processing power, AI infrastructure, running the model" },
+  cloud: { shows: "A cloud with an arrow going up into it and one coming down", means: "the cloud: hosting, servers, infrastructure, uploading and syncing, running it somewhere else, data centres" },
+  bug: { shows: "A beetle crawls across lines of code and one line turns red", means: "a bug: an error, something broke, a glitch, debugging, it crashed, the thing that went wrong" },
+  wall: { shows: "A ball flies at a brick wall and bounces off, leaving a crack", means: "a barrier: blocked, hitting a wall, an obstacle, no way through, resistance, stuck" },
+  gift: { shows: "The lid of a gift box pops open and sparkles fly", means: "a gift: free, giving it away, open source, a present, a bonus, something for nothing" },
+  dice: { shows: "Two dice tumble in and land", means: "chance: risk, luck, a gamble, rolling the dice, uncertainty, betting on it" },
+  flag: { shows: "A flag is planted on a hilltop and waves", means: "a milestone: planting the flag, reaching the goal, the finish line, we made it, claiming new ground" },
+  slow: { shows: "A snail inches forward, leaving a trail", means: "slow: sluggish, taking forever, a slow process, crawling, nothing moves, patience running out" },
+  sunrise: { shows: "A sun rises over the horizon and its rays appear", means: "a new beginning: morning, a fresh start, optimism, the dawn of something, day one, hope" },
 };

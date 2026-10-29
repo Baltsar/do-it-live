@@ -568,6 +568,128 @@
 @keyframes kyGlow { 0%, 44%, 58%, 100% { transform: scale(1); } 50% { transform: scale(1.6); } }
 .slide-frame.static .ky { transform: translateX(20px); opacity: 1; }
 
+/* fall: downhill, then the floor */
+.fl-ln { stroke-dasharray: 100; animation: flDraw 4.6s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+.fl-dot { opacity: 0; transform-origin: center; animation: flDot 4.6s ease-out infinite; }
+@keyframes flDraw { 0%, 8% { stroke-dashoffset: 100; opacity: 1; } 55%, 88% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+@keyframes flDot { 0%, 54% { opacity: 0; transform: scale(0); } 60% { opacity: 1; transform: scale(1.5); } 66%, 88% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static .fl-ln { stroke-dashoffset: 0; }
+.slide-frame.static .fl-dot { opacity: 1; }
+
+/* target: in it flies */
+.tg-ar { animation: tgFly 4.2s cubic-bezier(0.2, 0.9, 0.2, 1) infinite; }
+.tg-eye { transform-origin: center; animation: tgHit 4.2s ease-out infinite; }
+@keyframes tgFly { 0%, 10% { transform: translateX(-100px); opacity: 0; } 14% { opacity: 1; } 32%, 88% { transform: translateX(0); opacity: 1; } 100% { transform: translateX(0); opacity: 0; } }
+@keyframes tgHit { 0%, 32% { transform: scale(1); } 38% { transform: scale(1.7); } 46%, 100% { transform: scale(1); } }
+.slide-frame.static .tg-ar { transform: none; opacity: 1; }
+
+/* fork: pause, then pick */
+.fk-dot { animation: fkDot 5s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+.fk-pick { stroke-dasharray: 100; animation: fkPick 5s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+@keyframes fkDot { 0% { transform: translate(0, 0); opacity: 0; } 8% { opacity: 1; } 30%, 46% { transform: translate(52px, 0); opacity: 1; } 62% { transform: translate(94px, -14px); } 80%, 90% { transform: translate(136px, -23px); opacity: 1; } 100% { transform: translate(136px, -23px); opacity: 0; } }
+@keyframes fkPick { 0%, 46% { stroke-dashoffset: 100; } 80%, 100% { stroke-dashoffset: 0; } }
+.slide-frame.static .fk-dot { transform: translate(52px, 0); opacity: 1; }
+.slide-frame.static .fk-pick { stroke-dashoffset: 0; }
+
+/* bridge: plank by plank, then across */
+.br-pl { animation: brPl 5.2s cubic-bezier(0.2, 1.2, 0.3, 1) infinite backwards; animation-delay: calc(var(--i) * 0.22s); }
+.br-dot { animation: brDot 5.2s cubic-bezier(0.4, 0, 0.3, 1) infinite; }
+@keyframes brPl { 0% { transform: translateY(-14px); opacity: 0; } 10%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes brDot { 0%, 40% { transform: translateX(0); opacity: 1; } 72%, 88% { transform: translateX(104px); opacity: 1; } 100% { transform: translateX(104px); opacity: 0; } }
+.slide-frame.static .br-pl { transform: none; opacity: 1; }
+.slide-frame.static .br-dot { transform: translateX(52px); }
+
+/* funnel: many in, one out */
+.fn-in { animation: fnIn 3s ease-in infinite; animation-delay: calc(var(--i) * 0.22s); }
+.fn-out { opacity: 0; animation: fnOut 3s ease-in infinite; }
+@keyframes fnIn { 0% { transform: translateY(-8px); opacity: 0; } 20% { opacity: 1; } 60% { transform: translateY(30px); opacity: 1; } 70%, 100% { transform: translateY(30px); opacity: 0; } }
+@keyframes fnOut { 0%, 62% { transform: translateY(0); opacity: 0; } 70% { opacity: 1; } 100% { transform: translateY(14px); opacity: 0; } }
+.slide-frame.static .fn-in { transform: translateY(12px); opacity: 1; }
+.slide-frame.static .fn-out { opacity: 1; }
+
+/* crowd: row by row */
+.cr { animation: crIn 4.8s cubic-bezier(0.2, 1, 0.3, 1) infinite backwards; animation-delay: calc(var(--i) * 0.05s); }
+@keyframes crIn { 0% { transform: translateY(10px); opacity: 0; } 10%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+.slide-frame.static .cr { transform: none; opacity: 1; }
+
+/* eye: it looks around, and blinks */
+.ey-pu { animation: eyPu 4s ease-in-out infinite; }
+.ey-lid { transform-origin: center; transform: scaleY(0); animation: eyLid 4s ease-in-out infinite; }
+@keyframes eyPu { 0%, 20% { transform: translateX(0); } 30%, 45% { transform: translateX(-7px); } 55%, 75% { transform: translateX(7px); } 85%, 100% { transform: translateX(0); } }
+@keyframes eyLid { 0%, 60%, 66%, 100% { transform: scaleY(0); } 63% { transform: scaleY(1); } }
+.slide-frame.static .ey-lid { transform: scaleY(0); }
+
+/* chip: the core pulses, the pins fire */
+.cp-core { transform-origin: center; animation: cpCore 1.6s ease-in-out infinite; }
+.cp-pin { opacity: 0.45; animation: cpPin 2.4s ease-out infinite; animation-delay: calc(var(--i) * 0.08s); }
+@keyframes cpCore { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
+@keyframes cpPin { 0%, 70%, 100% { opacity: 0.45; } 12% { opacity: 1; } }
+.slide-frame.static .cp-pin { opacity: 1; }
+
+/* cloud: up into it, down out of it */
+.cd-up { animation: cdUp 1.6s ease-in-out infinite; }
+.cd-dn { animation: cdDn 1.6s ease-in-out infinite; animation-delay: 0.8s; }
+@keyframes cdUp { 0% { transform: translateY(6px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(-8px); opacity: 0; } }
+@keyframes cdDn { 0% { transform: translateY(-8px); opacity: 0; } 30% { opacity: 1; } 100% { transform: translateY(6px); opacity: 0; } }
+.slide-frame.static :is(.cd-up, .cd-dn) { transform: none; opacity: 1; }
+
+/* bug: it crawls, and a line goes red */
+.bq { animation: bqWalk 5s linear infinite; }
+.bq-leg { transform-origin: center; animation: bqLeg 0.3s ease-in-out infinite alternate; }
+.bq-err { animation: bqErr 5s linear infinite; }
+@keyframes bqWalk { 0% { transform: translateX(0); } 100% { transform: translateX(80px); } }
+@keyframes bqLeg { from { transform: rotate(-8deg); } to { transform: rotate(8deg); } }
+@keyframes bqErr { 0%, 42% { fill: var(--fg); opacity: 0.3; } 48%, 100% { fill: var(--alt); opacity: 1; } }
+.slide-frame.static .bq { transform: translateX(40px); }
+.slide-frame.static .bq-err { fill: var(--alt); opacity: 1; }
+
+/* wall: it bounces off */
+.wl-ball { animation: wlBall 3.2s cubic-bezier(0.5, 0, 0.5, 1) infinite; }
+.wl-crack { opacity: 0; animation: wlCrack 3.2s ease-out infinite; }
+@keyframes wlBall { 0% { transform: translateX(0); } 40% { transform: translateX(52px); } 43% { transform: translateX(50px) scaleX(0.85); } 78% { transform: translateX(6px); } 100% { transform: translateX(0); } }
+@keyframes wlCrack { 0%, 40% { opacity: 0; } 44%, 82% { opacity: 1; } 100% { opacity: 0; } }
+.slide-frame.static .wl-ball { transform: translateX(52px); }
+.slide-frame.static .wl-crack { opacity: 1; }
+
+/* gift: the lid pops */
+.gf-lid { transform-box: view-box; transform-origin: 80px 42px; animation: gfLid 4.4s cubic-bezier(0.2, 1.3, 0.3, 1) infinite; }
+.gf-sp { opacity: 0; transform-origin: center; animation: gfSp 4.4s ease-out infinite; animation-delay: calc(var(--i) * 0.12s); }
+@keyframes gfLid { 0%, 30% { transform: none; } 44%, 86% { transform: translateY(-14px) rotate(-10deg); } 100% { transform: none; } }
+@keyframes gfSp { 0%, 40% { opacity: 0; transform: scale(0); } 48% { opacity: 1; transform: scale(1.3); } 54%, 80% { opacity: 1; transform: scale(1); } 90%, 100% { opacity: 0; transform: scale(1); } }
+.slide-frame.static .gf-lid { transform: translateY(-14px) rotate(-10deg); }
+.slide-frame.static .gf-sp { opacity: 1; }
+
+/* dice: they tumble in */
+.dc { transform-box: view-box; animation: dcRoll 4.6s cubic-bezier(0.3, 0, 0.2, 1.2) infinite; }
+.dc-a { transform-origin: 55px 45px; }
+.dc-b { transform-origin: 105px 45px; animation-delay: 0.18s; }
+@keyframes dcRoll { 0% { transform: translateY(-34px) rotate(-70deg); opacity: 0; } 10% { opacity: 1; } 28% { transform: translateY(0) rotate(0); } 33% { transform: translateY(-3px) rotate(0); } 38%, 86% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+.slide-frame.static .dc { transform: none; opacity: 1; }
+
+/* flag: planted, then it waves */
+.fla-pole { animation: flaPole 4.6s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+.fla-flag { transform-origin: 0% 50%; animation: flaFlag 4.6s ease-in-out infinite; }
+@keyframes flaPole { 0% { transform: translateY(-40px); opacity: 0; } 18%, 88% { transform: none; opacity: 1; } 100% { transform: none; opacity: 0; } }
+@keyframes flaFlag { 0%, 18% { transform: scaleX(0); } 30%, 60%, 88% { transform: scaleX(1); } 45% { transform: scaleX(0.86); } 74% { transform: scaleX(0.9); } 100% { transform: scaleX(1); } }
+.slide-frame.static .fla-pole { transform: none; opacity: 1; }
+.slide-frame.static .fla-flag { transform: none; }
+
+/* slow: inch by inch */
+.sl { animation: slCreep 7s linear infinite; }
+.sl-tr { stroke-dasharray: 100; animation: slTrail 7s linear infinite; }
+@keyframes slCreep { 0% { transform: translateX(-8px); opacity: 0; } 8% { opacity: 1; } 92% { opacity: 1; } 100% { transform: translateX(16px); opacity: 0; } }
+@keyframes slTrail { 0% { stroke-dashoffset: 100; } 92%, 100% { stroke-dashoffset: 0; } }
+.slide-frame.static .sl { transform: none; opacity: 1; }
+.slide-frame.static .sl-tr { stroke-dashoffset: 0; }
+
+/* sunrise: up it comes */
+.sr-sun { animation: srSun 5.2s cubic-bezier(0.3, 0, 0.2, 1) infinite; }
+.sr-ray { opacity: 0; animation: srRay 5.2s ease-out infinite; animation-delay: calc(var(--i) * 0.06s); }
+@keyframes srSun { 0% { transform: translateY(0); opacity: 1; } 46%, 88% { transform: translateY(-22px); opacity: 1; } 100% { transform: translateY(-22px); opacity: 0; } }
+@keyframes srRay { 0%, 46% { opacity: 0; } 62%, 88% { opacity: 1; } 100% { opacity: 0; } }
+.slide-frame.static .sr-sun { transform: translateY(-22px); }
+.slide-frame.static .sr-ray { opacity: 1; }
+
 /* ---- Look: Scribble. The same templates, drawn with a marker on a whiteboard. ----
    Skin only, and every rule is scoped to the look, so Pop renders exactly as before.
    Marks are masks filled with the field's accent: they take the style guide's colours. */
