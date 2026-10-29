@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Anton, Archivo, Bricolage_Grotesque, Fraunces, Space_Grotesk } from "next/font/google";
+import { Anton, Archivo, Bricolage_Grotesque, Fraunces, Shantell_Sans, Space_Grotesk } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
@@ -15,6 +15,8 @@ const bricolage = Bricolage_Grotesque({ variable: "--font-bricolage", subsets: [
 const anton = Anton({ variable: "--font-anton", subsets: ["latin"], weight: "400" });
 const fraunces = Fraunces({ variable: "--font-fraunces", subsets: ["latin"] });
 const space = Space_Grotesk({ variable: "--font-space", subsets: ["latin"] });
+// The Scribble look: Informal makes it marker-like, Bounce lets letters sit off the line.
+const shantell = Shantell_Sans({ variable: "--font-shantell", subsets: ["latin"], axes: ["BNCE", "INFM"] });
 
 export const metadata: Metadata = {
   title: "Do it live: vibe presenting",
@@ -24,7 +26,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${archivo.variable} ${bricolage.variable} ${anton.variable} ${fraunces.variable} ${space.variable} dark h-full antialiased`}>
+    <html lang="en" className={`${archivo.variable} ${bricolage.variable} ${anton.variable} ${fraunces.variable} ${space.variable} ${shantell.variable} dark h-full antialiased`}>
       <body className="min-h-full bg-background font-sans text-foreground">
         <TooltipProvider>{children}</TooltipProvider>
       </body>

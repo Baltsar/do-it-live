@@ -7,7 +7,7 @@ import { UiHero } from "@/components/slide/ui-hero";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { useTheme } from "@/hooks/use-theme";
 import { hostOf, type ChartData, type Slide } from "@/lib/slide";
-import { themeVars } from "@/lib/theme";
+import { themeVars, type Theme } from "@/lib/theme";
 import { Backdrop } from "./backdrop";
 import { Scene } from "./scenes";
 import "./slide.css";
@@ -601,7 +601,7 @@ function Layer({ slide, enter, still, onEntered }: { slide: Slide; enter: boolea
   const backdrop = !still && slide.style.backdrop !== "none";
   return (
     <div
-      className={`layer mood-${slide.style.field}${flush ? " flush" : ""}${QUIET.includes(slide.layout) ? " quiet" : ""}${backdrop ? " has-backdrop" : ""}${enter ? " enter" : ""}`}
+      className={`layer layout-${slide.layout.toLowerCase()} mood-${slide.style.field}${flush ? " flush" : ""}${QUIET.includes(slide.layout) ? " quiet" : ""}${backdrop ? " has-backdrop" : ""}${enter ? " enter" : ""}`}
       onAnimationEnd={(e) => e.target === e.currentTarget && onEntered?.()}
     >
       {/* Live only: thumbnails would each run their own canvas loop. */}
@@ -620,16 +620,19 @@ interface SlideViewProps {
   /** No motion: thumbnails and previews. */
   still?: boolean;
   idleTitle?: string;
+  /** Renders in this style guide instead of the speaker's: previews in the look picker. */
+  theme?: Theme;
 }
 
 /**
  * Renders one slide. On change, the new colour field wipes in over the old one,
  * the signature "cut". The previous layer is dropped once the wipe finishes.
  */
-export function SlideView({ slide, blank, fill, still, idleTitle = "Do it live" }: SlideViewProps) {
+export function SlideView({ slide, blank, fill, still, idleTitle = "Do it live", theme: preview }: SlideViewProps) {
   const [shown, setShown] = useState<Slide | null>(slide);
   const [prev, setPrev] = useState<Slide | null>(null);
-  const [theme] = useTheme();
+  const [speaker] = useTheme();
+  const theme = preview ?? speaker;
 
   if (slide !== shown) {
     setPrev(shown);
@@ -637,7 +640,7 @@ export function SlideView({ slide, blank, fill, still, idleTitle = "Do it live" 
   }
 
   return (
-    <div className={`slide-frame${fill ? " fill" : ""}${still ? " static" : ""}`} style={themeVars(theme)}>
+    <div className={`slide-frame${fill ? " fill" : ""}${still ? " static" : ""}`} data-look={theme.look} style={themeVars(theme)}>
       {prev && !still ? <Layer key={`${prev.id}:${theme.font}`} slide={prev} enter={false} still /> : null}
       {shown ? (
         <Layer key={`${shown.id}:${theme.font}`} slide={shown} enter={!still} still={Boolean(still)} onEntered={() => setPrev(null)} />

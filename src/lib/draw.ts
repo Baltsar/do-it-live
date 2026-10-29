@@ -1,6 +1,7 @@
 // Server-only: a model builds the slide itself, as a small HTML and CSS scene, while the speaker is still talking.
 // The text is streamed so the picture can assemble on screen as it is written.
 
+import { LOOKS, type LookKey } from "@/lib/theme";
 import { UI_MENU } from "@/lib/ui-spec";
 
 const NEBIUS_BASE = "https://api.tokenfactory.nebius.com/v1";
@@ -25,16 +26,19 @@ export interface DrawPalette {
   bg: string;
   fg: string;
   alt: string;
+  /** How shapes are drawn. Without one, the original Pop brief. */
+  look?: LookKey;
 }
 
 const HEX = /^#[0-9a-f]{6}$/i;
-export const safePalette = (p: Partial<DrawPalette> | undefined): DrawPalette => ({
+export const safePalette = (p: Partial<DrawPalette> | undefined, look?: LookKey): DrawPalette => ({
   bg: p?.bg && HEX.test(p.bg) ? p.bg : "#0a0a0a",
   fg: p?.fg && HEX.test(p.fg) ? p.fg : "#ffd60a",
   alt: p?.alt && HEX.test(p.alt) ? p.alt : "#ff4fa3",
+  look,
 });
 
-const system = ({ bg, fg, alt }: DrawPalette): string => `You are the live visual designer of a talk. The speaker is talking right now and the line reaches you while it is still being said, often mid-sentence. Build ONE slide that makes the audience instantly SEE what is being said: the most obvious, literal picture for it. The newest words at the END of the line matter most. Like a simultaneous interpreter, do not wait for the sentence to finish: as soon as the words name something concrete (a thing, a place, a product, a number, a feeling, an action), show it.
+const system = ({ bg, fg, alt, look = "pop" }: DrawPalette): string => `You are the live visual designer of a talk. The speaker is talking right now and the line reaches you while it is still being said, often mid-sentence. Build ONE slide that makes the audience instantly SEE what is being said: the most obvious, literal picture for it. The newest words at the END of the line matter most. Like a simultaneous interpreter, do not wait for the sentence to finish: as soon as the words name something concrete (a thing, a place, a product, a number, a feeling, an action), show it.
 
 Your FIRST line is a verdict, exactly one of these four:
 
@@ -64,7 +68,7 @@ Rules:
 - Write the <style> block FIRST and keep it short: the @keyframes and a few small classes. Put layout in inline style attributes on the elements, so the slide can appear piece by piece while you write. Write the biggest, most important element first.
 - .stage is already 1600px by 900px with background ${bg}, position relative, overflow hidden: do not restyle it. Everything is big: this is a projector and the back row must read it. Interface text at least 36px, the main object several hundred pixels wide. Fill the stage and centre the composition.
 - Colours come from the speaker's style guide: background ${bg}, main ${fg}, accent ${alt}. You may also use white, black, and see-through versions of these (rgba). No other hues.
-- The stage already uses the speaker's typeface: never set font-family. Heavy weights. Rounded corners, flat, modern, confident. No drop shadows heavier than a soft one.
+- The stage already uses the speaker's typeface: never set font-family. ${LOOKS[look].drawBrief}
 - Nothing may spill out of its box: let a box grow with its content (padding, no fixed narrow width) and keep long figures on one line with white-space: nowrap. No emoji: draw the thing with shapes instead.
 - Never strike anything through or cross it out with lines: it looks cheap. To show that something is gone or not needed, leave it out, fade it, or grey it out next to the thing that replaces it.
 - Text only as real interface text (a button label, a field name, a number, a name in a chat) or one short word. Never a sentence, never an explanation.

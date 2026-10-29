@@ -7,7 +7,7 @@ import { SlideView } from "@/components/slide/slide-view";
 import { useTheme } from "@/hooks/use-theme";
 import { loadSettings, saveSettings } from "@/lib/settings";
 import { MOODS, normalizeSlide, type Mood, type Slide, type VisualMode } from "@/lib/slide";
-import { contrast, DEFAULT_THEME, extractPalette, FONTS, isFontKey, parseHexes, themeFromPalette, type FieldColors, type FontKey, type Theme } from "@/lib/theme";
+import { applyLook, contrast, DEFAULT_THEME, extractPalette, FONTS, isFontKey, LOOK_KEYS, LOOKS, parseHexes, themeFromPalette, type FieldColors, type FontKey, type Theme } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 
 // One sample per colour field, covering type, charts and scenes.
@@ -17,6 +17,8 @@ const SAMPLES: Slide[] = [
   { layout: "SCENE", scene: "swarm", headline: "community", mood: "calm" },
   { layout: "VERSUS", versus: ["Clicker", "Voice"], headline: "duel", mood: "serious" },
 ].map((raw) => normalizeSlide(raw));
+// The look picker previews every look on the same slide, so the only difference is the look.
+const LOOK_SAMPLE = SAMPLES[1];
 
 const FIELD_LABEL: Record<Mood, string> = { hype: "Energy", funny: "Playful", calm: "Calm", serious: "Serious", chaos: "Bold" };
 const PART_LABEL: Record<keyof FieldColors, string> = { bg: "Field", fg: "Type", alt: "Accent" };
@@ -200,6 +202,30 @@ export default function LookPage() {
               {theme.logo ? <img src={theme.logo} alt="Your logo" className="h-6 max-w-24 object-contain" /> : null}
             </div>
           ) : null}
+        </section>
+
+        <section>
+          <h2 className="mb-3 text-lg font-black tracking-tight">Look</h2>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {LOOK_KEYS.map((key) => {
+              const on = theme.look === key;
+              return (
+                <button
+                  key={key}
+                  type="button"
+                  onClick={() => setTheme(applyLook(theme, key))}
+                  aria-pressed={on}
+                  className={cn("overflow-hidden rounded-2xl text-left outline-none transition-shadow focus-visible:ring-4 focus-visible:ring-white/70", on ? "ring-4 ring-[#ffd60a]" : "ring-1 ring-white/15 hover:ring-white/40")}
+                >
+                  <SlideView slide={LOOK_SAMPLE} still theme={applyLook(theme, key)} />
+                  <span className="flex flex-wrap items-baseline gap-x-3 gap-y-1 px-4 py-3">
+                    <span className="text-lg font-black">{LOOKS[key].label}</span>
+                    <span className="text-sm text-white/60">{LOOKS[key].note}</span>
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </section>
 
         <section className="grid gap-4 sm:grid-cols-2">

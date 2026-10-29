@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useSyncExternalStore } from "react";
-import { DEFAULT_THEME, parseTheme, THEME_KEY, type Theme } from "@/lib/theme";
+import { useCallback, useEffect, useSyncExternalStore } from "react";
+import { DEFAULT_THEME, LOOK_COOKIE, parseTheme, THEME_KEY, type Theme } from "@/lib/theme";
 
 const CHANGED = "doitlive-theme";
 
@@ -36,6 +36,10 @@ function subscribe(notify: () => void): () => void {
 /** The speaker's style guide, shared by every window through localStorage. */
 export function useTheme(): [Theme, (theme: Theme | null) => void] {
   const theme = useSyncExternalStore(subscribe, read, () => DEFAULT_THEME);
+  useEffect(() => {
+    // The draw route reads the look from here: live drawings follow the same style guide.
+    document.cookie = `${LOOK_COOKIE}=${theme.look}; path=/; max-age=31536000; samesite=lax`;
+  }, [theme.look]);
   const setTheme = useCallback((next: Theme | null) => {
     try {
       if (next) localStorage.setItem(THEME_KEY, JSON.stringify(next));

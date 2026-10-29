@@ -4,13 +4,15 @@ import type { CSSProperties } from "react";
 import { MOODS, type Mood } from "@/lib/slide";
 
 // weight and tracking are per typeface: a face without a black cut must not be faked bold,
-// and condensed faces need air that a wide grotesque does not.
+// and condensed faces need air that a wide grotesque does not. variation sets a face's own axes.
 export const FONTS = {
-  archivo: { label: "Archivo", css: "var(--font-archivo)", note: "Wide, loud grotesque", weight: 900, tracking: "-0.035em" },
-  bricolage: { label: "Bricolage Grotesque", css: "var(--font-bricolage)", note: "Friendly, a bit quirky", weight: 800, tracking: "-0.03em" },
-  anton: { label: "Anton", css: "var(--font-anton)", note: "Tall condensed poster type", weight: 400, tracking: "0.005em" },
-  fraunces: { label: "Fraunces", css: "var(--font-fraunces)", note: "Soft editorial serif", weight: 900, tracking: "-0.025em" },
-  space: { label: "Space Grotesk", css: "var(--font-space)", note: "Clean and technical", weight: 700, tracking: "-0.035em" },
+  archivo: { label: "Archivo", css: "var(--font-archivo)", note: "Wide, loud grotesque", weight: 900, tracking: "-0.035em", variation: "normal" },
+  bricolage: { label: "Bricolage Grotesque", css: "var(--font-bricolage)", note: "Friendly, a bit quirky", weight: 800, tracking: "-0.03em", variation: "normal" },
+  anton: { label: "Anton", css: "var(--font-anton)", note: "Tall condensed poster type", weight: 400, tracking: "0.005em", variation: "normal" },
+  fraunces: { label: "Fraunces", css: "var(--font-fraunces)", note: "Soft editorial serif", weight: 900, tracking: "-0.025em", variation: "normal" },
+  space: { label: "Space Grotesk", css: "var(--font-space)", note: "Clean and technical", weight: 700, tracking: "-0.035em", variation: "normal" },
+  // Informal and Bounce are the face's own axes: marker-like letters that sit a little off the line.
+  shantell: { label: "Shantell Sans", css: "var(--font-shantell)", note: "Hand-drawn marker", weight: 800, tracking: "-0.01em", variation: '"INFM" 100, "BNCE" 25' },
 } as const;
 export type FontKey = keyof typeof FONTS;
 export const isFontKey = (v: unknown): v is FontKey => typeof v === "string" && v in FONTS;
@@ -24,26 +26,95 @@ export interface FieldColors {
   alt: string;
 }
 
+/**
+ * A look is a whole style guide, like a Keynote theme: colour fields, a typeface, how the slide
+ * templates are skinned (slide.css keys on it) and the brief the drawing model gets.
+ */
+export const LOOK_KEYS = ["scribble", "pop"] as const;
+export type LookKey = (typeof LOOK_KEYS)[number];
+export const isLookKey = (v: unknown): v is LookKey => typeof v === "string" && (LOOK_KEYS as readonly string[]).includes(v);
+
+export interface LookPreset {
+  label: string;
+  note: string;
+  fields: Record<Mood, FieldColors>;
+  font: FontKey;
+  /** One line of the drawing prompt: how the shapes in a live drawing look. */
+  drawBrief: string;
+}
+
+export const LOOKS: Record<LookKey, LookPreset> = {
+  scribble: {
+    label: "Scribble",
+    note: "Marker on a whiteboard. Numbers get circled, points underlined.",
+    fields: {
+      hype: { bg: "#2f5bea", fg: "#ffffff", alt: "#ffe500" },
+      funny: { bg: "#ffe500", fg: "#1d1d1d", alt: "#2f5bea" },
+      calm: { bg: "#fbfaf7", fg: "#1d1d1d", alt: "#2f5bea" },
+      serious: { bg: "#1d1d1d", fg: "#fbfaf7", alt: "#ffe500" },
+      chaos: { bg: "#f25c3b", fg: "#1d1d1d", alt: "#ffffff" },
+    },
+    font: "shantell",
+    // The classes are defined in the drawing's own stylesheet (live-ui.tsx), so drawings share the templates' marks.
+    drawBrief: `Heavy weights. The look is a HAND-DRAWN WHITEBOARD, a marker sketch. The stage already has a dot grid and these ready classes; build the main elements from them:
+  .card: a white card with a marker outline and a hard shadow (an object, a screen, a label)
+  .note: a sticky note in the accent colour
+  .pill: a big marker button
+  .bubble: a speech bubble
+  .big: huge text (320px) for one number or one word
+  .loop: on a span, draws a marker circle around it; put it around the key number or word
+  .under: on a span, draws a wavy marker underline
+  .arrow: a hand-drawn arrow (a div; set its width, height and color)
+  .tilt-l, .tilt-r: a small tilt
+- Pick ONE of these compositions. The stage centres what you put on it, so do not position the main element yourself:
+  A. A figure the speaker said, or one key word: <div class="big"><span class="loop">FIGURE</span></div>, then one short line of 1-4 words under it.
+  B. A thing: draw the object itself 500-700px tall from flat shapes, then a .note or .pill next to or under it with 1-2 words.
+  C. Something someone says or thinks: a .bubble with 2-5 words, one of them in a .under span.
+  D. An action or a result: a .pill (the button) or a .card with one word, plus at most one small drawn object.
+- Never a small thing inside a big empty card. Never more than 5 words on the whole slide. Kit elements keep their own text size or bigger.
+- Build in normal flow (a flex row or column) so everything sits together in the middle; absolute positions only for small accents next to the main element. A figure is plain text from the start: never count it up with content or counters.
+- Shapes you draw yourself (CSS or inline SVG): flat fills, outlines at least 6px thick in #1d1d1d, round line caps and joins, slightly uneven rounded corners. Only the style guide's colours, white and #1d1d1d: no greys, no thin line icons, no hairlines, no gradients, no soft shadows, no emoji ever.
+- Never build letters or digits out of shapes: words and numbers are always text.`,
+  },
+  pop: {
+    label: "Pop",
+    note: "Flat colour fields and loud type. The original.",
+    fields: {
+      hype: { bg: "#2b3bff", fg: "#ffd60a", alt: "#ff4fa3" },
+      funny: { bg: "#ffd60a", fg: "#0a0a0a", alt: "#2b3bff" },
+      calm: { bg: "#8cf5c9", fg: "#0a0a0a", alt: "#2b3bff" },
+      serious: { bg: "#0a0a0a", fg: "#8cf5c9", alt: "#ffd60a" },
+      chaos: { bg: "#ff4fa3", fg: "#0a0a0a", alt: "#ffd60a" },
+    },
+    font: "archivo",
+    drawBrief: "Heavy weights. Rounded corners, flat, modern, confident. No drop shadows heavier than a soft one.",
+  },
+};
+
 export interface Theme {
   name: string;
   fields: Record<Mood, FieldColors>;
   font: FontKey;
   /** Data URL of a logo shown small in a corner, or null. */
   logo: string | null;
+  look: LookKey;
 }
 
+const DEFAULT_NAME = "Do it live";
+
 export const DEFAULT_THEME: Theme = {
-  name: "Do it live",
-  fields: {
-    hype: { bg: "#2b3bff", fg: "#ffd60a", alt: "#ff4fa3" },
-    funny: { bg: "#ffd60a", fg: "#0a0a0a", alt: "#2b3bff" },
-    calm: { bg: "#8cf5c9", fg: "#0a0a0a", alt: "#2b3bff" },
-    serious: { bg: "#0a0a0a", fg: "#8cf5c9", alt: "#ffd60a" },
-    chaos: { bg: "#ff4fa3", fg: "#0a0a0a", alt: "#ffd60a" },
-  },
-  font: "archivo",
+  name: DEFAULT_NAME,
+  fields: LOOKS.scribble.fields,
+  font: LOOKS.scribble.font,
   logo: null,
+  look: "scribble",
 };
+
+/** Switching look swaps the whole style guide, as picking a Keynote theme does. The logo stays. */
+export const applyLook = (theme: Theme, look: LookKey): Theme => ({ ...theme, look, fields: LOOKS[look].fields, font: LOOKS[look].font });
+
+/** The draw route cannot read localStorage, so the chosen look also travels in this cookie. */
+export const LOOK_COOKIE = "dil_look";
 
 const INK = "#0a0a0a";
 const PAPER = "#ffffff";
@@ -180,7 +251,7 @@ export function themeFromPalette(palette: string[], base: Theme = DEFAULT_THEME)
 /** CSS custom properties for a slide frame. The stylesheet falls back to the default theme without them. */
 export function themeVars(theme: Theme): CSSProperties {
   const font = FONTS[theme.font];
-  const vars: Record<string, string> = { "--slide-font": font.css, "--slide-weight": String(font.weight), "--slide-tracking": font.tracking };
+  const vars: Record<string, string> = { "--slide-font": font.css, "--slide-weight": String(font.weight), "--slide-tracking": font.tracking, "--slide-variation": font.variation };
   for (const mood of MOODS) {
     const f = theme.fields[mood];
     vars[`--${mood}-bg`] = f.bg;
@@ -198,6 +269,10 @@ export function parseTheme(raw: string | null): Theme {
   if (!raw) return DEFAULT_THEME;
   try {
     const t = JSON.parse(raw) as Partial<Theme>;
+    const logo = typeof t.logo === "string" && t.logo.startsWith("data:image/") ? t.logo : null;
+    // Saved before looks existed: the untouched old default moves to the new default, a speaker's own guide stays Pop.
+    if (!isLookKey(t.look) && t.name === DEFAULT_NAME) return { ...DEFAULT_THEME, logo };
+    const look: LookKey = isLookKey(t.look) ? t.look : "pop";
     const fields = {} as Record<Mood, FieldColors>;
     for (const mood of MOODS) {
       const f = t.fields?.[mood];
@@ -207,8 +282,9 @@ export function parseTheme(raw: string | null): Theme {
     return {
       name: typeof t.name === "string" ? t.name.slice(0, 60) : "My style guide",
       fields,
-      font: isFontKey(t.font) ? t.font : "archivo",
-      logo: typeof t.logo === "string" && t.logo.startsWith("data:image/") ? t.logo : null,
+      font: isFontKey(t.font) ? t.font : LOOKS[look].font,
+      logo,
+      look,
     };
   } catch {
     return DEFAULT_THEME;

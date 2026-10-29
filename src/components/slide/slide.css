@@ -9,6 +9,7 @@
   overflow: hidden;
   background: #0a0a0a;
   font-family: var(--slide-font, var(--font-archivo)), ui-sans-serif, system-ui, sans-serif;
+  font-variation-settings: var(--slide-variation, normal);
 }
 .slide-frame.fill {
   position: fixed;
@@ -469,3 +470,115 @@
 .wv-line { stroke-dasharray: 100; animation: wvDraw 3.6s linear infinite; }
 @keyframes wvDraw { 0% { stroke-dashoffset: 100; } 80%, 100% { stroke-dashoffset: 0; } }
 .slide-frame.static .wv-line { stroke-dashoffset: 0; animation: none; }
+
+/* ---- Look: Scribble. The same templates, drawn with a marker on a whiteboard. ----
+   Skin only, and every rule is scoped to the look, so Pop renders exactly as before.
+   Marks are masks filled with the field's accent: they take the style guide's colours. */
+.slide-frame[data-look="scribble"] {
+  --wobble: 2.2cqw 0.7cqw 2.6cqw 0.8cqw / 0.8cqw 2.6cqw 0.7cqw 2.2cqw;
+  --wobble-px: 22px 8px 26px 10px / 10px 26px 8px 22px;
+  --blob: 52% 46% 55% 44% / 47% 55% 45% 53%;
+  --ink: 0.34cqw;
+  --mark-loop: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 100' preserveAspectRatio='none'%3E%3Cpath d='M30 60 C 18 18, 178 6, 192 48 C 202 88, 70 100, 26 82 C 8 72, 12 52, 46 36' fill='none' stroke='white' stroke-width='6' stroke-linecap='round'/%3E%3C/svg%3E");
+  --mark-wave: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 24' preserveAspectRatio='none'%3E%3Cpath d='M4 15 C 50 4, 100 22, 150 11 S 250 6, 296 13' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
+  --mark-wave-v: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 300' preserveAspectRatio='none'%3E%3Cpath d='M13 4 C 4 50, 22 100, 11 150 S 6 250, 13 296' fill='none' stroke='white' stroke-width='7' stroke-linecap='round'/%3E%3C/svg%3E");
+}
+
+/* Pop's moving backdrops and motifs (rings, pixel grids, stripes) do not belong on a whiteboard. */
+[data-look="scribble"] :is(.backdrop, .motif) { display: none; }
+
+/* Whiteboard dots behind every field; photos and GIFs cover them. */
+[data-look="scribble"] .layer {
+  background-image: radial-gradient(color-mix(in srgb, var(--fg) 14%, transparent) 0.15cqw, transparent 0.18cqw);
+  background-size: 2.8cqw 2.8cqw;
+}
+
+/* Tight tracking crushes a marker face: give the letters their own room. */
+[data-look="scribble"] .type { line-height: 1; }
+[data-look="scribble"] :is(.num, .num-label, .versus > div, .reveal-item, .reveal-head, .vs, .gif-slab, .caption, .kinetic-echo span, .idle h1, .ring-center, .stamp) { letter-spacing: -0.01em; }
+
+/* A figure is one mark: "80%" must never break into "80" and "%". */
+[data-look="scribble"] .ticker { white-space: nowrap; }
+
+/* The figure gets circled, after it lands. */
+[data-look="scribble"] .layout-big_number .stack > .fit:first-child .w:first-child { position: relative; }
+[data-look="scribble"] .layout-big_number .stack > .fit:first-child .w:first-child::after {
+  content: "";
+  position: absolute;
+  inset: -16% -14% -12% -12%;
+  background: var(--alt);
+  -webkit-mask: var(--mark-loop) center / 100% 100% no-repeat;
+  mask: var(--mark-loop) center / 100% 100% no-repeat;
+  pointer-events: none;
+  animation: inkIn 0.7s 0.8s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+
+/* The point inside the speaker's own words is underlined by hand. */
+[data-look="scribble"] .type .w.mark { position: relative; text-decoration: none; }
+[data-look="scribble"] .type .w.mark::after {
+  content: "";
+  position: absolute;
+  left: -3%;
+  right: -3%;
+  bottom: -0.14em;
+  height: 0.2em;
+  background: var(--alt);
+  -webkit-mask: var(--mark-wave) center / 100% 100% no-repeat;
+  mask: var(--mark-wave) center / 100% 100% no-repeat;
+  animation: inkIn 0.6s 1s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+
+/* Rules and bars become marker strokes. */
+[data-look="scribble"] :is(.rule, .kinetic-bar) {
+  width: 26cqw;
+  height: 3.4cqh;
+  -webkit-mask: var(--mark-wave) center / 100% 100% no-repeat;
+  mask: var(--mark-wave) center / 100% 100% no-repeat;
+  animation: inkIn 0.6s 0.7s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+[data-look="scribble"] .quote-bar {
+  flex-basis: 2.6cqw;
+  -webkit-mask: var(--mark-wave-v) center / 100% 100% no-repeat;
+  mask: var(--mark-wave-v) center / 100% 100% no-repeat;
+  animation: inkDown 0.6s 0.15s cubic-bezier(0.6, 0, 0.3, 1) both;
+}
+
+/* Kinetic type: the face's bounce axis at full, and the letters keep moving a little. */
+[data-look="scribble"] .kinetic-word { font-variation-settings: "INFM" 100, "BNCE" 100; }
+[data-look="scribble"] .kl {
+  animation: kineticDrop 0.55s cubic-bezier(0.2, 1.4, 0.35, 1) both, jiggle 2.4s ease-in-out infinite;
+  animation-delay: calc(0.12s + var(--k) * 0.045s), calc(0.9s + var(--k) * 0.12s);
+}
+
+/* Boxes, discs and badges: hand-drawn outlines, never quite round or square. */
+[data-look="scribble"] .vs { border-radius: var(--blob); border: var(--ink) solid #1d1d1d; color: #1d1d1d; rotate: -8deg; }
+[data-look="scribble"] .step { border-radius: var(--wobble); border: var(--ink) solid var(--fg); }
+[data-look="scribble"] .process-cell:nth-child(odd) .step { rotate: -1.2deg; }
+[data-look="scribble"] .process-cell:nth-child(even) .step { rotate: 1deg; }
+[data-look="scribble"] .process-arrow { stroke-width: 3; }
+[data-look="scribble"] .check-box { background: transparent; border: var(--ink) solid var(--fg); border-radius: var(--wobble); color: var(--alt); }
+[data-look="scribble"] .check-glyph { stroke-width: 4; }
+[data-look="scribble"] :is(.grid-disc, .icon-disc) { border-radius: var(--blob); }
+[data-look="scribble"] .icon-disc { box-shadow: none; outline: var(--ink) solid var(--fg); outline-offset: 1.6cqh; }
+[data-look="scribble"] .reveal-item i { display: inline-grid; place-items: center; align-self: center; width: 1.5em; height: 1.5em; font-size: 0.42em; color: var(--fg); border: 0.08em solid var(--alt); border-radius: var(--blob); }
+[data-look="scribble"] .stamp { border-radius: var(--wobble); rotate: -4deg; }
+[data-look="scribble"] .bar { border: var(--ink) solid var(--fg); border-bottom: 0; border-radius: 1.4cqw 0.6cqw 0 0 / 1cqw 1.6cqw 0 0; }
+[data-look="scribble"] .chart-ring circle { stroke-linecap: round; }
+
+/* Text on photos and GIFs: a sticky note instead of a slab glued to the edge. */
+[data-look="scribble"] :is(.gif-slab, .label-chip) { border: var(--ink) solid var(--fg); border-radius: var(--wobble); }
+[data-look="scribble"] .gif-slab { left: 3cqw; padding: 2.4cqh 3cqw 2.8cqh; rotate: -1.5deg; }
+[data-look="scribble"] .gif-slab.right { left: auto; right: 3cqw; rotate: 1.5deg; }
+
+/* A photo next to the words becomes a polaroid on the board. */
+[data-look="scribble"] .photo-img { box-sizing: border-box; clip-path: none; top: 9%; right: 5%; width: 50%; height: 82%; border: 1.1cqw solid #fff; border-bottom-width: 5cqh; rotate: 2deg; box-shadow: 0.6cqw 0.8cqw 0 rgba(0, 0, 0, 0.18); }
+[data-look="scribble"] .photo.flip .photo-img { clip-path: none; left: 5%; right: auto; rotate: -2deg; }
+[data-look="scribble"] .split-art { clip-path: none; margin: 6cqh 4cqw; border: var(--ink) solid var(--fg); border-radius: var(--wobble); }
+
+/* Interface cards live on a small stage that is scaled up, so their outlines are in px. */
+[data-look="scribble"] .ui-hero [data-slot="card"] { border: 3px solid var(--fg); border-radius: var(--wobble-px); box-shadow: 6px 6px 0 var(--fg); }
+[data-look="scribble"] .ui-hero [data-slot="button"] { border: 3px solid var(--fg); border-radius: var(--wobble-px); box-shadow: 4px 4px 0 var(--fg); }
+
+@keyframes inkIn { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+@keyframes inkDown { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+@keyframes jiggle { 0%, 100% { translate: 0 0; rotate: 0deg; } 50% { translate: 0 -0.04em; rotate: -3deg; } }
