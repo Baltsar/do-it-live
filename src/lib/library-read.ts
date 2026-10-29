@@ -48,10 +48,10 @@ export const withoutEmbedding = (item: LibraryItem): Omit<LibraryItem, "embeddin
   return copy;
 };
 
-/** Frames the browser sent with a form: up to six JPEG data URLs. */
-export const framesOf = (form: FormData): string[] => {
+/** Frames the browser sent, as a form field (JSON text) or in a JSON body: up to six JPEG data URLs. */
+export const framesOf = (raw: unknown): string[] => {
   try {
-    const frames = JSON.parse(String(form.get("frames") ?? "[]")) as unknown;
+    const frames = typeof raw === "string" ? (JSON.parse(raw) as unknown) : raw;
     return Array.isArray(frames) ? frames.map(String).slice(0, 6) : [];
   } catch {
     return [];

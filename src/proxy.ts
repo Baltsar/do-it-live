@@ -2,6 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 
 const COOKIE = "dil_gate";
 const MONTH_S = 60 * 60 * 24 * 30;
+// Each visitor's own media library in Blob is found by this random id (library-store.ts reads it).
+const LIBRARY_COOKIE = "dil_lib";
+
+function withLibraryId(request: NextRequest, res: NextResponse): NextResponse {
+  if (!request.cookies.get(LIBRARY_COOKIE)) {
+    res.cookies.set(LIBRARY_COOKIE, crypto.randomUUID(), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: MONTH_S * 12 });
+  }
+  return res;
+}
 
 /** The cookie holds a hash of the password, so the password itself never sits in the browser. */
 async function tokenFor(password: string): Promise<string> {
@@ -33,10 +42,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
     if (form.get("password") !== password) return gatePage(true);
     const res = NextResponse.redirect(new URL("/", request.url), 303);
     res.cookies.set(COOKIE, token, { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: MONTH_S });
-    return res;
+    return withLibraryId(request, res);
   }
 
-  if (request.cookies.get(COOKIE)?.value === token) return NextResponse.next();
+  if (request.cookies.get(COOKIE)?.value === token) return withLibraryId(request, NextResponse.next());
   if (request.nextUrl.pathname.startsWith("/api/")) return NextResponse.json({ error: "password required" }, { status: 401 });
   return gatePage(false);
 }

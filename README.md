@@ -179,7 +179,7 @@ scripts/session-report.mjs     Reads a recorded show and reports what happened
 - Speech to text needs AssemblyAI or a browser with a working speech service.
 - Drawing from unfinished sentences keeps the slides moving with the talk. The trade-off is that some pictures miss.
 - English and Swedish are supported. Each other language AssemblyAI knows is one line in the language picker.
-- The media library lives on local disk. A hosted, multi-user version needs real storage.
+- Your own media: on a laptop the library is a folder on disk. Hosted, each visitor gets a private library in Vercel Blob, kept theirs by a random cookie; files go from the browser straight to Blob, up to 40 MB each.
 
 ## Built for
 

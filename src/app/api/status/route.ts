@@ -1,5 +1,6 @@
 import { connection } from "next/server";
 import { currentModel, providers, rolesStatus } from "@/lib/director";
+import { canUpload } from "@/lib/library-store";
 
 export async function GET(): Promise<Response> {
   await connection(); // read env and the picked model per request, never at build time
@@ -8,8 +9,8 @@ export async function GET(): Promise<Response> {
     tavily: providers.tavily(),
     pexels: providers.pexels(),
     assemblyai: Boolean(process.env.ASSEMBLYAI_API_KEY),
-    // The media library lives on local disk; a Vercel deploy has none to write to.
-    uploads: !process.env.VERCEL,
+    // On disk locally; hosted only with a Blob store connected.
+    uploads: canUpload(),
     model: currentModel(),
     roles: await rolesStatus(),
   });

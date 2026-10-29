@@ -1,12 +1,7 @@
-// The speaker's own GIF library. Files live on disk, a vision model describes them,
-// so file names never matter. Server-only.
+// The speaker's own GIF library. A vision model describes each file, so file names never matter.
+// Where files and the index live (disk, or Vercel Blob when hosted) is library-store's business. Server-only.
 import { createHash } from "node:crypto";
-import { mkdir, readFile, rename, unlink, writeFile } from "node:fs/promises";
-import path from "node:path";
-
-const ROOT = path.join(process.cwd(), "library");
-const FILES = path.join(ROOT, "files");
-const INDEX = path.join(ROOT, "index.json");
+import { changeIndex, readBytes, readIndex, removeFile, writeBytes } from "@/lib/library-store";
 
 export interface LibraryItem {
   id: string;
@@ -65,36 +60,10 @@ export const libraryLine = (i: LibraryItem): string =>
     i.useWhen,
   ].filter(Boolean).join(" | ");
 
-export async function loadIndex(): Promise<LibraryItem[]> {
-  try {
-    return JSON.parse(await readFile(INDEX, "utf8")) as LibraryItem[];
-  } catch {
-    return [];
-  }
-}
+export const loadIndex = readIndex;
 
-/** Atomic: a crash mid-write must never leave a truncated index. */
-async function saveIndex(items: LibraryItem[]): Promise<void> {
-  await mkdir(ROOT, { recursive: true });
-  const tmp = `${INDEX}.tmp`;
-  await writeFile(tmp, JSON.stringify(items));
-  await rename(tmp, INDEX);
-}
-
-// Every change to the index is read-modify-write. Requests overlap (two uploads at once, a director
-// call while a GIF is being edited), so changes run one at a time or one of them is silently lost.
-let indexQueue: Promise<unknown> = Promise.resolve();
-function mutateIndex<T>(change: (items: LibraryItem[]) => Promise<{ items: LibraryItem[]; result: T }>): Promise<T> {
-  const run = indexQueue.then(async () => {
-    const { items, result } = await change(await loadIndex());
-    await saveIndex(items);
-    return result;
-  });
-  indexQueue = run.catch(() => undefined);
-  return run;
-}
-
-export const filePath = (item: LibraryItem): string => path.join(FILES, item.file);
+/** The bytes of an item's file, wherever it is kept. */
+export const itemBytes = (item: Pick<LibraryItem, "file">): Promise<Uint8Array> => readBytes(item.file);
 
 const tokens = (text: string | undefined): string[] =>
   (text ?? "").toLowerCase().replace(/[^\p{L}\p{N}\s]/gu, " ").split(/\s+/).filter((t) => t.length > 2);
@@ -240,28 +209,31 @@ export interface FileFacts {
   hash: string;
 }
 
-export async function addItem(fileName: string, bytes: Uint8Array, description: Description, facts: FileFacts, embedding?: number[]): Promise<LibraryItem> {
-  return mutateIndex(async (items) => {
-    const id = `g${Date.now().toString(36)}${items.length.toString(36)}`;
-    const file = `${id}${facts.ext}`;
-    await mkdir(FILES, { recursive: true });
-    await writeFile(path.join(FILES, file), bytes);
-    const item: LibraryItem = { ...description, id, file, name: fileName, mime: facts.mime, motion: facts.motion, hash: facts.hash, embedding };
-    return { items: [...items, item], result: item };
-  });
+/** A file the server received (kept on disk), or one the browser already put in the Blob store. */
+export type Upload = { bytes: Uint8Array } | { file: string };
+
+export async function addItem(fileName: string, upload: Upload, description: Description, facts: FileFacts, embedding?: number[]): Promise<LibraryItem> {
+  const id = `g${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  let file: string;
+  if ("bytes" in upload) {
+    file = `${id}${facts.ext}`;
+    await writeBytes(file, upload.bytes);
+  } else file = upload.file;
+  const item: LibraryItem = { ...description, id, file, name: fileName, mime: facts.mime, motion: facts.motion, hash: facts.hash, embedding };
+  return changeIndex((items) => ({ items: [...items, item], result: item }));
 }
 
-/** The item already holding these exact bytes. Items saved before hashing get their hash read from disk. */
+/** The item already holding these exact bytes. Items saved before hashing get their hash read from their file. */
 export async function findByHash(hash: string): Promise<LibraryItem | null> {
   for (const item of await loadIndex()) {
-    const own = item.hash ?? (await readFile(filePath(item)).then((b) => hashOf(b), () => ""));
+    const own = item.hash ?? (await itemBytes(item).then(hashOf, () => ""));
     if (own === hash) return item;
   }
   return null;
 }
 
 export async function updateItem(id: string, patch: Partial<Omit<LibraryItem, "id" | "file" | "embedding">>): Promise<LibraryItem | null> {
-  return mutateIndex(async (items) => {
+  return changeIndex((items) => {
     const item = items.find((i) => i.id === id);
     if (!item) return { items, result: null };
     // Only defined fields: an undefined value would serialize away and erase the field.
@@ -274,12 +246,13 @@ export async function updateItem(id: string, patch: Partial<Omit<LibraryItem, "i
 }
 
 export async function removeItem(id: string): Promise<boolean> {
-  return mutateIndex(async (items) => {
+  const gone = await changeIndex((items) => {
     const item = items.find((i) => i.id === id);
-    if (!item) return { items, result: false };
-    await unlink(filePath(item)).catch(() => undefined);
-    return { items: items.filter((i) => i.id !== id), result: true };
+    return { items: items.filter((i) => i.id !== id), result: item ?? null };
   });
+  // The file goes only once the index no longer points at it.
+  if (gone) await removeFile(gone.file);
+  return Boolean(gone);
 }
 
 export const itemText = (i: Pick<LibraryItem, "caption" | "tags" | "emotion" | "useWhen" | "knownAs" | "origin" | "meaning" | "category">): string =>
@@ -409,7 +382,7 @@ async function loadEmbedded(): Promise<LibraryItem[]> {
   const vectors = await embedder(missing.map(itemText));
   if (!vectors) return items;
   const byId = new Map(missing.map((m, i) => [m.id, vectors[i]]));
-  return mutateIndex(async (stored) => {
+  return changeIndex((stored) => {
     for (const item of stored) {
       const vector = byId.get(item.id);
       if (vector && !item.embedding) item.embedding = vector;

@@ -1,5 +1,6 @@
 // Client-side media dump: take whatever the speaker drops (files or whole folders), keep what
 // can be shown on a slide, and send each file with a few frames for the vision model.
+import { upload as toBlob } from "@vercel/blob/client";
 import { sniffFile } from "@/lib/sniff";
 
 const MAX_BYTES = 80 * 1024 * 1024;
@@ -140,12 +141,40 @@ async function pool<T>(queue: T[], work: (item: T) => Promise<void>, onProgress?
   await Promise.all(Array.from({ length: PARALLEL }, worker));
 }
 
+/** Where the library keeps files: disk (the file goes to our server) or Blob (straight from here, signed by it). */
+interface Store {
+  store: "disk" | "blob";
+  prefix: string | null;
+}
+
+/** Hosted: the file goes to this visitor's Blob folder first, then the server reads it from there. */
+async function sendViaBlob(prefix: string, file: File, mime: string): Promise<{ ok: boolean; duplicate?: boolean; error?: string }> {
+  const { frames, frameCount } = await extractFrames(file, mime).catch(() => ({ frames: [] as string[], frameCount: 0 }));
+  const safe = file.name.replace(/[^\w.-]+/g, "-").slice(-80) || "file";
+  const blob = await toBlob(`${prefix}/uploads/${safe}`, file, {
+    access: "private",
+    handleUploadUrl: "/api/library/upload",
+    contentType: mime,
+    multipart: file.size > 8 * 1024 * 1024,
+  });
+  const res = await fetch("/api/library", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ blob: blob.pathname, name: file.name, frames, frameCount }),
+  });
+  const body = (await res.json().catch(() => ({}))) as { duplicate?: boolean; error?: string };
+  return { ok: res.ok, duplicate: body.duplicate, error: body.error ?? (res.ok ? undefined : String(res.status)) };
+}
+
 /**
  * Uploads a dump of files to the speaker's library. What a file is comes from its bytes, never its
  * name: a GIF called "invoice.jpg" or "download" still goes in. Anything a slide cannot show is skipped.
  */
 export async function uploadMedia(files: File[], onProgress?: (done: number, total: number) => void): Promise<UploadReport> {
   const report: UploadReport = { added: 0, duplicates: 0, skipped: [], failed: [] };
+  const where = (await fetch("/api/library")
+    .then((r) => r.json())
+    .catch(() => ({ store: "disk", prefix: null }))) as Store;
   const queue: { file: File; mime: string }[] = [];
   for (const file of files) {
     if (file.name.startsWith(".")) continue; // .DS_Store and friends: not worth mentioning
@@ -157,7 +186,7 @@ export async function uploadMedia(files: File[], onProgress?: (done: number, tot
     queue,
     async ({ file, mime }) => {
       try {
-        const res = await send("/api/library", file, mime, file.name);
+        const res = where.store === "blob" && where.prefix ? await sendViaBlob(where.prefix, file, mime) : await send("/api/library", file, mime, file.name);
         if (res.duplicate) report.duplicates += 1;
         else if (res.ok) report.added += 1;
         else report.failed.push(`${file.name}: ${res.error}`);
