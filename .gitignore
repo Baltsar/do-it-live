@@ -51,3 +51,4 @@ library/
 # Internal notes; the signpost lexicon quotes TED transcripts verbatim.
 /docs/*
 !/docs/submission.md
+!/docs/images/

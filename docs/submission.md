@@ -4,17 +4,28 @@ Text for the Devpost form, field by field. Track: **Best Apps and Agents**.
 
 ## Tagline
 
-Talk. The slides make themselves.
+F*ck it, we'll do it live. Vibe presenting: talk on stage, and the slides draw themselves while you speak.
 
 ## What it does
 
-Do it live is a presentation with no deck. You press the mic and talk. While you are still mid-sentence, NVIDIA Nemotron models on Nebius Token Factory decide whether the moment deserves a slide, and the slide is drawn on screen as you speak: an interface element (a login form being crossed out, a poll, a rating), a big number you just said, a drawing, or one of your own GIFs. The audience sees the point instead of reading it, and you never build a slide.
+Do it live is a presentation with no deck. We call it vibe presenting. You press the mic and talk. While you are still mid-sentence, NVIDIA Nemotron models on Nebius Token Factory decide whether the moment deserves a slide, and the slide appears as you speak. It can be:
+- a drawing that builds on screen while it is written;
+- one big interface element, such as a login that folds away, a poll or a rating;
+- a figure you just said;
+- a duel between two things;
+- moving type;
+- your own words quoted back;
+- one of your own GIFs.
+
+The audience sees the point instead of reading it, and you never build a slide.
 
 It runs in any browser, and on a phone: press Screen, plug the phone into a TV, and talk.
 
 ## Why we built it
 
-Slides cost hours and mostly repeat the speaker in text the audience reads instead of listening. We wanted the opposite: the talk is the source, and the visuals follow it live, like a simultaneous interpreter who translates speech into pictures.
+Slides cost hours and mostly repeat the speaker in text the audience reads instead of listening. The people who present most often have the least time to build slides. Teachers and preschool staff present from a phone. Meetup hosts and community organisers speak every week. Founders pitch at demo day with one minute's notice.
+
+We wanted the opposite of a deck: the talk is the source, and the visuals follow it live, like a simultaneous interpreter who translates speech into pictures.
 
 ## How we built it
 
@@ -33,6 +44,14 @@ Slides cost hours and mostly repeat the speaker in text the audience reads inste
 - **Latency is the product.** A slide that lands three seconds late is worse than none. We moved everything we could out of the model path: figures, cues and signposts run on interim words in the browser. The director and the drawer run in parallel, not in sequence, and the drawer is a race of three models because shared-model latency on any one of them swung from under a second to eight seconds within minutes.
 - **The browser's speech recognition failed us.** It worked in Google Chrome but returned nothing, with no error, in Chromium browsers without Google's speech service. Five debugging rounds later we moved speech to text to a streaming service, which works the same in every browser and on phones.
 - **Live speech is unfinished.** Our first drawing prompt refused half sentences, which is everything a live system sees. Rewriting it as a simultaneous interpreter ("show it as soon as the words name something concrete") took one real recorded conversation from 9 to 23 pictures out of the same 55 chunks.
+- **The quickest answer is not the best one.** A recorded test talk showed two problems, both caused by "first answer wins".
+  - 16 of 22 slides were the same kind of interface card, because a card is the quickest answer to give.
+  - A fast model's "nothing to show" cut off the best model while it was still drawing: 26 times in 80 seconds.
+  - The fix has three parts:
+    - A quick "nothing to show" no longer overrules a better model that is still at work.
+    - There are never two cards in a row.
+    - A card that would be one too many appears at once as a big number, a duel, moving type or the speaker's own words.
+  - With the fix, the same talk had 6 cards out of 21, nine different looks, and a median of 1.7 s from words to screen.
 - **No invented numbers.** A slide may only show a figure the speaker said, or one from a cited source.
 
 ## What we learned
@@ -49,9 +68,14 @@ Most of the "intelligence" a live system needs is deciding *when* to speak up, n
 
 Nebius Token Factory, NVIDIA Nemotron 3.5 Lightning, NVIDIA Nemotron 3 Ultra, NVIDIA Nemotron 3.5 Super VL, Kimi-K3, gpt-oss-120b, Qwen3 Embedding, AssemblyAI, Tavily, Next.js, React, Tailwind CSS, shadcn/ui, Motion, Vercel.
 
+## Event
+
+Attended Builders & Brews, Stockholm.
+
 ## Testing instructions
 
 Demo: https://do-it-live-two.vercel.app (password in the private testing field).
+Code: https://github.com/Baltsar/do-it-live (MIT).
 
 Use a laptop or a phone with a microphone. Pick English or Swedish under the mic, press the mic and talk for a minute about anything. Pause briefly between sentences. Say a number ("we are 700 people") to see a figure land mid-sentence. **Play the demo talk** replays a scripted talk if no microphone is available. On a phone, **Screen** turns the phone into the audience screen.
 

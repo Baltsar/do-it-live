@@ -1,6 +1,8 @@
 {
   "name": "do-it-live",
   "version": "0.1.0",
+  "description": "Vibe presenting: talk on stage and the slides draw themselves, with NVIDIA Nemotron on Nebius Token Factory.",
+  "license": "MIT",
   "private": true,
   "engines": {
     "node": "22.x"
