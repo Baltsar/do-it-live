@@ -2,6 +2,7 @@
 // layer is a thin useSyncExternalStore binding.
 import { ANCHORS } from "@/lib/anchors";
 import { artDirect } from "@/lib/art-director";
+import { looksFor } from "@/lib/card-looks";
 import { DEFAULT_SETTINGS, loadSettings, saveSettings, SETTINGS_KEY } from "@/lib/settings";
 import { countFromLine, isAnnouncement, percentFromLine } from "@/lib/grounding";
 import { matchPrepared, type PreparedMoment } from "@/lib/prepared";
@@ -161,6 +162,8 @@ const STILL_MS = 5000;
 const DIRECTOR_TIMEOUT_MS = 6000;
 // An interface kind among the last this many slides is not used again.
 const UI_KIND_COOLDOWN = 4;
+// A card's other look (big number, duel, moving type, quote) is not used again within this many slides.
+const LOOK_COOLDOWN = 3;
 type DrawOutcome = "drawn" | "declined" | "same" | "refused" | "failed";
 // Each drawn slide takes the next colour field of the style guide, so two in a row never look the same.
 const DRAW_FIELDS = ["serious", "hype", "calm", "chaos", "funny"] as const;
@@ -720,7 +723,8 @@ export function createStage() {
     const shown = lineup.slice(-4).map((h) => h.scene ?? h.headline).filter(Boolean);
     const looks = lineup.slice(-4).flatMap((h) => {
       const name = h.scene ?? h.headline;
-      const look = h.ui ? h.ui.kind : h.layout === "LIVE_UI" ? "drawing" : h.layout.toLowerCase();
+      // A card's other look keeps its spec, but on screen it was not a card.
+      const look = h.layout === "UI_HERO" && h.ui ? h.ui.kind : h.layout === "LIVE_UI" ? "drawing" : h.layout.toLowerCase();
       return name ? [`${name} [${look}]`] : [];
     });
     // Variety: interface cards look alike whatever they say. In one take 16 of 22 slides were cards,
@@ -799,25 +803,31 @@ export function createStage() {
           held.repeat = true;
           return out(me);
         }
+        let look: Slide | null = null;
         if (ui && tired(ui.kind)) {
-          me.verdict = `tired:${ui.kind}`;
-          held.tired = true;
-          return out(me);
+          // One card too many: the same point in another look, unless every one fitting it was just shown too.
+          const other = looksFor(ui, line).find((l) => !lineup.slice(-LOOK_COOLDOWN).some((h) => h.layout === l.layout));
+          if (!other) {
+            me.verdict = `tired:${ui.kind}`;
+            held.tired = true;
+            return out(me);
+          }
+          look = normalizeSlide(other);
         }
         winner = tier;
-        me.verdict = ui ? `ui:${ui.kind}` : "draw";
+        me.verdict = look ? `${look.layout.toLowerCase()} for ${ui?.kind ?? ""}` : ui ? `ui:${ui.kind}` : "draw";
         stopOthers(tier);
         // A drawing for older words that is still being written stops where it is.
         activeDraw?.abort();
         activeDraw = me.controller;
-        slide = normalizeSlide(ui ? { layout: "UI_HERO", headline: label, ui } : { layout: "LIVE_UI", headline: label });
+        slide = look ?? normalizeSlide(ui ? { layout: "UI_HERO", headline: label, ui } : { layout: "LIVE_UI", headline: label });
         madeFrom.set(slide.id, line);
         askedAt.set(slide.id, asked);
         firstMs = Math.round(performance.now() - t0);
         if (!ui) setLive(slide.id, { html, done: false, palette });
         drawOutcome.set(decision, "drawn");
         pictureOf = decision;
-        acceptLate(line, slide, false, ui ? `interface: ${ui.kind}` : "drawn live");
+        acceptLate(line, slide, false, look ? `${look.layout} instead of a ${ui?.kind ?? ""} card` : ui ? `interface: ${ui.kind}` : "drawn live");
         // Nothing more to wait for: the rest of the answer, if any, is not needed.
         return !ui;
       }
@@ -880,7 +890,7 @@ export function createStage() {
     const { verdict } = outcome;
     const made = slide as Slide | null;
     const html = made ? (getLive(made.id)?.html ?? "") : "";
-    const ok = made !== null && (made.layout === "UI_HERO" || html.length >= DRAW_MIN_CHARS);
+    const ok = made !== null && (made.layout !== "LIVE_UI" || html.length >= DRAW_MIN_CHARS);
     // "m2 none 0-450ms": model 2 started at once and said "nothing to show" after 450 ms.
     const race = contenders.flatMap((c, i) => (c.startedAt ? [`m${i + 1} ${c.verdict || (c.controller.signal.aborted ? "stalled" : "nothing")} ${Math.round(c.startedAt - t0)}-${c.namedAt ? Math.round(c.namedAt - t0) : "?"}ms`] : []));
     record({ kind: "draw", said: line, label: made?.headline, ui: made?.ui?.kind ?? null, ok, by, declined: verdict === "declined", same: outcome.same, skipped: verdict, stalled: raw === null && !made, firstMs, ms: Math.round(performance.now() - t0), chars: html.length, race });

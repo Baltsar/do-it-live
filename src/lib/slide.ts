@@ -24,10 +24,12 @@ export const LAYOUTS = [
   "LIVE_UI",
   // One big, simplified interface element (see ui-spec.ts).
   "UI_HERO",
+  // One to three words as moving type: the letters drop in over echoes of the word sliding past.
+  "KINETIC",
 ] as const;
 
 export { SCENES, isScene, type SceneName } from "@/lib/scene-catalog";
-const VISUAL_LAYOUTS: readonly string[] = ["PHOTO", "ICON", "CHART", "GIF_REACTION", "ICON_GRID", "TITLE_CARD", "SCENE", "LIVE_UI", "UI_HERO"];
+const VISUAL_LAYOUTS: readonly string[] = ["PHOTO", "ICON", "CHART", "GIF_REACTION", "ICON_GRID", "TITLE_CARD", "SCENE", "LIVE_UI", "UI_HERO", "KINETIC"];
 export const MOTIFS = ["rings", "stripes", "dots", "burst", "grid"] as const;
 export const MOODS = ["hype", "funny", "calm", "serious", "chaos"] as const;
 

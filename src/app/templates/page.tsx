@@ -40,6 +40,8 @@ const LAYOUT_ENTRIES: Entry[] = [
   { code: "L16", name: "Icon grid", when: "With words on, four parallel things", raw: { layout: "ICON_GRID", headline: "Four tools", items: ["Voice", "Photos", "GIFs", "Charts"], icons: ["Mic", "Camera", "Film", "ChartPie"], mood: "calm" } },
   { code: "L17", name: "Number + icon", when: "With words on, a figure with the thing it counts", raw: { layout: "SPLIT_STAT", number: "80%", headline: "shipped with an agent", icon: "Bot", mood: "serious" } },
   { code: "L18", name: "Meme (GIF with captions)", when: "With words on, a joke with a setup and punchline", raw: { layout: "MEME", headline: "When the demo works", body: "on the first try", library_id: BLINK_GIF, mood: "funny" } },
+  { code: "L19", name: "Moving type", when: "Main track: instead of a card right after a card", raw: { layout: "KINETIC", headline: "Insane", mood: "chaos" } },
+  { code: "L20", name: "The speaker's own words", when: "Main track: instead of a card, the point underlined", raw: { layout: "QUOTE", headline: "“you can make the AI insane”", ui: { kind: "alert", text: "insane" }, mood: "calm" } },
 ];
 
 // One big interface element each: the drawing model can name one of these instead of drawing.

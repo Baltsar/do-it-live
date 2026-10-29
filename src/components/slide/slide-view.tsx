@@ -27,17 +27,22 @@ interface FitTextProps {
   slam?: boolean;
   /** Rendered instead of the text (it is still measured). Used for counting numbers. */
   node?: ReactNode;
+  /** Words to underline in the accent colour: the point inside a quote. */
+  mark?: string;
   className?: string;
 }
+
+const bare = (word: string): string => word.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
 
 /**
  * Fits text to a box by measuring the real layout, not by guessing glyph widths: binary search
  * for the largest size that neither overflows sideways (a long word) nor runs out of height.
  * Runs for each width cut and keeps the widest one that is still close to the best size.
  */
-function FitText({ text, w, h, max, min = 2.5, align = "left", slam = true, node, className = "" }: FitTextProps) {
+function FitText({ text, w, h, max, min = 2.5, align = "left", slam = true, node, mark, className = "" }: FitTextProps) {
   const outer = useRef<HTMLDivElement>(null);
   const inner = useRef<HTMLDivElement>(null);
+  const marked = new Set((mark ?? "").split(/\s+/).map(bare).filter(Boolean));
 
   const fit = useCallback(() => {
     const o = outer.current;
@@ -84,7 +89,7 @@ function FitText({ text, w, h, max, min = 2.5, align = "left", slam = true, node
           </span>
         ) : slam
           ? text.split(" ").map((word, i) => (
-              <span key={`${word}-${i}`} className="w" style={{ "--i": i } as CSSProperties}>
+              <span key={`${word}-${i}`} className={marked.has(bare(word)) ? "w mark" : "w"} style={{ "--i": i } as CSSProperties}>
                 {word}
               </span>
             ))
@@ -118,6 +123,43 @@ function tickerNode(text: string, still: boolean, delay = 0.35): ReactNode | nul
         {suffix}
       </span>
     </span>
+  );
+}
+
+/**
+ * One to three words as moving type. The word itself drops in letter by letter, fitted to the slide,
+ * while outlined copies of it slide past behind in the accent colour, in opposite directions per row.
+ */
+function Kinetic({ word }: { word: string }) {
+  const echo = `${word} • `.repeat(8);
+  let k = 0;
+  const letters = (
+    <span className="kinetic-letters">
+      {word.split(" ").map((part, i) => (
+        <span key={`${part}-${i}`} className="kinetic-part">
+          {[...part].map((ch, j) => (
+            <span key={j} className="kl" style={{ "--k": k++ } as CSSProperties}>
+              {ch}
+            </span>
+          ))}
+        </span>
+      ))}
+    </span>
+  );
+  return (
+    <div className="kinetic">
+      <div className="kinetic-echo" aria-hidden>
+        {[0, 1, 2, 3].map((row) => (
+          <span key={row} style={{ "--row": row } as CSSProperties}>
+            {echo}
+          </span>
+        ))}
+      </div>
+      <div className="kinetic-word">
+        <FitText text={word} w={84} h={46} max={34} align="center" node={letters} />
+        <div className="kinetic-bar" />
+      </div>
+    </div>
   );
 }
 
@@ -298,7 +340,7 @@ function renderContent(slide: Slide, still: boolean): { node: ReactNode; flush: 
             <div className="quote">
               <div className="quote-bar" />
               <div>
-                <FitText text={slide.headline} w={74} h={slide.body ? 48 : 60} max={14} />
+                <FitText text={slide.headline} w={74} h={slide.body ? 48 : 60} max={14} mark={slide.ui?.text} />
                 {slide.body ? <div className="sub">{slide.body}</div> : null}
               </div>
             </div>
@@ -404,6 +446,9 @@ function renderContent(slide: Slide, still: boolean): { node: ReactNode; flush: 
     case "UI_HERO":
       if (!slide.ui) break;
       return { flush: true, node: <UiHero spec={slide.ui} still={still} /> };
+
+    case "KINETIC":
+      return { flush: true, node: <Kinetic word={slide.headline} /> };
 
     case "ICON": {
       const word = style.text !== "none" && slide.headline ? slide.headline : "";

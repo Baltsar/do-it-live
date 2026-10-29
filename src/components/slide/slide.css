@@ -196,6 +196,39 @@
 /* UI_HERO: one shadcn element on a small stage, scaled up to the slide and centred */
 .ui-hero { position: absolute; inset: 0; overflow: hidden; z-index: 1; color: var(--fg); font-weight: var(--slide-weight, 900); }
 .ui-hero-stage { position: absolute; left: 50%; top: 50%; display: grid; place-items: center; transform-origin: 50% 50%; }
+
+/* KINETIC: the word drops in letter by letter over outlined copies of itself sliding past. */
+.kinetic { position: absolute; inset: 0; overflow: hidden; display: grid; place-items: center; }
+.kinetic-echo { position: absolute; inset: -3cqh 0; display: flex; flex-direction: column; justify-content: space-between; pointer-events: none; }
+.kinetic-echo span {
+  white-space: nowrap;
+  font-weight: var(--slide-weight, 900);
+  font-size: 22cqh;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: transparent;
+  -webkit-text-stroke: 0.16cqw color-mix(in srgb, var(--alt) 75%, transparent);
+  animation: kineticSlide 16s linear infinite, fadeIn 0.6s both;
+}
+.kinetic-echo span:nth-child(even) { animation-direction: reverse, normal; }
+.kinetic-word { position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; }
+.kinetic .type .w { animation: none; margin-right: 0; }
+.kinetic-part { display: inline-block; white-space: nowrap; margin-right: 0.22em; }
+.kinetic-part:last-child { margin-right: 0; }
+.kl {
+  display: inline-block;
+  paint-order: stroke fill;
+  -webkit-text-stroke: 0.12em var(--bg);
+  animation: kineticDrop 0.55s cubic-bezier(0.2, 1.4, 0.35, 1) both;
+  animation-delay: calc(0.12s + var(--k) * 0.045s);
+}
+.type.measuring .kl { animation: none !important; }
+.kinetic-bar { width: 30cqw; height: 2.4cqh; margin-top: 3cqh; background: var(--alt); animation: growX 0.45s 0.7s cubic-bezier(0.2, 1, 0.3, 1) both; }
+@keyframes kineticSlide { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+@keyframes kineticDrop { from { transform: translateY(-0.7em) rotate(-10deg) scale(1.2); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* QUOTE: the point inside the speaker's words */
+.type .w.mark { text-decoration: underline; text-decoration-color: var(--alt); text-decoration-thickness: 0.11em; text-underline-offset: 0.06em; text-decoration-skip-ink: none; }
 /* LIVE_UI: a 1600x900 stage a model draws into, scaled to the frame */
 .live-ui { position: absolute; inset: 0; overflow: hidden; z-index: 1; }
 .live-ui iframe { position: absolute; left: 0; top: 0; border: 0; transform-origin: 0 0; pointer-events: none; }
