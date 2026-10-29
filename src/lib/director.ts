@@ -1,7 +1,7 @@
 // Server-only: keys never reach the browser.
 import { ICON_NAMES } from "@/lib/icons";
 import { SCENES, SCENE_CATALOG } from "@/lib/scene-catalog";
-import { areBareOrdinals, countFromLine, groundSlide, hasUngroundedNumbers, isAbstractPhotoQuery, isAnnouncement, isQuestion, itemsFromEnumeration, percentFromLine, processFromLine, checklistFromLine } from "@/lib/grounding";
+import { areBareOrdinals, checklistFromLine, countFromLine, figureFromLine, groundSlide, hasUngroundedNumbers, isAbstractPhotoQuery, isAnnouncement, isQuestion, itemsFromEnumeration, percentFromLine, processFromLine } from "@/lib/grounding";
 import { isMotion, lexicalMatch, libraryCandidates, libraryLine, literalMatch, loadIndex, namedMatch, type LibraryItem } from "@/lib/library";
 import { isScene, type DirectorResult, type ImageSource, type VisualMode } from "@/lib/slide";
 
@@ -160,7 +160,7 @@ Output ONLY one JSON object, no prose:
  "wish": "a picture that is NOT in the speaker's library and that you wish it had for THIS line: one concrete, photographable scene in under 10 words, invented for this exact idea. Different for every line. Never describe a library item. Empty string for filler, greetings and announcements.",
  "search_query": "only for fact_lookup: a web search query",
  "slide": {
-   "layout": "SCENE" | "PHOTO" | "GIF_REACTION" | "ICON" | "ICON_GRID" | "CHART" | "BIG_NUMBER" | "SPLIT_STAT" | "VERSUS" | "REVEAL_3" | "PROCESS" | "CHECKLIST" | "TITLE_CARD" | "QUOTE" | "BIG_WORD",
+   "layout": "SCENE" | "PHOTO" | "GIF_REACTION" | "ICON" | "ICON_GRID" | "CHART" | "BIG_NUMBER" | "DELTA" | "PICTOGRAM" | "STAT_ROW" | "SPLIT_STAT" | "VERSUS" | "REVEAL_3" | "PROCESS" | "CHECKLIST" | "WORDS" | "TITLE_CARD" | "QUOTE" | "QUESTION" | "BIG_WORD",
    "headline": "max 3 words for PHOTO/GIF_REACTION/ICON/CHART, max 5 otherwise, sentence case",
    "body": "optional, max 12 words, usually empty",
    "metaphor": "one sentence: what the picture shows and why it AMPLIFIES the line (a visual metaphor, not the literal words)",
@@ -170,10 +170,10 @@ Output ONLY one JSON object, no prose:
    "scene": "one scene name from the SCENES list, ONLY when the NEW LINE is really about that feeling. Leave it out otherwise: most lines fit no scene.",
    "icon": "ICON: one name from the icon list",
    "chart": {"kind": "ring" | "bars", "values": [numbers], "labels": ["short"]},
-   "number": "BIG_NUMBER only, e.g. 42%",
-   "items": ["REVEAL_3: exactly three very short items. PROCESS: 2-4 steps. CHECKLIST: 2-5 items. ICON_GRID: 3-4 items"],
+   "number": "BIG_NUMBER only, e.g. 42%. PICTOGRAM: the share as a fraction, e.g. 1/5",
+   "items": ["REVEAL_3: exactly three very short items. PROCESS: 2-4 steps. CHECKLIST: 2-5 items. ICON_GRID: 3-4 items. STAT_ROW: 2-3 figures each with its word, as said. WORDS: 5-8 single words"],
    "icons": ["ICON_GRID only: one icon name per item, same order"],
-   "versus": ["A", "B"],
+   "versus": ["VERSUS: the two sides. DELTA: the two figures, before and after, as said"],
    "mood": "hype" | "funny" | "calm" | "serious" | "chaos",
    "motif": "rings" | "stripes" | "dots" | "burst" | "grid",
    "claims_fact": true | false
@@ -196,6 +196,11 @@ Choosing the visual:
 - A flow or sequence with an order ("first X, then Y, then Z", "from A to B"): PROCESS with the steps in order. A list of what is needed, done, or promised: CHECKLIST. Three or four parallel concepts that each have a clear symbol: ICON_GRID with one icon per item.
 - ONLY a pure topic change with no items ("now let's talk about the money"): TITLE_CARD with the topic in 1-3 words. A line that also lists things is a CHECKLIST, PROCESS or ICON_GRID, never a TITLE_CARD.
 - A number that comes with a thing it measures: SPLIT_STAT (number plus icon or image_query). A number alone: BIG_NUMBER.
+- A change from one figure to another ("from 12 to 700", "three became forty"): DELTA with versus = [the first figure, the second] and headline = what was counted.
+- A share said as a fraction of a group ("one in five", "9 out of 10"): PICTOGRAM with number = "1/5" and headline = who or what.
+- Two or three figures in one breath ("40 customers, 12 people, 2 million in revenue"): STAT_ROW with items = each figure with its word.
+- A question the speaker asks the room and leaves hanging ("what if slides made themselves?"): QUESTION with the question as headline.
+- Five to eight things named in one go (languages, cities, tools): WORDS with items = the words.
 - A comparison ("X versus Y", "X or Y", "X vs Y"): ALWAYS VERSUS with versus ["X","Y"], never a GIF or photo, even if the speaker orders it. A list or sequence of exactly three things: REVEAL_3 (always, never a photo).
 
 Icon list: ${ICON_NAMES.join(", ")}.
@@ -310,8 +315,8 @@ const STALE_MS = 12_000;
 // scene (3) is enough. When the director wants to hold, only a clear scene (4) overrules it:
 // replaying a real session, every "hold + scene 3" slide was noise ("so that's my talk bye" -> launch).
 const MIN_OUTVOTE_FIT = 4;
-const TEXT_TEMPLATES_PURE = ["BIG_WORD", "QUOTE", "TITLE_CARD", "REVEAL_3", "PROCESS", "CHECKLIST", "ICON_GRID", "VERSUS", "ICON"];
-const TEXT_TEMPLATES_MINIMAL = ["BIG_WORD", "QUOTE", "TITLE_CARD", "ICON"];
+const TEXT_TEMPLATES_PURE = ["BIG_WORD", "QUOTE", "TITLE_CARD", "REVEAL_3", "PROCESS", "CHECKLIST", "ICON_GRID", "VERSUS", "ICON", "QUESTION", "WORDS"];
+const TEXT_TEMPLATES_MINIMAL = ["BIG_WORD", "QUOTE", "TITLE_CARD", "ICON", "QUESTION"];
 
 const MOCK_ICONS: [RegExp, string][] = [
   [/rocket|space|launch|ship it/i, "Rocket"],
@@ -506,9 +511,19 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
     out.reason = `scene ${sceneChoice.scene} fits (${sceneChoice.fit}); the director wanted to hold`;
   }
 
-  // A figure the speaker states with the thing it counts is the one slide that is never a guess.
+  // Figures the speaker states are the slides that are never a guess: a change ("from 12 to 700"), a share
+  // of a group ("one in five"), several figures in one breath, or one count. Each is read from the line itself.
+  const figure = !request && input.latest ? figureFromLine(input.latest) : null;
+  if (figure && !(input.history ?? []).includes(figure.key)) {
+    parsed.slide = figure.slide;
+    parsed.action = "show";
+    out.slide = parsed.slide;
+    out.action = "show";
+    out.reason = figure.reason;
+    debug.count = figure.key;
+  }
   // In a real session "we are right now 700 people" was held three times while the model looked for a photo.
-  const count = !request && input.latest && percentFromLine(input.latest) === null ? countFromLine(input.latest) : null;
+  const count = !figure && !request && input.latest && percentFromLine(input.latest) === null ? countFromLine(input.latest) : null;
   if (count && !(input.history ?? []).includes(`${count.label} [BIG_NUMBER]`)) {
     parsed.slide = { layout: "BIG_NUMBER", number: count.number, headline: count.label, mood: "hype" };
     parsed.action = "show";
@@ -658,7 +673,7 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
   const share = !request && input.latest ? percentFromLine(input.latest) : null;
   if (share !== null && out.slide && typeof out.slide === "object") {
     const slide = out.slide as Record<string, unknown>;
-    if (!["CHART", "VERSUS", "REVEAL_3", "GIF_REACTION"].includes(String(slide.layout ?? "").toUpperCase())) {
+    if (!["CHART", "VERSUS", "REVEAL_3", "GIF_REACTION", "DELTA", "PICTOGRAM", "STAT_ROW"].includes(String(slide.layout ?? "").toUpperCase())) {
       slide.layout = "CHART";
       slide.chart = { kind: "ring", values: [share], labels: [] };
       slide.number = undefined;
@@ -719,7 +734,7 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
   if (out.slide && typeof out.slide === "object") {
     const slide = out.slide as Record<string, unknown>;
     const layout = String(slide.layout ?? "").toUpperCase();
-    const visual = ["VERSUS", "REVEAL_3", "CHART", "ICON", "GIF_REACTION", "SCENE", "PHOTO"].includes(layout);
+    const visual = ["VERSUS", "REVEAL_3", "CHART", "ICON", "GIF_REACTION", "SCENE", "PHOTO", "DELTA", "PICTOGRAM", "STAT_ROW", "WORDS"].includes(layout);
     if (!visual && !String(slide.headline ?? "").trim() && !slide.number) {
       return { ...out, action: "hold", slide: undefined, reason: `${out.reason ?? ""} (empty slide dropped)`.trim() };
     }

@@ -852,6 +852,56 @@
 .slide-frame.static .nw-ed { stroke-dashoffset: 0; }
 .slide-frame.static .nw-nd:nth-of-type(odd) { fill: var(--alt); }
 
+/* DELTA: from one figure to another. The second is the point; the first is where it started. */
+.delta { display: flex; align-items: center; gap: 3cqw; }
+.delta-from { opacity: 0.5; }
+.delta-arrow { display: flex; flex-direction: column; align-items: center; gap: 0.6cqh; color: var(--alt); animation: rise 0.5s 0.5s both; }
+.delta-glyph { width: 10cqw; height: 10cqw; }
+.delta-factor { font-size: 3.4cqw; font-weight: 800; letter-spacing: -0.02em; white-space: nowrap; }
+.layout-delta .num-label { margin-top: 2cqh; }
+
+/* PICTOGRAM: a share of a group as a row of figures, the share lit in the accent colour. */
+.picto { display: flex; align-items: center; gap: 5cqw; }
+.picto-grid { display: grid; gap: 1cqw; }
+.picto-cell {
+  width: var(--cell); height: var(--cell);
+  display: grid; place-items: center;
+  color: color-mix(in srgb, var(--fg) 30%, transparent);
+  animation: slam 0.4s cubic-bezier(0.2, 1.3, 0.3, 1) both;
+  animation-delay: calc(0.2s + var(--i) * 0.07s);
+}
+.picto-cell.on { color: var(--alt); }
+.picto-glyph { width: 80%; height: 80%; }
+.picto-text { display: flex; flex-direction: column; }
+.picto-frac { font-weight: var(--slide-weight, 900); font-size: 14cqw; letter-spacing: -0.05em; line-height: 0.85; white-space: nowrap; animation: slam 0.5s 0.4s cubic-bezier(0.2, 1.3, 0.3, 1) both; }
+.picto-in { font-size: 0.4em; letter-spacing: 0; opacity: 0.6; }
+
+/* STAT_ROW: two or three figures in one breath, side by side. */
+.stat-row { display: flex; align-items: flex-start; gap: 4cqw; width: 100%; }
+.stat { flex: 1; min-width: 0; display: flex; flex-direction: column; animation: slam 0.45s cubic-bezier(0.2, 1.3, 0.3, 1) both; animation-delay: calc(0.2s + var(--i) * 0.35s); }
+.stat + .stat { border-left: 0.35cqw solid color-mix(in srgb, var(--fg) 35%, transparent); padding-left: 4cqw; }
+.stat .num-label { margin-top: 1.5cqh; font-size: 3.6cqw; }
+
+/* QUESTION: the question in front, one huge mark behind it. */
+.question { position: relative; width: 100%; }
+.question-mark {
+  position: absolute; right: -4cqw; top: 50%; translate: 0 -56%;
+  font-size: 95cqh; line-height: 1; font-weight: var(--slide-weight, 900);
+  color: var(--alt); opacity: 0.32; pointer-events: none; user-select: none;
+  animation: slam 0.6s 0.1s cubic-bezier(0.2, 1.3, 0.3, 1) both;
+}
+.question .stack { position: relative; z-index: 1; }
+
+/* WORDS: five to eight words as one wall, sizes and tilts in a fixed rhythm. */
+.words { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2cqh 3.5cqw; max-width: 92cqw; margin: 0 auto; text-align: center; }
+.word {
+  font-weight: var(--slide-weight, 900); font-size: var(--s); line-height: 1; letter-spacing: -0.03em; white-space: nowrap;
+  rotate: var(--r);
+  animation: slam 0.45s cubic-bezier(0.2, 1.3, 0.3, 1) both;
+  animation-delay: calc(0.15s + var(--i) * 0.14s);
+}
+.word:nth-child(3n + 1) { color: var(--alt); }
+
 /* ---- Look: Scribble. The same templates, drawn with a marker on a whiteboard. ----
    Skin only, and every rule is scoped to the look, so Pop renders exactly as before.
    Marks are masks filled with the field's accent: they take the style guide's colours. */
@@ -882,8 +932,8 @@
 [data-look="scribble"] .ticker { white-space: nowrap; }
 
 /* The figure gets circled, after it lands. */
-[data-look="scribble"] .layout-big_number .stack > .fit:first-child .w:first-child { position: relative; }
-[data-look="scribble"] .layout-big_number .stack > .fit:first-child .w:first-child::after {
+[data-look="scribble"] :is(.layout-big_number .stack > .fit:first-child, .delta-to .fit) .w:first-child { position: relative; }
+[data-look="scribble"] :is(.layout-big_number .stack > .fit:first-child, .delta-to .fit) .w:first-child::after {
   content: "";
   position: absolute;
   inset: -16% -14% -12% -12%;
@@ -1020,7 +1070,7 @@
 /* Look: Broadcast. A news desk: condensed capitals, a lower third, a LIVE bug in the corner. */
 [data-look="broadcast"] :is(.backdrop, .motif) { display: none; }
 [data-look="broadcast"] .type { text-transform: uppercase; letter-spacing: 0; line-height: 0.9; }
-[data-look="broadcast"] :is(.versus > div, .vs, .reveal-item, .reveal-head, .kinetic-echo span, .stamp) { text-transform: uppercase; letter-spacing: 0; }
+[data-look="broadcast"] :is(.versus > div, .vs, .reveal-item, .reveal-head, .kinetic-echo span, .stamp, .word, .picto-frac) { text-transform: uppercase; letter-spacing: 0; }
 [data-look="broadcast"] .layer:not(.layout-live_ui)::after {
   content: "● LIVE";
   position: absolute; right: 3cqw; top: 4cqh; z-index: 6;
@@ -1071,7 +1121,7 @@
   background-size: 0.95cqw 0.95cqw;
 }
 [data-look="scoreboard"] .type { text-transform: uppercase; line-height: 0.95; text-shadow: 0 0 1.6cqw color-mix(in srgb, var(--fg) 55%, transparent); }
-[data-look="scoreboard"] :is(.versus > div, .vs, .reveal-item, .reveal-head, .num-label, .sub, .kinetic-echo span, .stamp, .ring-center) { text-transform: uppercase; letter-spacing: 0.01em; }
+[data-look="scoreboard"] :is(.versus > div, .vs, .reveal-item, .reveal-head, .num-label, .sub, .kinetic-echo span, .stamp, .ring-center, .word, .picto-frac, .delta-factor) { text-transform: uppercase; letter-spacing: 0.01em; }
 [data-look="scoreboard"] .type .w.mark { text-decoration: none; color: var(--alt); text-shadow: 0 0 1.6cqw color-mix(in srgb, var(--alt) 65%, transparent); }
 [data-look="scoreboard"] :is(.num-label, .sub) { color: var(--alt); text-shadow: 0 0 1cqw color-mix(in srgb, var(--alt) 55%, transparent); }
 [data-look="scoreboard"] :is(.rule, .kinetic-bar) {

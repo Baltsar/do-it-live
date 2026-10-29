@@ -10,7 +10,7 @@ const PREP_SYSTEM = `You prepare slides BEFORE a live talk. The speaker wrote a 
 Rules:
 - Go through the heads-up sentence by sentence. Every sentence that makes a point gets its own slide: a short heads-up of four sentences gives four slides.
 - Use ONLY what the heads-up says. Never invent a fact, a number or a name.
-- Every number in the heads-up gets its own slide: BIG_NUMBER, or CHART with a ring for a percentage.
+- Every number in the heads-up gets its own slide: BIG_NUMBER, or CHART with a ring for a percentage. A change between two numbers ("from 12 to 700") is a DELTA with versus = ["12", "700"]; a share of a group ("one in five") is a PICTOGRAM with number "1/5".
 - A theme or feeling in the heads-up becomes a SCENE from the list. Use each scene at most once.
 - Use a library item only when it clearly fits something in the heads-up: PHOTO for a photo, GIF_REACTION for a gif or clip, with its library_id.
 - No text slides. "headline" is a 1-2 word label.
@@ -23,7 +23,7 @@ SCENES:
 ${SCENES.map((n) => `  ${n} = ${SCENE_CATALOG[n].means}`).join("\n")}
 
 Output ONLY JSON:
-{"moments":[{"cues":["..."],"strong":"...","say":"...","slide":{"layout":"SCENE|BIG_NUMBER|CHART|PHOTO|GIF_REACTION","scene":"...","number":"...","headline":"...","chart":{"kind":"ring","values":[0]},"library_id":"...","mood":"hype|funny|calm|serious|chaos"}}]}`;
+{"moments":[{"cues":["..."],"strong":"...","say":"...","slide":{"layout":"SCENE|BIG_NUMBER|DELTA|PICTOGRAM|CHART|PHOTO|GIF_REACTION","versus":["..."],"scene":"...","number":"...","headline":"...","chart":{"kind":"ring","values":[0]},"library_id":"...","mood":"hype|funny|calm|serious|chaos"}}]}`;
 
 interface RawMoment {
   say?: unknown;
@@ -105,8 +105,9 @@ async function prepareOnce(brief: string): Promise<PreparedMoment[]> {
     else slide.library_id = undefined;
 
     const layout = String(slide.layout ?? "").toUpperCase();
-    const figure = layout === "BIG_NUMBER" || layout === "CHART";
-    if ((asked === "BIG_NUMBER" || asked === "CHART") && !figure) {
+    const figures = ["BIG_NUMBER", "CHART", "DELTA", "PICTOGRAM", "STAT_ROW"];
+    const figure = figures.includes(layout);
+    if (figures.includes(asked) && !figure) {
       prepDropped.push(`${strong}: a number that is not in the heads-up`);
       continue;
     }

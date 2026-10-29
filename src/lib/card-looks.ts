@@ -23,6 +23,7 @@ const COUNTED: Partial<Record<UiKind, string>> = {
   notifications: "notifications", people: "people", like: "likes", balance: "", progress: "", rating: "stars", poll: "",
   battery: "battery", trend: "", error: "", timer: "", post: "likes",
   stars: "stars", video: "views", tabs: "tabs", table: "rows", receipt: "", temperature: "", pricing: "",
+  streak: "days in a row", waitlist: "in line", followers: "followers", meeting: "in the call",
 };
 const PERCENT: readonly UiKind[] = ["progress", "poll", "battery", "trend"];
 

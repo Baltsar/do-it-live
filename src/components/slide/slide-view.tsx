@@ -6,7 +6,8 @@ import { LiveUi } from "@/components/slide/live-ui";
 import { UiHero } from "@/components/slide/ui-hero";
 import { NumberTicker } from "@/components/ui/number-ticker";
 import { useTheme } from "@/hooks/use-theme";
-import { hostOf, type ChartData, type Slide } from "@/lib/slide";
+import { magnitudeOf } from "@/lib/grounding";
+import { fractionOf, hostOf, type ChartData, type Slide } from "@/lib/slide";
 import { themeVars, type Theme } from "@/lib/theme";
 import { Backdrop } from "./backdrop";
 import { Scene } from "./scenes";
@@ -103,6 +104,28 @@ function FitText({ text, w, h, max, min = 2.5, align = "left", slam = true, node
  * A number that counts up. The final text is rendered invisibly underneath so the box is already
  * the right width, which keeps the fitted size stable while the digits change.
  */
+/** "700 builders" -> the figure and its word; an item without a figure is all label. */
+function splitStat(item: string): { number: string; label: string } {
+  // A unit letter only counts when it ends the figure: "2M revenue" has one, "700 builders" does not.
+  const m = item.match(/^([$€£]?\s?[\d.,]+(?:\s?(?:[kKmMbB](?![a-z])|%|×))?)\s*(.*)$/i);
+  return m ? { number: m[1].trim(), label: m[2].trim() } : { number: "", label: item };
+}
+
+/** "12" -> "700": "58×". A fall reads as a share lost. Empty when the change is small or unreadable. */
+function growth(from: string, to: string): string {
+  const a = magnitudeOf(from);
+  const b = magnitudeOf(to);
+  if (a === null || b === null || a <= 0 || b <= 0) return "";
+  const r = b / a;
+  if (r >= 2) return `${r >= 10 ? Math.round(r) : Math.round(r * 10) / 10}×`;
+  if (r <= 0.5) return `−${Math.round((1 - r) * 100)}%`;
+  return "";
+}
+
+// A word wall reads as one shape when the sizes and tilts repeat in a fixed order, never at random.
+const WORD_SIZES = [9, 6.2, 7.4, 5.4, 8.4, 6, 7, 5.2];
+const WORD_TILTS = [-3, 2, -1.5, 2.5, -2, 1, -2.5, 1.5];
+
 function tickerNode(text: string, still: boolean, delay = 0.35): ReactNode | null {
   if (still) return null;
   const m = text.match(/^(\D*?)(\d[\d,]*(?:\.\d+)?)(.*)$/);
@@ -444,6 +467,121 @@ function renderContent(slide: Slide, still: boolean): { node: ReactNode; flush: 
         ),
       };
     }
+
+    case "DELTA": {
+      const [from, to] = slide.versus;
+      const factor = growth(from, to);
+      return {
+        flush: false,
+        node: (
+          <>
+            <Motif kind={slide.motif} />
+            <div className="stack left">
+              <div className="delta">
+                <div className="delta-from">
+                  <FitText text={from} w={24} h={30} max={20} align="center" />
+                </div>
+                <div className="delta-arrow">
+                  <IconGlyph name="ArrowRight" className="delta-glyph" />
+                  {factor ? <span className="delta-factor">{factor}</span> : null}
+                </div>
+                <div className="delta-to">
+                  <FitText text={to} w={46} h={50} max={46} align="center" node={tickerNode(to, still)} />
+                </div>
+              </div>
+              {slide.headline ? <div className="num-label">{slide.headline}</div> : null}
+            </div>
+          </>
+        ),
+      };
+    }
+
+    case "PICTOGRAM": {
+      const [part, of] = fractionOf(slide.number).length === 2 ? fractionOf(slide.number) : [1, 5];
+      const cols = of <= 10 ? of : Math.ceil(of / 2);
+      const cell = Math.min(9, 50 / cols);
+      return {
+        flush: false,
+        node: (
+          <>
+            <Motif kind={slide.motif} />
+            <div className="picto">
+              <div className="picto-grid" style={{ gridTemplateColumns: `repeat(${cols}, ${cell}cqw)`, "--cell": `${cell}cqw` } as CSSProperties}>
+                {Array.from({ length: of }, (_, i) => (
+                  <span key={i} className={`picto-cell${i < part ? " on" : ""}`} style={{ "--i": i } as CSSProperties}>
+                    <IconGlyph name={slide.icon ?? "User"} className="picto-glyph" />
+                  </span>
+                ))}
+              </div>
+              <div className="picto-text">
+                <span className="picto-frac">
+                  {part}
+                  <span className="picto-in"> in </span>
+                  {of}
+                </span>
+                {slide.headline ? <span className="num-label">{slide.headline}</span> : null}
+              </div>
+            </div>
+          </>
+        ),
+      };
+    }
+
+    case "STAT_ROW": {
+      const stats = slide.items.slice(0, 3).map(splitStat);
+      const w = (88 - (stats.length - 1) * 8) / stats.length;
+      return {
+        flush: false,
+        node: (
+          <>
+            {slide.headline ? <div className="reveal-head">{slide.headline}</div> : null}
+            <div className="stat-row">
+              {stats.map((stat, i) => (
+                <div key={`${stat.number}-${i}`} className="stat" style={{ "--i": i } as CSSProperties}>
+                  <FitText text={stat.number} w={w} h={30} max={stats.length === 2 ? 26 : 20} node={tickerNode(stat.number, still)} />
+                  {stat.label ? <div className="num-label">{stat.label}</div> : null}
+                </div>
+              ))}
+            </div>
+          </>
+        ),
+      };
+    }
+
+    case "QUESTION":
+      return {
+        flush: false,
+        node: (
+          <>
+            <Motif kind={slide.motif} />
+            <div className="question">
+              <span className="question-mark" aria-hidden>
+                ?
+              </span>
+              <div className={`stack ${align}`}>
+                <FitText text={/[?？]\s*$/.test(slide.headline) ? slide.headline : `${slide.headline}?`} w={76} h={62} max={22} align={align} />
+              </div>
+            </div>
+          </>
+        ),
+      };
+
+    case "WORDS":
+      return {
+        flush: false,
+        node: (
+          <>
+            <Motif kind={slide.motif} />
+            <div className="words">
+              {slide.items.slice(0, 8).map((word, i) => (
+                <span key={`${word}-${i}`} className="word" style={{ "--i": i, "--s": `${WORD_SIZES[i % WORD_SIZES.length]}cqw`, "--r": `${WORD_TILTS[i % WORD_TILTS.length]}deg` } as CSSProperties}>
+                  {word}
+                </span>
+              ))}
+            </div>
+          </>
+        ),
+      };
 
     case "LIVE_UI":
       return { flush: true, node: <LiveUi id={slide.id} /> };

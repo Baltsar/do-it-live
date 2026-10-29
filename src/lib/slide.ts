@@ -26,6 +26,13 @@ export const LAYOUTS = [
   "UI_HERO",
   // One to three words as moving type: the letters drop in over echoes of the word sliding past.
   "KINETIC",
+  // Figures the speaker states, read from the line itself: a change, a share of a group, several figures.
+  "DELTA",
+  "PICTOGRAM",
+  "STAT_ROW",
+  // A question left hanging in the room, and a wall of five to eight words named in one go.
+  "QUESTION",
+  "WORDS",
 ] as const;
 
 export { SCENES, isScene, type SceneName } from "@/lib/scene-catalog";
@@ -234,9 +241,17 @@ function parseRaw(raw: unknown): z.infer<typeof RawSlide> {
 export function normalizeSlide(raw: unknown): Slide {
   const s = parseRaw(raw);
   let layout: Layout = toLayout(s.layout) ?? "BIG_WORD";
-  const cleanItem = (i: string): string => clampWords(i.replace(/^\s*(?:one|two|three|four|five|first|second|third|\d)[\s,.:)-]+/i, ""), 5);
-  const items = (s.items ?? []).slice(0, 5).map(cleanItem).filter(Boolean);
+  const wall = layout === "WORDS";
+  // A list drops its ordinals ("1. ship"); a row of figures and a word wall keep every item as it is.
+  const literal = wall || layout === "STAT_ROW";
+  const cleanItem = (i: string): string => clampWords(literal ? i : i.replace(/^\s*(?:one|two|three|four|five|first|second|third|\d)[\s,.:)-]+/i, ""), wall ? 2 : 5);
+  const items = (s.items ?? []).slice(0, wall ? 8 : 5).map(cleanItem).filter(Boolean);
   const versus = (s.versus ?? []).slice(0, 2).map((i) => clampWords(i, 4));
+  if (layout === "DELTA" && !(versus.length === 2 && versus.every((v) => /\d/.test(v)))) layout = "BIG_WORD";
+  if (layout === "PICTOGRAM" && !fractionOf(String(s.number ?? ""))) layout = "BIG_WORD";
+  if (layout === "STAT_ROW" && !(items.length >= 2 && items.every((i) => /\d/.test(i)))) layout = items.length === 1 ? "BIG_WORD" : "BIG_WORD";
+  if (layout === "WORDS" && items.length < 4) layout = items.length === 3 ? "REVEAL_3" : "BIG_WORD";
+  if (layout === "QUESTION" && !(s.headline ?? "").trim()) layout = "BIG_WORD";
   if (layout === "REVEAL_3" && items.length < 3) layout = "BIG_WORD";
   if (layout === "VERSUS" && versus.length < 2) layout = "BIG_WORD";
   if (layout === "PROCESS" && (items.length < 2 || items.length > 4)) layout = items.length >= 3 ? "REVEAL_3" : "BIG_WORD";
@@ -268,9 +283,9 @@ export function normalizeSlide(raw: unknown): Slide {
   return {
     id: nextId(),
     layout,
-    headline: clampWords(s.headline, layout === "QUOTE" ? 14 : VISUAL_LAYOUTS.includes(layout) ? 3 : 5) || (layout === "BIG_WORD" ? "Do it live" : ""),
+    headline: clampWords(s.headline, layout === "QUOTE" || layout === "QUESTION" ? 14 : VISUAL_LAYOUTS.includes(layout) ? 3 : 5) || (layout === "BIG_WORD" ? "Do it live" : ""),
     body: clampWords(s.body, 12),
-    number: s.number === undefined ? "" : String(s.number).slice(0, 14),
+    number: layout === "PICTOGRAM" ? fractionOf(String(s.number)).map(String).join("/") : s.number === undefined ? "" : String(s.number).slice(0, 14),
     items,
     versus,
     mood: isMood(s.mood) ? s.mood : MOOD_ALIASES[(s.mood ?? "").toLowerCase()] ?? "hype",
@@ -292,6 +307,15 @@ export function normalizeSlide(raw: unknown): Slide {
     vibe: claims && source === null,
     failed: Boolean(s.failed),
   };
+}
+
+/** "1/5", "1 in 5", "9 of 10" -> [1, 5]; empty when it is not a small share of a group. */
+export function fractionOf(text: string): number[] {
+  const m = text.match(/(\d{1,2})\s*(?:\/|in|of|out of)\s*(\d{1,2})/i);
+  if (!m) return [];
+  const part = Number(m[1]);
+  const of = Number(m[2]);
+  return part >= 1 && part < of && of <= 20 ? [part, of] : [];
 }
 
 export interface DirectorResult {

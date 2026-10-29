@@ -45,7 +45,7 @@ The unit is a minute on stage. Everything else follows from it.
 5. **Events and teams**: one account, many speakers, the organiser's look on every stage, a screen
    per room. Priced per event or per seat.
 
-What makes it hard to copy is not a model. It is the taste: 7 looks, 18 slide types, 50 interface
+What makes it hard to copy is not a model. It is the taste: 7 looks, 23 slide types, 60 interface
 cards, 80 scenes, and a director that knows when to show nothing. Every show makes that library
 better, and the contributor door is open.
 

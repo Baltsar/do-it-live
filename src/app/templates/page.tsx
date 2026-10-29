@@ -42,6 +42,12 @@ const LAYOUT_ENTRIES: Entry[] = [
   { code: "L17", name: "Number + icon", when: "With words on, a figure with the thing it counts", raw: { layout: "SPLIT_STAT", number: "80%", headline: "shipped with an agent", icon: "Bot", mood: "serious" } },
   { code: "L19", name: "Moving type", when: "Main track: instead of a card right after a card", raw: { layout: "KINETIC", headline: "Insane", mood: "chaos" } },
   { code: "L20", name: "The speaker's own words", when: "Main track: instead of a card, the point underlined", raw: { layout: "QUOTE", headline: "“you can make the AI insane”", ui: { kind: "alert", text: "insane" }, mood: "calm" } },
+  // Figures read from the line itself, and two more ways with words.
+  { code: "L21", name: "From one figure to another", when: "Main track: \"we went from 12 to 700 builders\"", raw: { layout: "DELTA", versus: ["12", "700"], headline: "builders", mood: "hype" } },
+  { code: "L22", name: "A share of a group", when: "Main track: \"one in five startups make it\"", raw: { layout: "PICTOGRAM", number: "1/5", headline: "startups make it", icon: "Rocket", mood: "serious" } },
+  { code: "L23", name: "Figures in a row", when: "Main track: \"700 builders, 12 cities, 3 countries\"", raw: { layout: "STAT_ROW", items: ["700 builders", "12 cities", "3 countries"], mood: "hype" } },
+  { code: "L24", name: "A question left hanging", when: "With words on: \"what if the slides made themselves?\"", raw: { layout: "QUESTION", headline: "What if the slides made themselves", mood: "calm" } },
+  { code: "L25", name: "A wall of words", when: "With words on: six languages named in one go", raw: { layout: "WORDS", items: ["Swedish", "English", "Finnish", "Danish", "Norwegian", "German"], mood: "funny" } },
 ];
 
 // One big interface element each: the drawing model can name one of these instead of drawing.
@@ -99,6 +105,17 @@ const UI_ENTRIES: { code: string; name: string; when: string; ui: Record<string,
   { code: "U48", name: "Lock", when: "\"they got in anyway\"", ui: { kind: "lock", text: "Hacked", state: "crossed" }, mood: "chaos" },
   { code: "U49", name: "Link", when: "\"scan this, try it yourself\"", ui: { kind: "link", text: "do-it-live.vercel.app" }, mood: "hype" },
   { code: "U50", name: "Temperature", when: "\"it was forty degrees in the tent\"", ui: { kind: "temperature", count: 40, text: "in the tent" }, mood: "funny" },
+  // Meetings, habits, money, queues, shops, parcels, audiences and languages.
+  { code: "U51", name: "On mute", when: "\"I talked for two minutes on mute\"", ui: { kind: "mute" }, mood: "funny" },
+  { code: "U52", name: "Meeting, waiting", when: "\"we sat there waiting for the host\"", ui: { kind: "meeting", state: "loading" }, mood: "calm" },
+  { code: "U53", name: "Streak", when: "\"47 days in a row\"", ui: { kind: "streak", count: 47 }, mood: "hype" },
+  { code: "U54", name: "Achievement", when: "\"first paying customer\"", ui: { kind: "badge", text: "First customer" }, mood: "hype" },
+  { code: "U55", name: "Card declined", when: "\"and the card got declined\"", ui: { kind: "declined", text: "Cloud bill" }, mood: "chaos" },
+  { code: "U56", name: "Waitlist", when: "\"we were number 4,021 in line\"", ui: { kind: "waitlist", count: 4021, text: "GPU waitlist" }, mood: "serious" },
+  { code: "U57", name: "Sold out", when: "\"the tickets sold out in an hour\"", ui: { kind: "soldout", text: "Tickets", count: 49 }, mood: "chaos" },
+  { code: "U58", name: "Delivery", when: "\"the GPUs are on their way\"", ui: { kind: "delivery", text: "8 GPUs" }, mood: "calm" },
+  { code: "U59", name: "Followers", when: "\"ten thousand followers now\"", ui: { kind: "followers", text: "do_it_live", count: 10000 }, mood: "hype" },
+  { code: "U60", name: "Translate", when: "\"in Swedish we say lagom\"", ui: { kind: "translate", items: ["lagom", "just enough"] }, mood: "funny" },
 ];
 
 // A drawing made the way the engine makes one live, so the first card shows the real thing.

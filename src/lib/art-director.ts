@@ -16,14 +16,14 @@ const hash = (seed: string): number => {
   return h;
 };
 
-const TEXT_LAYOUTS: readonly Slide["layout"][] = ["BIG_WORD", "QUOTE", "TITLE_CARD", "BIG_NUMBER"];
+const TEXT_LAYOUTS: readonly Slide["layout"][] = ["BIG_WORD", "QUOTE", "TITLE_CARD", "BIG_NUMBER", "QUESTION", "WORDS", "DELTA", "PICTOGRAM"];
 
 /**
  * The art director. Takes a slide as the director made it and decides how it looks next to the
  * slides before it: colour field, alignment, photo side, motif. Pure and deterministic.
  */
 // Layouts with room behind them. Photos, GIFs and dense lists stay clean.
-const BACKDROP_LAYOUTS: readonly Slide["layout"][] = ["SCENE", "ICON", "BIG_NUMBER", "BIG_WORD", "TITLE_CARD"];
+const BACKDROP_LAYOUTS: readonly Slide["layout"][] = ["SCENE", "ICON", "BIG_NUMBER", "BIG_WORD", "TITLE_CARD", "DELTA", "PICTOGRAM", "QUESTION"];
 // Pairs that fight: rings behind rings, a dot grid behind a dot grid.
 const CLASHES: Partial<Record<BackdropName, readonly string[]>> = {
   ripple: ["echo", "orbit", "lock", "swarm", "focus", "loop"],

@@ -43,6 +43,7 @@ Vibe coding took the boilerplate out of building software. Vibe presenting takes
   - one big interface element (a poll, a rating, a login that folds away);
   - a figure you just said;
   - moving type, or your own words quoted back.
+- **Draws the figures you say.** "From 12 to 700", "one in five", "700 builders in 12 cities and 3 countries": read from your own words, never from the model's memory, and shown as a change, a share of a group or a row of figures.
 - **Keeps it varied.** It never shows two interface cards in a row. It does not bring back a card type, or another look for a card, within a few slides. It skips pictures of what was just shown.
 - **Plays your own media.** It finds the GIF or photo from your library that fits what you are saying.
 - **Answers for you.** Say "Bill, how many…?" and it searches the web and puts up one slide with its source.

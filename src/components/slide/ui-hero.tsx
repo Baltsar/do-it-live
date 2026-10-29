@@ -5,22 +5,28 @@ import { motion } from "motion/react";
 import {
   ArrowDownRight,
   ArrowUpRight,
+  Award,
   Bell,
   Check,
   CheckCheck,
   Cloud,
   CloudRain,
   Cookie,
+  CreditCard,
+  Flame,
   GitBranch,
   GitPullRequest,
   Heart,
+  Languages,
   Link as LinkIcon,
   Lock,
   LockOpen,
   MapPin,
   MessageCircle,
+  MicOff,
   Moon,
   MousePointer2,
+  Package,
   Phone,
   PhoneOff,
   Plane,
@@ -35,6 +41,8 @@ import {
   TrendingUp,
   TriangleAlert,
   Trophy,
+  Truck,
+  UserPlus,
   X,
   Zap,
 } from "lucide-react";
@@ -1310,6 +1318,215 @@ function Hero({ spec, still }: { spec: UiSpec; still: boolean }): ReactNode {
             <div className="text-7xl font-black tabular-nums leading-none" style={hot ? { color: "var(--alt)" } : undefined}><Count value={deg} delay={0.3} still={still} />°</div>
             {text ? <div className="mt-2 text-2xl font-black opacity-70">{text}</div> : null}
           </div>
+        </motion.div>
+      );
+    }
+
+    case "mute": {
+      return (
+        <motion.div {...enter(still)} className="flex flex-col items-center gap-4">
+          <motion.span className="relative grid size-36 place-items-center rounded-full" style={{ background: "var(--card)" }} animate={!still && later ? { scale: [1, 1.08, 1] } : undefined} transition={{ duration: 0.4 }}>
+            <MicOff className="size-20" strokeWidth={2.2} style={{ color: later || still ? "var(--alt)" : "var(--fg)" }} />
+          </motion.span>
+          <span className="text-4xl font-black">{text || "You're on mute"}</span>
+        </motion.div>
+      );
+    }
+
+    case "meeting": {
+      const n = Math.max(1, Math.round(count ?? 4));
+      const waiting = spec.state === "loading" || spec.state === "empty";
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[380px] gap-3 rounded-2xl px-4 py-4" style={{ background: "var(--fg)", color: "var(--bg)" }}>
+            <div className="grid grid-cols-2 gap-2">
+              {Array.from({ length: 4 }, (_, i) => (
+                <motion.div key={i} {...enter(still, 0.1 + i * 0.12, { scale: 0.8 })} className="relative grid aspect-video place-items-center rounded-lg" style={{ background: "color-mix(in srgb, var(--bg) 18%, var(--fg))" }}>
+                  {i < Math.min(n, 4) && !(waiting && i > 0) ? (
+                    <Avatar className="size-12"><AvatarFallback className="text-transparent" style={{ background: i % 2 ? "var(--alt)" : "var(--bg)" }}>.</AvatarFallback></Avatar>
+                  ) : (
+                    <span className="size-12 rounded-full" style={{ background: "color-mix(in srgb, var(--bg) 30%, var(--fg))" }} />
+                  )}
+                  {i === 0 ? <span className="absolute right-1.5 top-1.5 size-3 rounded-full" style={{ background: "var(--alt)" }} /> : null}
+                </motion.div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xl font-black">{waiting ? text || "Waiting for the host" : text || "Meeting"}</span>
+              {waiting ? (
+                <motion.span className="flex gap-1" animate={still ? undefined : { opacity: [0.3, 1, 0.3] }} transition={{ duration: 1.2, repeat: Infinity }}>
+                  {[0, 1, 2].map((i) => <span key={i} className="size-2 rounded-full" style={{ background: "var(--bg)" }} />)}
+                </motion.span>
+              ) : (
+                <span className="text-xl font-black tabular-nums" style={{ color: "var(--alt)" }}><Count value={n} delay={0.5} still={still} /> here</span>
+              )}
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "streak": {
+      const n = Math.max(1, Math.round(count ?? 47));
+      return (
+        <motion.div {...enter(still)} className="flex items-center gap-5">
+          <motion.span animate={still ? undefined : { scale: [1, 1.12, 1], rotate: [0, -4, 4, 0] }} transition={{ duration: 1.1, repeat: Infinity }}>
+            <Flame className="size-28" strokeWidth={2} style={{ color: "var(--alt)", fill: "var(--alt)" }} />
+          </motion.span>
+          <span>
+            <span className="block text-7xl font-black tabular-nums leading-none"><Count value={n} delay={0.3} still={still} /></span>
+            <span className="mt-1 block text-2xl font-black opacity-70">{text || "day streak"}</span>
+          </span>
+        </motion.div>
+      );
+    }
+
+    case "badge": {
+      return (
+        <motion.div {...enter(still, 0, { scale: 0.6 })}>
+          <Card className="w-[340px] items-center gap-3 rounded-3xl px-6 py-7 text-center">
+            <motion.span className="grid size-24 place-items-center rounded-full" style={{ background: "var(--alt)", color: "var(--bg)" }} animate={!still && later ? { rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] } : undefined} transition={{ duration: 0.6 }}>
+              <Award className="size-14" strokeWidth={2.2} />
+            </motion.span>
+            <span className="text-xs font-black uppercase tracking-widest opacity-60">Unlocked</span>
+            <span className="text-3xl leading-tight font-black">{text || "Achievement"}</span>
+            <Bar w={150} className="opacity-50" />
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "declined": {
+      const ok = spec.state === "done" || spec.state === "on";
+      return (
+        <motion.div {...enter(still, 0, { y: 30 })} animate={!ok && later && !still ? { opacity: 1, y: 0, x: [0, -9, 9, -6, 6, 0] } : { opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
+          <div className="relative h-[210px] w-[340px] rounded-3xl p-6" style={{ background: "var(--fg)", color: "var(--bg)" }}>
+            <div className="flex items-start justify-between">
+              <CreditCard className="size-9" />
+              <Bar w={60} className="bg-[var(--bg)] opacity-40" />
+            </div>
+            <div className="mt-9 flex gap-3 text-xl font-black tracking-widest opacity-70">
+              <span>••••</span><span>••••</span><span>••••</span><span>4242</span>
+            </div>
+            <div className="mt-5 text-lg font-black">{text || "Card"}</div>
+            <motion.span
+              className="absolute right-5 top-14 rounded-lg border-4 px-3 py-1 text-3xl font-black uppercase tracking-wide"
+              style={{ borderColor: "var(--alt)", color: "var(--alt)", rotate: "-12deg", background: "var(--fg)" }}
+              initial={still ? false : { opacity: 0, scale: 1.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 18, delay: 0.7 }}
+            >
+              {ok ? "Approved" : "Declined"}
+            </motion.span>
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "waitlist": {
+      const n = Math.max(1, Math.round(count ?? 4021));
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[380px] gap-4 rounded-2xl px-6 py-6">
+            <span className="text-xs font-black uppercase tracking-widest opacity-60">{text || "Waitlist"}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-black opacity-60">#</span>
+              <span className="text-6xl font-black tabular-nums leading-none" style={{ color: "var(--alt)" }}><Count value={n} delay={0.3} still={still} /></span>
+              <span className="text-2xl font-black opacity-60">in line</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              {Array.from({ length: 14 }, (_, i) => (
+                <motion.span key={i} {...enter(still, 0.4 + i * 0.05, { scale: 0.3 })} className="size-4 rounded-full" style={{ background: i === 13 ? "var(--alt)" : "var(--muted)" }} />
+              ))}
+              <span className="ml-1 text-sm font-black opacity-60">you</span>
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "soldout": {
+      return (
+        <motion.div {...enter(still, 0, { y: 30 })}>
+          <Card className="relative w-[320px] gap-3 overflow-hidden rounded-2xl px-6 py-6">
+            <div className="h-28 rounded-xl" style={{ background: "var(--muted)" }} />
+            <span className="text-2xl leading-tight font-black">{text || "Tickets"}</span>
+            <div className="flex items-center justify-between">
+              {count ? <span className="text-2xl font-black tabular-nums line-through opacity-50">${compactNumber(count)}</span> : <Bar w={70} className="h-4" />}
+              <Bar w={90} className="h-8 rounded-lg opacity-30" />
+            </div>
+            <motion.span
+              className="absolute left-1/2 top-1/2 rounded-lg border-[5px] px-4 py-1 text-4xl font-black uppercase tracking-widest"
+              style={{ borderColor: "var(--alt)", color: "var(--alt)", background: "var(--card)", translate: "-50% -50%", rotate: "-14deg" }}
+              initial={still ? false : { opacity: 0, scale: 2 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 420, damping: 18, delay: 0.6 }}
+            >
+              Sold out
+            </motion.span>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "delivery": {
+      const delivered = spec.state === "done" || spec.state === "on";
+      const steps = ["Ordered", "On its way", "Delivered"];
+      const at = delivered ? 2 : 1;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[400px] gap-5 rounded-2xl px-6 py-6">
+            <div className="flex items-center gap-3">
+              <Package className="size-8 shrink-0" style={{ color: "var(--alt)" }} />
+              {text ? <span className="truncate text-2xl font-black">{text}</span> : <Bar w={180} className="h-4" />}
+            </div>
+            <div className="relative h-2 rounded-full" style={{ background: "var(--muted)" }}>
+              <motion.div className="h-full rounded-full" style={{ background: "var(--alt)" }} initial={still ? false : { width: "0%" }} animate={{ width: `${(at / 2) * 100}%` }} transition={{ duration: 1.2, ease: "easeInOut", delay: 0.3 }} />
+              <motion.span className="absolute top-1/2 -translate-y-1/2" initial={still ? false : { left: "0%" }} animate={{ left: `${(at / 2) * 100}%` }} transition={{ duration: 1.2, ease: "easeInOut", delay: 0.3 }}>
+                <span className="grid size-10 -translate-x-1/2 place-items-center rounded-full" style={{ background: "var(--alt)", color: "var(--bg)" }}>
+                  {delivered ? <Check className="size-5" strokeWidth={3} /> : <Truck className="size-5" />}
+                </span>
+              </motion.span>
+            </div>
+            <div className="flex justify-between text-sm font-black">
+              {steps.map((s, i) => <span key={s} style={{ opacity: i <= at ? 1 : 0.35, color: i === at ? "var(--alt)" : undefined }}>{s}</span>)}
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "followers": {
+      const n = count ?? 10_000;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[340px] items-center gap-3 rounded-3xl px-6 py-6">
+            <Avatar className="size-20 ring-4 ring-[var(--alt)]">
+              <AvatarFallback className="text-3xl font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>{(text || "?").slice(0, 1).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            {text ? <span className="text-2xl font-black">{text}</span> : <Bar w={120} className="h-4" />}
+            <div className="flex items-end gap-2">
+              <span className="text-5xl font-black tabular-nums leading-none"><Count value={n} delay={0.4} still={still} compact /></span>
+              <span className="pb-1 text-lg font-black opacity-60">followers</span>
+            </div>
+            <motion.div {...enter(still, 1.2, { y: 8 })}>
+              <Badge className="h-8 rounded-full px-3 text-base font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}><UserPlus className="size-4" /> +{compactNumber(Math.max(1, Math.round(n / 20)))} today</Badge>
+            </motion.div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "translate": {
+      const [from, to] = [spec.items[0] || text || "Hej", spec.items[1] || (spec.items[0] ? text : "") || "Hello"];
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[380px] gap-4 rounded-2xl px-6 py-5">
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-widest opacity-60"><Languages className="size-4" /> Translate</div>
+            <div className="rounded-xl px-4 py-3 text-3xl font-black" style={{ background: "var(--muted)" }}>{from}</div>
+            <div className="flex justify-center"><ArrowDownRight className="size-6 opacity-50" /></div>
+            <motion.div {...enter(still, 0.8, { y: 8 })} className="rounded-xl px-4 py-3 text-3xl font-black" style={{ background: "var(--alt)", color: "var(--bg)" }}>{to}</motion.div>
+          </Card>
         </motion.div>
       );
     }
