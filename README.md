@@ -75,7 +75,7 @@ flowchart LR
      - *a drawing*, which streams as HTML and CSS into a sandboxed iframe with no scripts.
    - **Two rules keep the race honest.** A quick "nothing to show" from a faster model never cuts off the best model while it is still drawing. A card that would be one too many becomes a big number, a duel, moving type or a quote instead.
 4. **Prepare, if you want.** Write a few sentences about your talk beforehand. Nemotron 3 Ultra turns them into ready slides with cue words.
-5. **Bring your own media.** Nemotron 3.5 Super VL describes each GIF or photo you upload, from its first, middle and last frames, because file names say nothing. Qwen3 Embedding then ranks them against what you are saying.
+5. **Bring your own media.** Drop a whole folder. The file's own bytes say what it is (a "gif" from Giphy is often WebP or MP4), never its name. Nemotron 3.5 Super VL watches six frames of each, Tavily looks it up on meme and GIF sites, and Nemotron 3 Ultra decides what it is and what the internet uses it to say: "Blinking White Guy" means disbelief. A meme name is only kept when a page confirms it. Qwen3 Embedding then ranks the library against what you are saying.
 6. **Ask for a fact.** Tavily searches the web, and Nemotron 3 Ultra turns the results into one sourced slide.
 
 ### NVIDIA models on Nebius Token Factory
@@ -84,7 +84,8 @@ flowchart LR
 |---|---|---|
 | Director: show or hold, which layout | `nvidia/Nemotron-3_5-Lightning` | Fast and steady enough to run every few spoken words |
 | Preparing slides, sourced facts | `nvidia/Nemotron-3-Ultra-550b-a55b` | Serious reasoning where a second of latency is fine |
-| Describing your own media | `nvidia/Nemotron-3.5-Super-VL` | Reads the start, middle and end frames of a GIF |
+| Watching your own media | `nvidia/Nemotron-3.5-Super-VL` | Six frames spread over a GIF or clip |
+| Naming it and its meaning | `nvidia/Nemotron-3-Ultra-550b-a55b` + Tavily | Meme, film or show, confirmed on a web page |
 | Third runner in the drawing race | `nvidia/Nemotron-3-Ultra-550b-a55b` | A steady first token when shared models stall |
 | Library ranking | `Qwen/Qwen3-Embedding-8B` | Embeddings on the same API |
 | Drawing | `moonshotai/Kimi-K3`, `openai/gpt-oss-120b` | Raced with Nemotron 3 Ultra; the first answer wins |

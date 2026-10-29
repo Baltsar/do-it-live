@@ -2,15 +2,18 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Film, ImageIcon, Trash2 } from "lucide-react";
+import { ChevronDown, Film, ImageIcon, RotateCw, Trash2 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { LibraryItem } from "@/lib/library";
-import { filesFromDrop, uploadMedia } from "@/lib/upload";
+import { filesFromDrop, rereadMedia, uploadMedia } from "@/lib/upload";
 
 type Item = Omit<LibraryItem, "embedding">;
 
-const isMotion = (item: Item): boolean => item.mime === "image/gif" || item.mime.startsWith("video/");
+const isMotion = (item: Item): boolean => item.motion ?? (item.mime === "image/gif" || item.mime.startsWith("video/"));
+
+/** The engine's category, or the older one-word emotion for items read before it existed. */
+const labelOf = (item: Item): string => (item.category ?? item.emotion ?? "").trim().toLowerCase();
 
 /** What the drop zone promises, in the speaker's words rather than in file extensions. */
 const KINDS = [
@@ -21,7 +24,7 @@ const KINDS = [
 
 export default function LibraryPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [busy, setBusy] = useState<{ done: number; total: number } | null>(null);
+  const [busy, setBusy] = useState<{ done: number; total: number; again?: boolean } | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [drag, setDrag] = useState(false);
   const [filter, setFilter] = useState<string>("all");
@@ -55,6 +58,15 @@ export default function LibraryPage() {
     [refresh],
   );
 
+  const reread = async (): Promise<void> => {
+    setErrors([]);
+    setBusy({ done: 0, total: items.length, again: true });
+    const failed = await rereadMedia(items, (done, total) => setBusy({ done, total, again: true }));
+    setBusy(null);
+    setErrors(failed);
+    await refresh();
+  };
+
   const remove = async (id: string): Promise<void> => {
     await fetch(`/api/library/${id}`, { method: "DELETE" });
     setItems((prev) => prev.filter((i) => i.id !== id));
@@ -74,13 +86,13 @@ export default function LibraryPage() {
   const { motion, stills, moods } = useMemo(() => {
     const counts = new Map<string, number>();
     for (const item of items) {
-      const mood = item.emotion?.trim().toLowerCase();
+      const mood = labelOf(item);
       if (mood) counts.set(mood, (counts.get(mood) ?? 0) + 1);
     }
     return {
       motion: items.filter(isMotion).length,
       stills: items.filter((i) => !isMotion(i)).length,
-      moods: [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
+      moods: [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 12),
     };
   }, [items]);
 
@@ -88,7 +100,7 @@ export default function LibraryPage() {
     if (filter === "all") return true;
     if (filter === "motion") return isMotion(item);
     if (filter === "stills") return !isMotion(item);
-    return item.emotion?.trim().toLowerCase() === filter;
+    return labelOf(item) === filter;
   });
 
   const chip = (value: string, label: string, count: number) => (
@@ -126,7 +138,12 @@ export default function LibraryPage() {
       <div className="mx-auto max-w-[1400px] space-y-8 px-5 py-6">
         <header className="flex items-center gap-3">
           <span className="text-lg font-black tracking-tight [font-stretch:125%]">Do it live</span>
-          <Link href="/" className={buttonVariants({ variant: "outline", className: "ml-auto" })}>
+          {items.length > 0 && !busy ? (
+            <Button variant="ghost" className="ml-auto text-white/70 hover:text-white" onClick={() => void reread()}>
+              <RotateCw /> Read all again
+            </Button>
+          ) : null}
+          <Link href="/" className={buttonVariants({ variant: "outline", className: items.length > 0 && !busy ? "" : "ml-auto" })}>
             Back to the show
           </Link>
         </header>
@@ -149,7 +166,7 @@ export default function LibraryPage() {
           {busy ? (
             <div className="space-y-4 text-center">
               <p className="text-2xl font-black tracking-tight sm:text-3xl">
-                Looking at your files <span className="tabular-nums text-[#ffd60a]">{busy.done}</span>
+                {busy.again ? "Reading again" : "Looking at your files"} <span className="tabular-nums text-[#ffd60a]">{busy.done}</span>
                 <span className="text-white/40"> / {busy.total}</span>
               </p>
               <div className="mx-auto h-2 w-full max-w-lg overflow-hidden rounded-full bg-white/10">
@@ -158,7 +175,7 @@ export default function LibraryPage() {
                   style={{ width: `${busy.total === 0 ? 0 : Math.round((busy.done / busy.total) * 100)}%` }}
                 />
               </div>
-              <p className="text-sm font-semibold text-white/50">A vision model watches each one and writes down what it shows.</p>
+              <p className="text-sm font-semibold text-white/50">Vision watches each one. The web says what it is called. Nemotron decides what it means.</p>
             </div>
           ) : (
             <div className="space-y-5 text-center">
@@ -183,7 +200,6 @@ export default function LibraryPage() {
             type="file"
             multiple
             hidden
-            accept=".gif,.webp,.png,.jpg,.jpeg,.mp4,.webm"
             onChange={(e) => {
               void upload([...(e.target.files ?? [])]);
               e.target.value = "";
@@ -223,11 +239,14 @@ export default function LibraryPage() {
                     <span className="absolute left-2 top-2 grid size-7 place-items-center rounded-full bg-black/70 text-white/80" title={isMotion(item) ? "Moves" : "Still"}>
                       {isMotion(item) ? <Film className="size-3.5" /> : <ImageIcon className="size-3.5" />}
                     </span>
-                    {item.emotion ? (
-                      <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-xs font-bold lowercase text-[#ffd60a]">{item.emotion}</span>
+                    {labelOf(item) ? (
+                      <span className="absolute right-2 top-2 rounded-full bg-black/70 px-2 py-0.5 text-xs font-bold lowercase text-[#ffd60a]">{labelOf(item)}</span>
                     ) : null}
                     <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-3 pt-10">
-                      <p className="line-clamp-2 text-sm font-semibold leading-snug">{item.caption || <span className="text-[#ff4fa3]">Not described — open and write one</span>}</p>
+                      {item.knownAs ? <p className="truncate text-base font-black leading-tight text-[#ffd60a]">{item.knownAs}</p> : null}
+                      <p className="line-clamp-2 text-sm font-semibold leading-snug">
+                        {item.meaning || item.caption || <span className="text-[#ff4fa3]">Not described — open and write one</span>}
+                      </p>
                     </div>
                   </div>
 
@@ -243,6 +262,17 @@ export default function LibraryPage() {
 
                   {open === item.id ? (
                     <div className="space-y-2 border-t border-white/10 p-3">
+                      {item.knownAs || item.origin ? (
+                        <p className="text-xs font-semibold text-white/60">
+                          {[item.knownAs, item.origin].filter(Boolean).join(" · ")}
+                          {item.evidence ? (
+                            <a href={item.evidence} target="_blank" rel="noreferrer" className="ml-2 text-[#ffd60a] underline-offset-2 hover:underline">
+                              source
+                            </a>
+                          ) : null}
+                        </p>
+                      ) : null}
+                      {item.nameFits === false ? <p className="text-xs text-white/40">The file name did not match what is in it, so it is ignored.</p> : null}
                       <input
                         defaultValue={item.caption}
                         onBlur={(e) => e.target.value !== item.caption && void edit(item, { caption: e.target.value })}

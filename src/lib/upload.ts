@@ -1,14 +1,16 @@
 // Client-side media dump: take whatever the speaker drops (files or whole folders), keep what
 // can be shown on a slide, and send each file with a few frames for the vision model.
+import { sniffFile } from "@/lib/sniff";
 
-const SUPPORTED = /\.(gif|webp|png|jpe?g|mp4|webm)$/i;
 const MAX_BYTES = 80 * 1024 * 1024;
 const MAX_FRAME = 384;
 const PARALLEL = 3;
+/** Where in a file the frames are taken, as a share of its length. */
+const SPREAD = [0.02, 0.2, 0.4, 0.6, 0.8, 0.98];
 
 export interface UploadReport {
   added: number;
-  /** Already in the library under the same name. */
+  /** The same bytes are already in the library, whatever either file is called. */
   duplicates: number;
   /** Not something a slide can show (documents, huge files, system files). */
   skipped: string[];
@@ -29,11 +31,22 @@ interface GifDecoder {
   decode(opts: { frameIndex: number }): Promise<{ image: VideoFrame }>;
 }
 
-/** Up to three JPEG frames (start, middle, end) so the vision model sees the motion, not just frame one. */
-async function extractFrames(file: File): Promise<string[]> {
+interface Frames {
+  frames: string[];
+  /** From the decoder for GIF and WebP; 0 when nothing counted them. */
+  frameCount: number;
+}
+
+/**
+ * Up to six JPEG frames spread over the file so the vision model sees the motion: a blink or a
+ * head turn lasts a fraction of a GIF and three frames missed it.
+ * `mime` is what the bytes say: the browser guesses from the extension, and a GIF named .jpg would
+ * decode as one still frame.
+ */
+async function extractFrames(file: Blob, mime: string): Promise<Frames> {
   const url = URL.createObjectURL(file);
   try {
-    if (file.type.startsWith("video/")) {
+    if (mime.startsWith("video/")) {
       const video = document.createElement("video");
       video.muted = true;
       video.src = url;
@@ -42,32 +55,32 @@ async function extractFrames(file: File): Promise<string[]> {
         video.onerror = () => rej(new Error("video decode failed"));
       });
       const frames: string[] = [];
-      for (const f of [0.1, 0.5, 0.9]) {
+      for (const f of SPREAD) {
         video.currentTime = video.duration * f;
         await new Promise<void>((res) => {
           video.onseeked = () => res();
         });
         frames.push(frameFromSource(video, video.videoWidth, video.videoHeight));
       }
-      return frames;
+      return { frames, frameCount: 0 };
     }
-    if (file.type === "image/gif" && "ImageDecoder" in window) {
+    if ((mime === "image/gif" || mime === "image/webp") && "ImageDecoder" in window) {
       const Decoder = (window as unknown as { ImageDecoder: new (init: { data: ArrayBuffer; type: string }) => GifDecoder }).ImageDecoder;
-      const decoder = new Decoder({ data: await file.arrayBuffer(), type: file.type });
+      const decoder = new Decoder({ data: await file.arrayBuffer(), type: mime });
       await decoder.tracks.ready;
       const count = decoder.tracks.selectedTrack.frameCount;
       const frames: string[] = [];
-      for (const i of [...new Set([0, Math.floor(count / 2), count - 1])]) {
+      for (const i of [...new Set(SPREAD.map((f) => Math.round(f * (count - 1))))]) {
         const { image } = await decoder.decode({ frameIndex: i });
         frames.push(frameFromSource(image, image.displayWidth, image.displayHeight));
         image.close();
       }
-      return frames;
+      return { frames, frameCount: count };
     }
     const img = new Image();
     img.src = url;
     await img.decode();
-    return [frameFromSource(img, img.naturalWidth, img.naturalHeight)];
+    return { frames: [frameFromSource(img, img.naturalWidth, img.naturalHeight)], frameCount: 0 };
   } finally {
     URL.revokeObjectURL(url);
   }
@@ -101,44 +114,78 @@ export async function filesFromDrop(data: DataTransfer): Promise<File[]> {
   return out.length > 0 ? out : loose;
 }
 
-/** Uploads a dump of files to the speaker's library. Anything that cannot go on a slide is skipped, not failed. */
-export async function uploadMedia(files: File[], onProgress?: (done: number, total: number) => void): Promise<UploadReport> {
-  const report: UploadReport = { added: 0, duplicates: 0, skipped: [], failed: [] };
-  let existing = new Set<string>();
-  try {
-    const d = (await (await fetch("/api/library")).json()) as { items: { name: string }[] };
-    existing = new Set(d.items.map((i) => i.name));
-  } catch {
-    // Cannot list the library: upload everything rather than block the speaker.
-  }
+/** Sends one file with its frames; the server answers with the item or tells it was a duplicate. */
+async function send(url: string, file: Blob, mime: string, name?: string): Promise<{ ok: boolean; duplicate?: boolean; error?: string }> {
+  const { frames, frameCount } = await extractFrames(file, mime).catch(() => ({ frames: [] as string[], frameCount: 0 }));
+  const form = new FormData();
+  if (name) form.append("file", file, name);
+  form.append("frames", JSON.stringify(frames));
+  form.append("frameCount", String(frameCount));
+  const res = await fetch(url, { method: "POST", body: form });
+  const body = (await res.json().catch(() => ({}))) as { duplicate?: boolean; error?: string };
+  return { ok: res.ok, duplicate: body.duplicate, error: body.error ?? (res.ok ? undefined : String(res.status)) };
+}
 
-  const queue: File[] = [];
-  for (const file of files) {
-    if (file.name.startsWith(".")) continue; // .DS_Store and friends: not worth mentioning
-    if (!SUPPORTED.test(file.name) || file.size > MAX_BYTES || file.size === 0) report.skipped.push(file.name);
-    else if (existing.has(file.name) || queue.some((q) => q.name === file.name)) report.duplicates += 1;
-    else queue.push(file);
-  }
-
+async function pool<T>(queue: T[], work: (item: T) => Promise<void>, onProgress?: (done: number, total: number) => void): Promise<void> {
   const total = queue.length;
   let done = 0;
   onProgress?.(0, total);
   const worker = async (): Promise<void> => {
-    for (let file = queue.shift(); file; file = queue.shift()) {
-      try {
-        const form = new FormData();
-        form.append("file", file);
-        form.append("frames", JSON.stringify(await extractFrames(file).catch(() => [] as string[])));
-        const res = await fetch("/api/library", { method: "POST", body: form });
-        if (res.ok) report.added += 1;
-        else report.failed.push(`${file.name}: ${((await res.json().catch(() => ({}))) as { error?: string }).error ?? res.status}`);
-      } catch (err) {
-        report.failed.push(`${file.name}: ${err instanceof Error ? err.message : "failed"}`);
-      }
+    for (let item = queue.shift(); item !== undefined; item = queue.shift()) {
+      await work(item);
       done += 1;
       onProgress?.(done, total);
     }
   };
   await Promise.all(Array.from({ length: PARALLEL }, worker));
+}
+
+/**
+ * Uploads a dump of files to the speaker's library. What a file is comes from its bytes, never its
+ * name: a GIF called "invoice.jpg" or "download" still goes in. Anything a slide cannot show is skipped.
+ */
+export async function uploadMedia(files: File[], onProgress?: (done: number, total: number) => void): Promise<UploadReport> {
+  const report: UploadReport = { added: 0, duplicates: 0, skipped: [], failed: [] };
+  const queue: { file: File; mime: string }[] = [];
+  for (const file of files) {
+    if (file.name.startsWith(".")) continue; // .DS_Store and friends: not worth mentioning
+    const kind = file.size > 0 && file.size <= MAX_BYTES ? await sniffFile(file).catch(() => null) : null;
+    if (kind) queue.push({ file, mime: kind.mime });
+    else report.skipped.push(file.name);
+  }
+  await pool(
+    queue,
+    async ({ file, mime }) => {
+      try {
+        const res = await send("/api/library", file, mime, file.name);
+        if (res.duplicate) report.duplicates += 1;
+        else if (res.ok) report.added += 1;
+        else report.failed.push(`${file.name}: ${res.error}`);
+      } catch (err) {
+        report.failed.push(`${file.name}: ${err instanceof Error ? err.message : "failed"}`);
+      }
+    },
+    onProgress,
+  );
   return report;
+}
+
+/** Reads every item again with the current engine: fresh frames here, the culture desk on the server. */
+export async function rereadMedia(items: { id: string; name: string }[], onProgress?: (done: number, total: number) => void): Promise<string[]> {
+  const failed: string[] = [];
+  await pool(
+    [...items],
+    async (item) => {
+      try {
+        const blob = await (await fetch(`/api/library/${item.id}`, { cache: "no-store" })).blob();
+        const kind = await sniffFile(blob);
+        const res = await send(`/api/library/${item.id}`, blob, kind?.mime ?? blob.type);
+        if (!res.ok) failed.push(`${item.name}: ${res.error}`);
+      } catch (err) {
+        failed.push(`${item.name}: ${err instanceof Error ? err.message : "failed"}`);
+      }
+    },
+    onProgress,
+  );
+  return failed;
 }

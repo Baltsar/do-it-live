@@ -2,7 +2,7 @@
 import { ICON_NAMES } from "@/lib/icons";
 import { SCENES, SCENE_CATALOG } from "@/lib/scene-catalog";
 import { areBareOrdinals, countFromLine, groundSlide, hasUngroundedNumbers, isAbstractPhotoQuery, isAnnouncement, isQuestion, itemsFromEnumeration, percentFromLine, processFromLine, checklistFromLine } from "@/lib/grounding";
-import { isMotion, lexicalMatch, libraryCandidates, literalMatch, loadIndex, namedMatch } from "@/lib/library";
+import { isMotion, lexicalMatch, libraryCandidates, libraryLine, literalMatch, loadIndex, namedMatch, type LibraryItem } from "@/lib/library";
 import { isScene, type DirectorResult, type ImageSource, type VisualMode } from "@/lib/slide";
 
 const NEBIUS_BASE = "https://api.tokenfactory.nebius.com/v1";
@@ -342,14 +342,16 @@ interface TavilyResponse {
   results?: { url: string; title: string; content: string }[];
 }
 
-async function tavilySearch(query: string): Promise<TavilyResponse> {
+export async function tavilySearch(query: string, domains?: string[]): Promise<TavilyResponse> {
   const res = await fetch("https://api.tavily.com/search", {
     method: "POST",
     headers: {
       "content-type": "application/json",
       authorization: `Bearer ${process.env.TAVILY_API_KEY}`,
     },
-    body: JSON.stringify({ query, max_results: 4, include_answer: true, search_depth: "basic" }),
+    body: JSON.stringify(
+      domains ? { query, max_results: 5, search_depth: "basic", include_domains: domains } : { query, max_results: 4, include_answer: true, search_depth: "basic" },
+    ),
   });
   if (!res.ok) throw new Error(`Tavily ${res.status}: ${(await res.text()).slice(0, 200)}`);
   return (await res.json()) as TavilyResponse;
@@ -439,9 +441,12 @@ Sharing a single word is not a fit. If the connection needs explaining, it is 3 
 Reply ONLY JSON: {"fit": <1-5>}`;
 
 /** Independent check of a library pick. Returns 0 when the judge cannot be reached (treated as no fit). */
-async function judgeFit(line: string, item: { caption: string; emotion: string; useWhen: string }): Promise<number> {
+async function judgeFit(line: string, item: Pick<LibraryItem, "caption" | "emotion" | "useWhen" | "knownAs" | "origin" | "meaning">): Promise<number> {
   try {
-    const picture = `${item.caption} Emotion: ${item.emotion || "unknown"}. The speaker says it could stand for: ${item.useWhen || "nothing noted"}.`;
+    // The culture is what makes a reaction land: the judge has to know "Blinking White Guy" means disbelief.
+    const known = item.knownAs ? `The "${item.knownAs}" GIF${item.origin ? ` from ${item.origin}` : ""}. ` : "";
+    const says = item.meaning ? ` People use it to say: ${item.meaning}.` : "";
+    const picture = `${known}${item.caption} Emotion: ${item.emotion || "unknown"}.${says} The speaker says it could stand for: ${item.useWhen || "nothing noted"}.`;
     const { json } = await chatJson(JUDGE_SYSTEM, `SPEAKER SAID: ${line}\nPICTURE: ${picture}`, 20);
     const fit = Number((json as { fit?: unknown }).fit);
     return Number.isFinite(fit) ? fit : 0;
@@ -460,8 +465,8 @@ export async function direct(input: DirectorInput): Promise<DirectorResult> {
   const exclude = new Set(input.recentGifIds ?? []);
   const candidates = await libraryCandidates(`${request} ${input.latest ?? transcript.slice(-300)}`, 24, exclude);
   const libraryBlock = candidates.length
-    ? `THE SPEAKER'S MEDIA LIBRARY (id | kind | what it shows | could stand for). Return the id as "library_id":\n${candidates
-        .map((c) => `${c.id} | ${isMotion(c) ? "gif/clip" : "photo"} | ${c.caption} | ${c.useWhen}`)
+    ? `THE SPEAKER'S MEDIA LIBRARY (id | kind | what it shows | what people use it to say | could stand for). Return the id as "library_id":\n${candidates
+        .map(libraryLine)
         .join("\n")}`
     : "THE SPEAKER'S MEDIA LIBRARY is empty.";
   const scenePromise: Promise<SceneVote[]> = !request && input.latest ? classifyScene(input.latest) : Promise.resolve([]);

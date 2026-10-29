@@ -1,7 +1,7 @@
 // Server-only: turns the speaker's heads-up into slides that are ready before the talk starts.
 import { chatJson } from "@/lib/director";
 import { groundSlide } from "@/lib/grounding";
-import { isMotion, loadIndex } from "@/lib/library";
+import { isMotion, libraryLine, loadIndex } from "@/lib/library";
 import type { PreparedMoment } from "@/lib/prepared";
 import { isScene, SCENE_CATALOG, SCENES } from "@/lib/scene-catalog";
 
@@ -55,9 +55,9 @@ async function prepareOnce(brief: string): Promise<PreparedMoment[]> {
   if (text.length < 15) return [];
   const index = await loadIndex();
   const library = index.length
-    ? index.map((i) => `${i.id} | ${isMotion(i) ? "gif/clip" : "photo"} | ${i.caption} | ${i.useWhen}`).join("\n")
+    ? index.map(libraryLine).join("\n")
     : "(empty)";
-  const { json } = await chatJson(PREP_SYSTEM, `HEADS-UP:\n${text}\n\nLIBRARY (id | kind | what it shows | could stand for):\n${library}`, 1400, "quality");
+  const { json } = await chatJson(PREP_SYSTEM, `HEADS-UP:\n${text}\n\nLIBRARY (id | kind | what it shows | what people use it to say | could stand for):\n${library}`, 1400, "quality");
   const raw = ((json as { moments?: RawMoment[] }).moments ?? []).slice(0, 10);
   prepDropped.push(`model proposed ${raw.length}`);
 
