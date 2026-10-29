@@ -42,7 +42,7 @@ next-env.d.ts
 
 # session recordings
 /sessions
-library/
+/library/
 
 # do it live: local state, keys and material that must not be published
 /.backup/
