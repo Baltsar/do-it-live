@@ -2,7 +2,26 @@
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { motion } from "motion/react";
-import { Bell, Check, CheckCheck, Heart, MapPin, MousePointer2, Plus, Search, Star, TrendingUp, TriangleAlert, X } from "lucide-react";
+import {
+  ArrowDownRight,
+  ArrowUpRight,
+  Bell,
+  Check,
+  CheckCheck,
+  Heart,
+  MapPin,
+  MessageCircle,
+  MousePointer2,
+  Plus,
+  Repeat2,
+  Search,
+  Star,
+  TrendingUp,
+  TriangleAlert,
+  Trophy,
+  X,
+  Zap,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,22 +60,25 @@ function Bar({ w, className = "" }: { w: number; className?: string }) {
 
 /** Flips to true after `ms`, for elements that change state on screen. Thumbnails start in the end state. */
 function useLater(ms: number, still: boolean): boolean {
-  const [done, setDone] = useState(still);
+  const [done, setDone] = useState(false);
   useEffect(() => {
     if (still) return;
     const id = setTimeout(() => setDone(true), ms);
     return () => clearTimeout(id);
   }, [ms, still]);
-  return done;
+  // Read on every render: a gallery learns it is showing stills only after it has mounted.
+  return still || done;
 }
+
+const SHORT = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 /**
  * A number that counts up, then shows the exact figure. The spring behind the ticker can come to rest
  * a hair short of a big target, and "$999,999" is not "a million".
  */
-function Count({ value, delay, still }: { value: number; delay: number; still: boolean }) {
+function Count({ value, delay, still, compact = false }: { value: number; delay: number; still: boolean; compact?: boolean }) {
   const settled = useLater((delay + 2.2) * 1000, still);
-  if (settled) return <>{Math.round(value).toLocaleString("en")}</>;
+  if (settled) return <>{compact ? SHORT.format(value) : Math.round(value).toLocaleString("en")}</>;
   return <NumberTicker value={value} delay={delay} className="text-inherit" />;
 }
 
@@ -521,6 +543,321 @@ function Hero({ spec, still }: { spec: UiSpec; still: boolean }): ReactNode {
               ))
             : null}
         </div>
+      );
+    }
+
+    case "timeline": {
+      const marks = spec.items.length >= 2 ? spec.items.slice(0, 4) : ["", "", ""];
+      const last = marks.length - 1;
+      // Each moment sits in a 90 px column, so the track runs between the first and last dot centres.
+      const column = "flex w-[90px] justify-center";
+      return (
+        <motion.div {...enter(still)} className="space-y-3" style={{ width: marks.length * 100 + 40 }}>
+          <div className="flex justify-between">
+            {marks.map((mark, i) => (
+              <motion.div key={i} {...enter(still, 0.3 + i * 0.35, { y: 12 })} className={`${column} text-center text-3xl leading-none font-black`} style={i === last ? { color: "var(--alt)" } : undefined}>
+                {mark || <Bar w={56} className="h-4" />}
+              </motion.div>
+            ))}
+          </div>
+          <div className="relative flex h-9 items-center justify-between">
+            <div className="absolute inset-x-[45px] h-2 rounded-full" style={{ background: "var(--muted)" }} />
+            <motion.div
+              className="absolute inset-x-[45px] h-2 origin-left rounded-full"
+              style={{ background: "var(--alt)" }}
+              initial={still ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: 0.35 * marks.length + 0.4, ease: "easeInOut", delay: 0.2 }}
+            />
+            {marks.map((_, i) => (
+              <div key={i} className={column}>
+                <motion.span
+                  {...enter(still, 0.3 + i * 0.35, { scale: 0.2 })}
+                  className="relative block size-9 rounded-full ring-[6px] ring-[var(--bg)]"
+                  style={{ background: i === last ? "var(--alt)" : "var(--fg)" }}
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-between">
+            {marks.map((_, i) => (
+              <div key={i} className={column}>
+                <Bar w={64} className="opacity-50" />
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "terminal": {
+      const command = text || "deploy";
+      const failed = spec.state === "error";
+      const running = spec.state === "loading";
+      const typed = still ? command : command.slice(0, Math.max(1, Math.round(command.length * (later ? 1 : 0.35))));
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="min-w-[380px] gap-4 rounded-2xl px-6 py-5 font-mono" style={{ background: "var(--fg)", color: "var(--bg)" }}>
+            <div className="flex gap-2">
+              {[0, 1, 2].map((i) => <span key={i} className="size-3.5 rounded-full" style={{ background: "var(--bg)", opacity: 0.35 }} />)}
+            </div>
+            <div className="flex items-center gap-3 text-3xl font-bold whitespace-nowrap">
+              <span style={{ color: "var(--alt)" }}>$</span>
+              <span>{typed}</span>
+              {!still && !later ? <motion.span className="h-8 w-3" style={{ background: "var(--bg)" }} animate={{ opacity: [1, 0] }} transition={{ duration: 0.5, repeat: Infinity }} /> : null}
+            </div>
+            <motion.div {...enter(still, 1.2, { y: 6 })} className="flex items-center gap-3 text-3xl font-bold" style={failed ? { color: "var(--alt)" } : undefined}>
+              {running ? (
+                <motion.span className="flex gap-2" animate={still ? undefined : { opacity: [0.3, 1, 0.3] }} transition={{ duration: 1, repeat: Infinity }}>
+                  {[0, 1, 2].map((i) => <span key={i} className="size-3 rounded-full" style={{ background: "var(--bg)" }} />)}
+                </motion.span>
+              ) : failed ? (
+                <>
+                  <X className="size-8" strokeWidth={3} /> failed
+                </>
+              ) : (
+                <>
+                  <Check className="size-8" strokeWidth={3} /> done
+                </>
+              )}
+            </motion.div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "error": {
+      const code = count ? Math.round(count) : 404;
+      return (
+        <motion.div {...enter(still, 0, { scale: 0.9 })}>
+          <Card className="w-[380px] gap-0 overflow-hidden rounded-2xl p-0">
+            <div className="flex items-center gap-2 px-4 py-3" style={{ background: "var(--secondary)" }}>
+              {[0, 1, 2].map((i) => <span key={i} className="size-3 rounded-full" style={{ background: "var(--muted)" }} />)}
+              <Bar w={170} className="ml-3" />
+            </div>
+            <div className="flex flex-col items-center gap-3 px-6 py-8">
+              <motion.div
+                className="text-8xl leading-none font-black tabular-nums"
+                style={{ color: "var(--alt)" }}
+                animate={!still && later ? { x: [0, -10, 10, -6, 6, 0], rotate: [0, -3, 3, -1, 0] } : undefined}
+                transition={{ duration: 0.55 }}
+              >
+                {code}
+              </motion.div>
+              {text ? <div className="text-center text-3xl leading-tight font-black">{text}</div> : <Bar w={170} className="h-4" />}
+              <Bar w={120} className="opacity-50" />
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "message": {
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[340px] gap-5 rounded-[32px] px-5 py-5">
+            <div className="flex items-center gap-3 border-b pb-4" style={{ borderColor: "var(--border)" }}>
+              <Avatar className="size-11">
+                <AvatarFallback className="text-transparent" style={{ background: "var(--alt)" }}>.</AvatarFallback>
+              </Avatar>
+              <Bar w={110} className="h-3" />
+            </div>
+            <div className="flex min-h-[64px] items-end">
+              {!still && !later ? (
+                <motion.span className="flex gap-1.5 rounded-3xl rounded-bl-md px-5 py-4" style={{ background: "var(--muted)" }} animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 0.9, repeat: Infinity }}>
+                  {[0, 1, 2].map((i) => <span key={i} className="size-2.5 rounded-full" style={{ background: "var(--fg)" }} />)}
+                </motion.span>
+              ) : (
+                <motion.div {...enter(still, 0, { scale: 0.5 })} className="max-w-[270px] origin-bottom-left rounded-3xl rounded-bl-md px-5 py-3 text-3xl leading-tight font-black" style={{ background: "var(--muted)" }}>
+                  {text || <Bar w={140} className="h-4" />}
+                </motion.div>
+              )}
+            </div>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "battery": {
+      const pct = Math.max(1, Math.min(100, Math.round(count ?? 2)));
+      const low = pct <= 20;
+      const charging = spec.state === "loading" || spec.state === "on";
+      return (
+        <motion.div {...enter(still)} className="flex flex-col items-center gap-5">
+          <div className="flex items-center">
+            <div className="relative h-[120px] w-[260px] rounded-[28px] border-[8px] p-2" style={{ borderColor: "var(--fg)" }}>
+              <motion.div
+                className="h-full rounded-[14px]"
+                style={{ background: low ? "var(--alt)" : "var(--fg)" }}
+                initial={still ? false : { width: charging ? "4%" : "100%" }}
+                animate={{ width: `${pct}%`, opacity: low && !still && !charging ? [1, 0.25, 1] : 1 }}
+                transition={{ width: { duration: 1.2, ease: "easeInOut" }, opacity: { duration: 0.9, repeat: Infinity, delay: 1.2 } }}
+              />
+              {charging ? (
+                <span className="absolute inset-0 grid place-items-center">
+                  <Zap className="size-14" strokeWidth={2.2} style={{ fill: "var(--bg)", color: "var(--fg)" }} />
+                </span>
+              ) : null}
+            </div>
+            <span className="ml-1.5 h-12 w-4 rounded-r-lg" style={{ background: "var(--fg)" }} />
+          </div>
+          <span className="text-6xl font-black tabular-nums" style={low ? { color: "var(--alt)" } : undefined}>{pct}%</span>
+        </motion.div>
+      );
+    }
+
+    case "trend": {
+      const down = spec.state === "off" || spec.state === "error" || spec.state === "crossed";
+      const pct = Math.round(count ?? 0);
+      const line = down ? "M10 30 L70 44 L120 36 L180 86 L230 74 L290 128 L340 152" : "M10 150 L70 128 L120 138 L180 92 L230 104 L290 46 L340 20";
+      const end = down ? { cx: 340, cy: 152 } : { cx: 340, cy: 20 };
+      const Arrow = down ? ArrowDownRight : ArrowUpRight;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[400px] gap-4 rounded-3xl px-6 py-6">
+            <div className="flex items-start justify-between gap-4">
+              <span className="space-y-2">
+                {text ? <span className="block text-3xl leading-tight font-black">{text}</span> : <Bar w={120} className="h-4" />}
+                <Bar w={80} className="opacity-50" />
+              </span>
+              <span className="flex items-center gap-1 text-4xl font-black whitespace-nowrap tabular-nums" style={{ color: "var(--alt)" }}>
+                <Arrow className="size-9" strokeWidth={3} />
+                {pct ? (
+                  <>
+                    {down ? "-" : "+"}
+                    <Count value={pct} delay={0.4} still={still} />%
+                  </>
+                ) : null}
+              </span>
+            </div>
+            <svg viewBox="0 0 350 170" className="h-[150px] w-full overflow-visible" aria-hidden>
+              {[40, 90, 140].map((y) => <line key={y} x1="0" x2="350" y1={y} y2={y} stroke="var(--muted)" strokeWidth="2" strokeDasharray="6 8" />)}
+              <motion.path d={line} fill="none" stroke="var(--alt)" strokeWidth="9" strokeLinecap="round" strokeLinejoin="round" initial={still ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.3, ease: "easeInOut", delay: 0.2 }} />
+              <motion.circle {...end} r="13" fill="var(--alt)" initial={still ? false : { scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 380, damping: 16, delay: 1.45 }} />
+            </svg>
+          </Card>
+        </motion.div>
+      );
+    }
+
+    case "leaderboard": {
+      const names = spec.items.length ? spec.items.slice(0, 4) : ["", "", ""];
+      return (
+        <Card className="w-[340px] gap-2.5 rounded-3xl px-5 py-5">
+          {names.map((name, i) => (
+            // From the bottom up: the winner is revealed last.
+            <motion.div
+              key={i}
+              {...enter(still, 0.2 + (names.length - 1 - i) * 0.3, { x: -40 })}
+              className="flex h-14 items-center gap-4 rounded-2xl px-4"
+              style={i === 0 ? { background: "var(--alt)", color: "var(--bg)" } : { background: "var(--muted)" }}
+            >
+              <span className="w-6 text-2xl font-black tabular-nums">{i + 1}</span>
+              {name ? <span className="flex-1 truncate text-2xl font-black">{name}</span> : <Bar w={150 - i * 22} className={i === 0 ? "bg-[var(--bg)] opacity-60" : ""} />}
+              {i === 0 ? <Trophy className="ml-auto size-7" strokeWidth={2.4} /> : null}
+            </motion.div>
+          ))}
+        </Card>
+      );
+    }
+
+    case "timer": {
+      const n = Math.max(1, Math.round(count ?? 60));
+      const up = spec.state === "done" || spec.state === "error" || spec.state === "empty";
+      return (
+        <motion.div {...enter(still)} className="relative grid size-[250px] place-items-center">
+          <svg viewBox="0 0 220 220" className="absolute inset-0 size-full -rotate-90" aria-hidden>
+            <circle cx="110" cy="110" r="92" fill="none" stroke="var(--muted)" strokeWidth="18" />
+            <motion.circle
+              cx="110"
+              cy="110"
+              r="92"
+              fill="none"
+              stroke="var(--alt)"
+              strokeWidth="18"
+              strokeLinecap="round"
+              initial={still ? false : { pathLength: 1 }}
+              animate={{ pathLength: up ? 0 : 0.2 }}
+              transition={{ duration: 2.6, ease: "linear", delay: 0.3 }}
+            />
+          </svg>
+          <div className="relative text-center">
+            <motion.div
+              className="text-7xl leading-none font-black tabular-nums"
+              style={up ? { color: "var(--alt)" } : undefined}
+              animate={up && !still && later ? { scale: [1, 1.14, 1] } : undefined}
+              transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 0.5 }}
+            >
+              {up ? 0 : n}
+            </motion.div>
+            {text ? <div className="mt-1 text-2xl font-black">{text}</div> : null}
+          </div>
+        </motion.div>
+      );
+    }
+
+    case "signal": {
+      const lost = spec.state === "off" || spec.state === "error" || spec.state === "empty" || spec.state === "crossed";
+      // Arcs of radius 120, 80 and 40 around the dot, 45 degrees either side of straight up.
+      const arcs = ["M25.1 85.1 A120 120 0 0 1 194.9 85.1", "M53.4 113.4 A80 80 0 0 1 166.6 113.4", "M81.7 141.7 A40 40 0 0 1 138.3 141.7"];
+      return (
+        <motion.div {...enter(still)} className="flex flex-col items-center gap-4">
+          <svg viewBox="0 0 220 200" className="h-[200px] w-[220px] overflow-visible" aria-hidden>
+            {arcs.map((d, i) => (
+              <motion.path
+                key={i}
+                d={d}
+                fill="none"
+                strokeWidth="20"
+                strokeLinecap="round"
+                stroke={lost ? "var(--muted)" : "var(--fg)"}
+                initial={still ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, delay: 0.15 + (arcs.length - 1 - i) * 0.22 }}
+              />
+            ))}
+            <circle cx="110" cy="170" r="15" fill={lost ? "var(--muted)" : "var(--fg)"} />
+            {lost ? (
+              <motion.path d="M28 28 L192 192" stroke="var(--alt)" strokeWidth="20" strokeLinecap="round" initial={still ? false : { pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 0.4, delay: 0.95 }} />
+            ) : null}
+          </svg>
+          {text ? <span className="text-4xl font-black">{text}</span> : null}
+        </motion.div>
+      );
+    }
+
+    case "post": {
+      const n = count ?? 12_400;
+      return (
+        <motion.div {...enter(still)}>
+          <Card className="w-[360px] gap-4 rounded-3xl px-6 py-5">
+            <div className="flex items-center gap-3">
+              <Avatar className="size-11">
+                <AvatarFallback className="text-transparent" style={{ background: "var(--alt)" }}>.</AvatarFallback>
+              </Avatar>
+              <span className="space-y-1.5">
+                <Bar w={110} className="h-3" />
+                <Bar w={70} className="opacity-50" />
+              </span>
+            </div>
+            {text ? (
+              <div className="text-3xl leading-tight font-black">{text}</div>
+            ) : (
+              <span className="space-y-2.5">
+                <Bar w={270} className="h-3.5" />
+                <Bar w={200} className="h-3.5" />
+              </span>
+            )}
+            <div className="flex items-center gap-6 text-2xl font-black">
+              <span className="flex items-center gap-2 tabular-nums" style={{ color: "var(--alt)" }}>
+                <Heart className="size-7" style={{ fill: "var(--alt)" }} />
+                <Count value={n} delay={0.5} still={still} compact />
+              </span>
+              <span className="flex items-center gap-2 opacity-60"><Repeat2 className="size-7" /><Bar w={34} /></span>
+              <span className="flex items-center gap-2 opacity-60"><MessageCircle className="size-7" /><Bar w={28} /></span>
+            </div>
+          </Card>
+        </motion.div>
       );
     }
 

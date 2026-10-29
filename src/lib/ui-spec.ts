@@ -24,6 +24,18 @@ export const UI_KINDS = [
   "profile",
   "alert",
   "like",
+  // Moments every talk has: a history, code, a crash, a quoted text, running low, a curve, a ranking,
+  // a deadline, being cut off, going viral.
+  "timeline",
+  "terminal",
+  "error",
+  "message",
+  "battery",
+  "trend",
+  "leaderboard",
+  "timer",
+  "signal",
+  "post",
 ] as const;
 export type UiKind = (typeof UI_KINDS)[number];
 
@@ -52,7 +64,9 @@ export function parseUiSpec(raw: unknown): UiSpec | null {
   if (!isKind(kind)) return null;
   const count = typeof r.count === "number" ? r.count : Number.parseFloat(String(r.count ?? "").replace(/[^\d.]/g, ""));
   const state = typeof r.state === "string" ? r.state.toLowerCase().trim() : "";
-  const text = typeof r.text === "string" ? r.text.replace(/[<>]/g, "").trim().split(/\s+/).slice(0, 3).join(" ").slice(0, 28) : "";
+  // A quoted message, a post or a command is read word for word: it may run a little longer than a label.
+  const long = kind === "message" || kind === "post" || kind === "terminal";
+  const text = typeof r.text === "string" ? r.text.replace(/[<>]/g, "").trim().split(/\s+/).slice(0, long ? 5 : 3).join(" ").slice(0, long ? 40 : 28) : "";
   const items = Array.isArray(r.items)
     ? r.items.filter((x): x is string => typeof x === "string").map((x) => x.replace(/[<>]/g, "").trim().split(/\s+/).slice(0, 2).join(" ").slice(0, 18)).filter(Boolean).slice(0, 4)
     : [];
@@ -60,4 +74,4 @@ export function parseUiSpec(raw: unknown): UiSpec | null {
 }
 
 /** The menu the drawing model chooses from, as it is written in its instructions. */
-export const UI_MENU = `button (text = the button word; state "crossed" = not needed any more), form (a sign-up or login; state "crossed" = no login needed: the fields fold away and only the button stays, "error" = it fails), toggle (text = what is switched; state "on" or "off"), notifications (count = how many), progress (count = percent; state "loading" = stuck, waiting), chat (state "empty" = nobody answers), people (count = how many), search (text = what is searched; state "empty" = nothing found), balance (count = the amount), dialog (text = the question; state "crossed" = refused), checklist (state "done" = all ticked), rating (count = stars out of 5; text = what is rated), poll (text = the question; items = the 2-3 answers, the winning one first; count = the winner's percent if said), calendar (text = a month or weekday; count = the day), map (text = the place), compare (items = the two things, the good one first; state "crossed" = the second is a fake or a trap), tags (items = 3-4 short labels of what something is), profile (text = the name of a person, animal, thing or species being introduced; items = 2-3 traits), alert (text = the warning in 1-2 words, like a danger or a mistake), like (count = how many love it)`;
+export const UI_MENU = `button (text = the button word; state "crossed" = not needed any more), form (a sign-up or login; state "crossed" = no login needed: the fields fold away and only the button stays, "error" = it fails), toggle (text = what is switched; state "on" or "off"), notifications (count = how many), progress (count = percent; state "loading" = stuck, waiting), chat (state "empty" = nobody answers), people (count = how many), search (text = what is searched; state "empty" = nothing found), balance (count = the amount), dialog (text = the question; state "crossed" = refused), checklist (state "done" = all ticked), rating (count = stars out of 5; text = what is rated), poll (text = the question; items = the 2-3 answers, the winning one first; count = the winner's percent if said), calendar (text = a month or weekday; count = the day), map (text = the place), compare (items = the two things, the good one first; state "crossed" = the second is a fake or a trap), tags (items = 3-4 short labels of what something is), profile (text = the name of a person, animal, thing or species being introduced; items = 2-3 traits), alert (text = the warning in 1-2 words, like a danger or a mistake), like (count = how many love it), timeline (items = 2-4 moments in order, like years or "Then", "Now"; the last is highlighted), terminal (text = the command, like "npm run deploy"; state "error" = it fails, "loading" = still running), error (count = the error code like 404 or 500; text = 1-3 words of what broke), message (text = the exact words of a text someone sent, up to five), battery (count = percent left; state "loading" = charging), trend (count = percent change; text = what is measured; state "off" = it fell), leaderboard (items = 2-4 names in rank order, the winner first), timer (count = how much time; text = the unit, like "hours"; state "done" = time is up), signal (state "off" = no connection; text = 1-2 words if any), post (text = what was posted, up to five words; count = likes)`;

@@ -19,7 +19,11 @@ export interface CardLook {
 const compact = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
 
 // The kinds whose count is the point, and what a bare count stands for when the card had no words.
-const COUNTED: Partial<Record<UiKind, string>> = { notifications: "notifications", people: "people", like: "likes", balance: "", progress: "", rating: "stars", poll: "" };
+const COUNTED: Partial<Record<UiKind, string>> = {
+  notifications: "notifications", people: "people", like: "likes", balance: "", progress: "", rating: "stars", poll: "",
+  battery: "battery", trend: "", error: "", timer: "", post: "likes",
+};
+const PERCENT: readonly UiKind[] = ["progress", "poll", "battery", "trend"];
 
 const bare = (word: string): string => word.toLowerCase().replace(/[^\p{L}\p{N}']/gu, "");
 const FILLER = new Set(["and", "so", "but", "or", "um", "uh", "like", "well", "then", "because", "yeah"]);
@@ -56,7 +60,8 @@ export function looksFor(ui: UiSpec, line: string): CardLook[] {
   const counted = COUNTED[ui.kind];
   if (ui.count !== null && counted !== undefined) {
     const n = ui.count;
-    const number = ui.kind === "progress" || ui.kind === "poll" ? `${Math.round(n)}%` : ui.kind === "rating" ? `${n}/5` : compact.format(n);
+    const sign = ui.kind === "trend" ? (ui.state === "off" ? "-" : "+") : "";
+    const number = PERCENT.includes(ui.kind) ? `${sign}${Math.round(n)}%` : ui.kind === "rating" ? `${n}/5` : ui.kind === "error" ? String(Math.round(n)) : compact.format(n);
     const headline = (ui.kind === "poll" ? ui.items[0] : "") || words || counted;
     looks.push({ layout: "BIG_NUMBER", number, headline, mood: "hype", ui });
   }

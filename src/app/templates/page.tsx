@@ -67,6 +67,17 @@ const UI_ENTRIES: { code: string; name: string; when: string; ui: Record<string,
   { code: "U18", name: "Profile", when: "\"let me introduce the fly agaric\"", ui: { kind: "profile", text: "Fly agaric", items: ["Red", "Toxic"] }, mood: "hype" },
   { code: "U19", name: "Alert", when: "\"that one will kill you\"", ui: { kind: "alert", text: "Deadly" }, mood: "serious" },
   { code: "U20", name: "Like", when: "\"everybody loves mushroom season\"", ui: { kind: "like", count: 12400 }, mood: "chaos" },
+  // Moments every talk has, shown with a talk about shipping a product.
+  { code: "U21", name: "Timeline", when: "\"we started in 2019, launched in 2023, and here we are\"", ui: { kind: "timeline", items: ["2019", "2023", "Now"] }, mood: "calm" },
+  { code: "U22", name: "Terminal, failing", when: "\"and then the deploy failed\"", ui: { kind: "terminal", text: "npm run deploy", state: "error" }, mood: "chaos" },
+  { code: "U23", name: "Error page", when: "\"the whole site went down\"", ui: { kind: "error", count: 500, text: "Server down" }, mood: "serious" },
+  { code: "U24", name: "Text message", when: "\"then my boss texted: we need to talk\"", ui: { kind: "message", text: "We need to talk" }, mood: "funny" },
+  { code: "U25", name: "Battery, almost empty", when: "\"I was running on two percent\"", ui: { kind: "battery", count: 2 }, mood: "funny" },
+  { code: "U26", name: "Trend", when: "\"users grew seven hundred percent\"", ui: { kind: "trend", text: "Users", count: 700 }, mood: "hype" },
+  { code: "U27", name: "Leaderboard", when: "\"we came first, ahead of the giants\"", ui: { kind: "leaderboard", items: ["Us", "Giant A", "Giant B"] }, mood: "hype" },
+  { code: "U28", name: "Timer", when: "\"we had 48 hours\"", ui: { kind: "timer", count: 48, text: "hours" }, mood: "chaos" },
+  { code: "U29", name: "Signal lost", when: "\"no internet out there\"", ui: { kind: "signal", state: "off" }, mood: "calm" },
+  { code: "U30", name: "Post going viral", when: "\"the post went viral overnight\"", ui: { kind: "post", text: "We did it live", count: 48000 }, mood: "hype" },
 ];
 
 // A drawing made the way the engine makes one live, so the first card shows the real thing.
