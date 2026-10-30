@@ -4,3 +4,13 @@ out
 public/*.mp4
 public/*.mov
 public/*.webm
+
+# Made by scripts/cues.mjs and the sound-layer mix and check on every run.
+audio/hook
+audio/built
+audio/sheet.png
+# The chosen track is licensed for this film only and is large.
+public/*.mp3
+public/*.wav
+public/*.m4a
+audio/live

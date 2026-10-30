@@ -1,0 +1,14 @@
+{
+  "name": "mic-click",
+  "seconds": 0.087,
+  "peakAt": 0.0015,
+  "attackMs": 2,
+  "brightHz": 3502,
+  "lowShare": 0.26,
+  "ringsMs": 48,
+  "sourcePeakDb": 0,
+  "cutFromStart": 0,
+  "notes": [],
+  "credit": "Stand-in: mic switch synthesized for this film (two ticks and a low pop); replace with a real recording",
+  "source": "/private/tmp/claude-501/-Users-baltsar-Documents-Cursor-HACKATHON-NETLIGHT/6f093f34-4771-4d4c-a3df-52bdac330f60/scratchpad/mic-click-standin.wav"
+}

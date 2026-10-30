@@ -8,7 +8,14 @@
     "studio": "remotion studio src/index.ts",
     "render": "remotion render src/index.ts Pitch out/pitch.mp4",
     "labels": "node scripts/labels.mjs",
-    "typecheck": "tsc --noEmit"
+    "film:hook": "remotion render src/index.ts Hook out/film/hook-muted.mp4 --muted --image-format=png --color-space=bt709 --crf=16",
+    "film:built": "remotion render src/index.ts Built out/film/built-muted.mp4 --muted --image-format=png --color-space=bt709 --crf=16",
+    "film:title": "remotion render src/index.ts TitleCard out/film/title --sequence --image-format=png",
+    "film:cues": "node --no-warnings scripts/cues.mjs",
+    "typecheck": "tsc --noEmit",
+    "live": "node --no-warnings scripts/live.mjs",
+    "music:standin": "node --no-warnings scripts/music-standin.mjs",
+    "live:board": "remotion still src/index.ts Board out/live/board.png --frame=0 --image-format=png"
   },
   "dependencies": {
     "@remotion/cli": "4.0.539",

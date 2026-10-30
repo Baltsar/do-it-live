@@ -1,3 +1,5 @@
+> Replaced on 30 Oct 2026 by [TAKE.md](TAKE.md): the film is now the hook, one screen recording, and "how" (src/film).
+
 # Pitch video: script and shot list
 
 **The idea:** this pitch has no slides. You pitch *inside* Do it live, and every slide behind you is drawn live while you talk. Remotion adds the cold open, two short cutaways (how it works, the numbers) and the outro. It also labels each live slide with what made it, taken straight from the session log of the take.

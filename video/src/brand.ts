@@ -15,7 +15,7 @@ export const COLORS = {
 export const FONT = "Archivo";
 
 // Variable in weight and width: headings run wide (125%) and heavy, like the start page.
-void loadFont({ family: FONT, url: staticFile("fonts/Archivo.ttf"), weight: "100 900", stretch: "62% 125%" });
+export const archivoLoaded: Promise<void> = loadFont({ family: FONT, url: staticFile("fonts/Archivo.ttf"), weight: "100 900", stretch: "62% 125%" });
 
 export const FPS = 30;
 export const WIDTH = 1920;

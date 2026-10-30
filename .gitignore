@@ -51,4 +51,5 @@ next-env.d.ts
 # Internal notes; the signpost lexicon quotes TED transcripts verbatim.
 /docs/*
 !/docs/submission.md
+!/docs/devpost.md
 !/docs/images/
