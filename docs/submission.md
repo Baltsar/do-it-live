@@ -100,7 +100,7 @@ Everyone else: https://doitlive.app, 15 free minutes a day while the public shar
 5. **Library** at /library takes a folder of your own GIFs and photos; each is watched, looked up and described. Then say what one of them means.
 6. No microphone? **Play the demo talk** replays a scripted talk. On a phone, **Screen** turns the phone into the audience screen.
 
-Run it yourself with your own Token Factory key: `pnpm install && pnpm dev`, see the README.
+Run it yourself with your own Token Factory key: `npm install && npm run dev`, see the README.
 
 ## Feedback on Nebius Token Factory and NVIDIA models
 
