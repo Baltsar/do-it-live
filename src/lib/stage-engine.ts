@@ -152,6 +152,9 @@ const DRAW_STALL_MS = 6000;
 // No new word for this long means the speaker paused: act on the phrase now. The recogniser itself
 // takes another one to three seconds to call it finished, and a punchline cannot wait for that.
 const PAUSE_MS = 700;
+// A demo talk types each line into the caption a word at a time, about the pace of quick speech at
+// replay speed, so a visitor without a mic sees the transcript arrive the way a live one does.
+const REPLAY_WORD_MS = 230;
 // Less markup than this is not a picture.
 const DRAW_MIN_CHARS = 300;
 // The slide goes on air once this much of the picture itself exists. Going up at the first word of the
@@ -1630,22 +1633,36 @@ export function createStage() {
 
   function stopReplay(): void {
     replayTimers.splice(0).forEach(clearTimeout);
+    // A demo stopped mid-line leaves no half sentence in the caption; a live mic's words are not ours to clear.
+    emit(replaying ? { replaying: false, interim: "" } : { replaying: false });
     replaying = false;
-    emit({ replaying: false });
   }
 
+  /**
+   * Plays a script as if it were heard: each line's words appear in the caption one by one, the way
+   * the recogniser's interim text does, then land as a final line. Only the caption sees the words
+   * early; the show decides on the final line, as it always has for a replay.
+   */
   function replay(lines: { t: number; text: string }[], speed: number): void {
     stopReplay();
     replaying = true;
     recordingOff = true;
     emit({ replaying: true, replayDone: 0, replayTotal: lines.length });
     lines.forEach((l, i) => {
+      const start = l.t / speed;
+      const next = i + 1 < lines.length ? lines[i + 1].t / speed : Infinity;
+      const words = l.text.split(/\s+/).filter(Boolean);
+      // Typed within the gap to the next line, so two lines never type over each other.
+      const step = Math.min(REPLAY_WORD_MS, ((next - start) * 0.85) / Math.max(1, words.length));
+      words.forEach((_, w) => {
+        replayTimers.push(setTimeout(() => emit({ interim: words.slice(0, w + 1).join(" ") }), start + w * step));
+      });
       replayTimers.push(
         setTimeout(() => {
           onFinal(l.text);
-          emit({ replayDone: i + 1 });
+          emit({ interim: "", replayDone: i + 1 });
           if (i === lines.length - 1) stopReplay();
-        }, l.t / speed),
+        }, start + words.length * step),
       );
     });
   }
