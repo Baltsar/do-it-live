@@ -1559,6 +1559,8 @@ export function createStage() {
       }
     }
     rec.onerror = (e) => {
+      // A stopped take can still report while its socket closes; it must not stop the take that replaced it.
+      if (recognition !== rec) return;
       errorCount += 1;
       log(`mic error: ${e.error}`);
       record({ kind: "mic", event: "error", error: e.error });
@@ -1613,7 +1615,9 @@ export function createStage() {
     let aborts = 0;
     let lastAbortAt = 0;
     rec.onend = () => {
-      if (!snap.listening) return;
+      // A stopped take ends up to 1.5 s later, when its socket closes. If a new take is listening by then,
+      // restarting this one would run two recognisers on one mic, and Stop would reach only the new one.
+      if (!snap.listening || recognition !== rec) return;
       const instant = Date.now() - startedAt < 500;
       instantEnds = instant ? instantEnds + 1 : 0;
       if (instantEnds >= 6) {
@@ -1625,7 +1629,7 @@ export function createStage() {
       }
       record({ kind: "mic", event: instant ? `restart (ended at once, attempt ${instantEnds})` : "restart" });
       const again = (): void => {
-        if (!snap.listening) return;
+        if (!snap.listening || recognition !== rec) return;
         try {
           startedAt = Date.now();
           begin();
