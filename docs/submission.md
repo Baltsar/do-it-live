@@ -86,7 +86,11 @@ Nebius Token Factory, NVIDIA Nemotron 3.5 Lightning, NVIDIA Nemotron 3 Ultra, NV
 
 ## Testing instructions
 
-Open https://doitlive.app in Google Chrome, Edge or Safari, on a laptop or a phone with a microphone. No account, no password. Each visitor has 15 free minutes of stage time a day.
+Judges: open the jury link below once, in Google Chrome, Edge or Safari, on a laptop or a phone with a microphone. It keeps a share of the credits for you, 30 minutes of stage time a day, even if the public demo has run out. No account, no password.
+
+Jury link: https://doitlive.app/?jury=JURY_CODE (the real code is in the Devpost form, not in this repository)
+
+Everyone else: https://doitlive.app, 15 free minutes a day while the public share lasts. If the microphone does not get through, the page says why and how to fix it in your browser.
 
 1. Pick English or Swedish under the mic, press the mic and talk for a minute about anything. Pause briefly between sentences.
 2. Say a figure ("we went from 12 to 700 people", "one in five", "80 percent") to see it land mid-sentence.

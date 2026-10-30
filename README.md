@@ -145,6 +145,14 @@ On a phone, **Screen** turns the phone itself into the audience screen: the slid
 
 The hosted demo runs on our Token Factory credits, so each visitor gets `FREE_MINUTES` of stage time a
 day (15) and the site has a daily ceiling (`DAILY_STAGE_MINUTES`, 180). The meter sits under the mic.
+
+The credits are finite, so the public also has a share for the whole run (`PUBLIC_MINUTES`, 600), and a
+separate share is kept for the judges (`JURY_MINUTES`, 240). A judge comes in once through
+`/?jury=<JURY_CODE>`, which sets a cookie holding a hash of the code, and then talks on the jury's share,
+30 minutes a day, whatever the public has left. When the public share is spent the start page says
+"Sold out" and points to running it yourself; `PUBLIC_CLOSED=1` does the same by hand. With no minutes
+left the mic stays off, so the speech service is not paid for either.
+
 Run it yourself with your own key and there is no budget. How a show is priced after the hackathon:
 [AFTER-THE-HACKATHON.md](AFTER-THE-HACKATHON.md).
 
@@ -152,11 +160,11 @@ Run it yourself with your own key and there is no budget. How a show is priced a
 
 `vercel deploy` works as is. `vercel.json` pins the Stockholm region. Set the same environment variables in the Vercel project.
 
-On Vercel the disk is read-only, so two things change: the session recorder writes to the runtime log, and media uploads only work locally.
+On Vercel the disk is read-only, so two things change: shows are not recorded at all (only crash reports reach the runtime log), and media uploads go to a private Vercel Blob library per visitor.
 
 ### See what happened in a show
 
-Every show records what was heard, what each model answered, what reached the screen, how long it took, and every stretch where you talked and nothing new appeared. Locally the record lands in `sessions/`; on Vercel it goes to the runtime log.
+Every show records what was heard, what each model answered, what reached the screen, how long it took, and every stretch where you talked and nothing new appeared. It lands in `sessions/` on the laptop that ran it; the hosted demo records nothing.
 
 ```bash
 node scripts/session-report.mjs              # the newest local show

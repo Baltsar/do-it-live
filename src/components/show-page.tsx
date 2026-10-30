@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Lock, Mic, Square, X } from "lucide-react";
 import { LANGUAGES, LanguageSelect } from "@/components/language-select";
 import { MediaDropzone } from "@/components/media-dropzone";
+import { MicHelpCard } from "@/components/mic-help-card";
+import { MinutesNote, SoldOut } from "@/components/minutes-note";
 import { OptionalNote } from "@/components/optional-note";
 import { PoweredBy } from "@/components/powered-by";
 import { TalkCounter } from "@/components/talk-counter";
@@ -13,6 +15,8 @@ import { SlideView } from "@/components/slide/slide-view";
 import { Textarea } from "@/components/ui/textarea";
 import { useMediaDrop } from "@/hooks/use-media-drop";
 import { useStage } from "@/hooks/use-stage";
+import { closedFor } from "@/lib/budget-rules";
+import { micHelp, type MicProblem, type Where, whereFrom } from "@/lib/mic-help";
 import { SAMPLES } from "@/lib/samples";
 import { AUTHOR_X_HANDLE, AUTHOR_X_URL, SITE_AUTHOR } from "@/lib/site";
 import { MAX_BRIEF } from "@/lib/settings";
@@ -34,12 +38,15 @@ export function ShowPage() {
   const media = useMediaDrop(uploads);
   const picker = useRef<HTMLInputElement>(null);
   const ring = useRef<HTMLSpanElement>(null);
+  const bar = useRef<HTMLSpanElement>(null);
   const [voice, setVoice] = useState(true);
   const [phone, setPhone] = useState(false);
   const [onStage, setOnStage] = useState(false);
   // Chromium browsers other than Chrome and Edge (Comet, Brave, Opera) ship the speech API without the
   // service behind it: they take the audio and never answer. Said before the speaker wastes a take.
   const [hollowVoice, setHollowVoice] = useState(false);
+  // Which browser and system, so a mic problem comes with the fix for this one. Read after mount.
+  const [where, setWhere] = useState<Where>({ browser: "other", platform: "other", app: "your browser" });
 
   useEffect(() => {
     // Checked after mount so the server and the first client render agree.
@@ -48,6 +55,7 @@ export function ShowPage() {
       setPhone(window.matchMedia("(pointer: coarse)").matches);
       const brands = (navigator as Navigator & { userAgentData?: { brands: { brand: string }[] } }).userAgentData?.brands.map((b) => b.brand) ?? [];
       setHollowVoice(brands.includes("Chromium") && !brands.some((b) => b === "Google Chrome" || b === "Microsoft Edge"));
+      setWhere(whereFrom(navigator.userAgent, navigator.maxTouchPoints));
       try {
         const saved = localStorage.getItem(LANG_KEY);
         if (saved && LANGUAGES.some((l) => l.ready && l.code === saved)) stage.setLang(saved);
@@ -57,6 +65,8 @@ export function ShowPage() {
     }, 0);
     stage.setLevelListener((level) => {
       if (ring.current) ring.current.style.transform = `scale(${1 + level * 1.6})`;
+      // Speech sits around 0.05 to 0.25 on this meter: stretched so a normal voice fills most of the bar.
+      if (bar.current) bar.current.style.transform = `scaleX(${Math.min(1, level * 4)})`;
     });
     return () => {
       clearTimeout(id);
@@ -66,6 +76,11 @@ export function ShowPage() {
 
   // With AssemblyAI on the server any browser that gives us the microphone can talk, Firefox included.
   const canTalk = voice || Boolean(snap.status.assemblyai);
+  // The hosted demo runs on our credits: a few free minutes a day each, a share for the whole run, and
+  // a plain word when they are gone. With none left the mic stays off, so listening costs nothing either.
+  const budget = snap.status.budget ?? null;
+  const closed = budget ? closedFor(budget) : false;
+  const soldOut = Boolean(budget?.soldOut);
   const live = snap.listening || snap.replaying || snap.current !== null;
 
   useEffect(() => {
@@ -133,47 +148,58 @@ export function ShowPage() {
         ? `${media.count} of your own files ready`
         : "";
 
-  // One warning at a time, the one that blocks the most. Shown in both layouts: before, these only
-  // appeared on the start screen, so a mic that failed while a slide was up failed silently.
+  // One problem at a time, the one that blocks the most, with the fix for this browser. Shown in both
+  // layouts: before, these only appeared on the start screen, so a mic that failed mid-talk failed silently.
   const callMode = snap.micRate !== null && snap.micRate <= 16000;
-  const micWarning = snap.micBlocked
-    ? "The microphone is blocked for this page. Allow it (the icon next to the address, or Settings → Safari → Microphone on an iPhone), then press the mic again."
-    : snap.micMissing
-      ? "No microphone found. Plug one in, or pick one in System Settings → Sound → Input."
-      : snap.micBusy
-        ? "The show is already listening in another tab, or another app has the microphone. Close it, then press the mic again."
-        : snap.micDeaf
-          ? "This browser hears you but turns nothing into words. Open the page in Google Chrome, Edge or Safari."
-          : snap.micSilent
-          ? `No sound at all is coming from ${snap.micDevice ?? "the microphone"}. It is muted, or it is the wrong input: System Settings → Sound → Input.`
-          : callMode
-            ? `${snap.micDevice ?? "This input"} is a Bluetooth headset in call mode (${(snap.micRate ?? 0) / 1000} kHz), which garbles names. The built-in mic hears you better: System Settings → Sound → Input.`
+  const problem: MicProblem | null = snap.micAsking
+    ? "asking"
+    : snap.micBlocked
+      ? snap.micBlockedBy === "system"
+        ? "system"
+        : "site"
+      : snap.micMissing
+        ? "missing"
+        : snap.micBusy
+          ? "busy"
+          : snap.micDeaf
+            ? "deaf"
+            : snap.micSilent
+              ? "silent"
+              : snap.micNoWords
+                ? "no-words"
+                : callMode
+                  ? "call"
+                  : snap.micAllowedNow
+                    ? "allowed"
+                    : null;
+  // A phone has no level meter: its recogniser opens the mic itself.
+  const help = problem && !closed ? micHelp(problem, where, { device: snap.micDevice, rateKHz: (snap.micRate ?? 16000) / 1000, meter: !phone && snap.listening }) : null;
+  const micWarning = help?.tone === "problem" ? help.title : null;
+  // Pressing again is the fix once the setting is changed; a mic that hears nothing gets a clean restart.
+  // A block by the system needs the browser restarted first, so it gets no button.
+  const retry = !help
+    ? null
+    : snap.listening
+      ? problem === "silent" || problem === "no-words"
+        ? {
+            label: "Restart the mic",
+            run: () => {
+              stage.toggleListening();
+              stage.toggleListening();
+            },
+          }
+        : null
+      : problem === "allowed"
+        ? { label: "Start talking", run: () => stage.toggleListening() }
+        : problem === "site"
+          ? { label: "I allowed it. Try again", run: () => stage.toggleListening() }
+          : problem === "missing" || problem === "busy"
+            ? { label: "Try again", run: () => stage.toggleListening() }
             : null;
 
-  // The hosted demo runs on our credits: a few free minutes a day each, and a plain word when they are gone.
-  const budget = snap.status.budget ?? null;
-  const outOfMinutes = Boolean(budget && (budget.minutesLeft <= 0 || budget.siteClosed));
-  const minutes = budget ? (
-    outOfMinutes ? (
-      <div className="w-full max-w-xl rounded-2xl border border-[#ffd60a]/40 bg-[#ffd60a]/10 px-5 py-4 text-left">
-        <p className="text-lg font-black leading-tight">{budget.siteClosed ? "The demo has used today's minutes." : `Your free ${budget.minutesPerDay} minutes for today are used up.`}</p>
-        <p className="mt-1 text-sm font-semibold text-white/70">
-          Tomorrow there are {budget.minutesPerDay} more. Buying minutes, and a Mac app that runs on your own keys, are coming. Until then it runs on your own laptop:{" "}
-          <a href="https://github.com/Baltsar/do-it-live#run-it-yourself" className="text-[#ffd60a] underline underline-offset-4 outline-none hover:text-white focus-visible:ring-2 focus-visible:ring-white/60">
-            github.com/Baltsar/do-it-live
-          </a>
-        </p>
-      </div>
-    ) : (
-      <p className="text-xs font-semibold text-white/40">
-        {budget.minutesLeft} of {budget.minutesPerDay} free minutes left today
-      </p>
-    )
-  ) : null;
-
   const micStatus = (
-    <div className="flex max-w-2xl flex-col items-center gap-2 text-center">
-      {minutes}
+    <div className="flex w-full max-w-2xl flex-col items-center gap-3 text-center">
+      {budget ? <MinutesNote budget={budget} /> : null}
       {snap.micDevice ? (
         <p className="flex items-center gap-2 text-sm font-semibold text-white/45">
           <span className={cn("size-2 shrink-0 rounded-full", micWarning ? "bg-[#ff4fa3]" : snap.listening ? "bg-white" : "bg-white/25")} />
@@ -181,8 +207,8 @@ export function ShowPage() {
           {snap.micMode ? <span className="text-white/30">· {snap.micMode}</span> : null}
         </p>
       ) : null}
-      {micWarning ? (
-        <p className="text-base font-semibold text-[#ff4fa3]">{micWarning}</p>
+      {help ? (
+        <MicHelpCard help={help} barRef={bar} pointUp={problem === "asking"} onRetry={retry?.run} retryLabel={retry?.label} />
       ) : hollowVoice && !snap.status.assemblyai ? (
         <p className="text-sm font-semibold text-white/55">Use Google Chrome, Edge or Safari: this browser may hear you without turning speech into words.</p>
       ) : null}
@@ -202,7 +228,7 @@ export function ShowPage() {
     <button
       type="button"
       onClick={() => stage.toggleListening()}
-      disabled={!canTalk}
+      disabled={!canTalk || (closed && !snap.listening)}
       aria-pressed={snap.listening}
       className={cn(
         "relative grid shrink-0 place-items-center rounded-full outline-none transition-transform focus-visible:ring-4 focus-visible:ring-white/70 enabled:hover:scale-105 enabled:active:scale-95 disabled:opacity-40",
@@ -221,7 +247,8 @@ export function ShowPage() {
         <span className="whitespace-nowrap text-lg font-black uppercase tracking-tight [font-stretch:125%] max-[400px]:text-base">Do it live</span>
         <span className="text-sm font-semibold text-white/40 max-sm:hidden">#vibepresenting</span>
         <nav className="ml-auto flex items-center gap-1">
-          <TalkCounter />
+          {/* "Be talk #2" on a sold-out page would invite a talk nobody can give. */}
+          {soldOut ? null : <TalkCounter />}
           <button type="button" className={quiet} onClick={() => (phone ? enterStage() : window.open("/screen", "doitlive-audience", "width=1280,height=720"))}>
             Screen
           </button>
@@ -271,55 +298,64 @@ export function ShowPage() {
         </main>
       ) : (
         <main className="flex flex-1 flex-col items-center justify-center gap-8 px-5 pb-12 text-center">
-          <div>
-            <p className="mb-5 text-lg font-black uppercase tracking-wide text-[#ffd60a] sm:text-xl">F*ck it, we&apos;ll do it live.</p>
-            <h1 className="text-[clamp(96px,22vw,340px)] font-black leading-[0.8] tracking-[-0.06em] [font-stretch:125%]">Talk.</h1>
-            <p className="mt-6 text-xl font-semibold text-white/60 sm:text-2xl">The slides make themselves.</p>
-          </div>
-          <TalkGlow active={canTalk && !snap.listening}>{micButton("hero")}</TalkGlow>
-          <LanguageSelect lang={snap.lang} onChange={chooseLanguage} />
-          {/* Said only where it is true: a laptop records its own shows for review, the hosted demo does not. */}
-          {snap.status.record === false ? (
-            <p className="-mt-5 flex items-center gap-1.5 text-xs font-semibold text-white/40">
-              <Lock className="size-3" strokeWidth={2.6} aria-hidden />
-              We draw what you say. We don&apos;t keep it.
-            </p>
-          ) : null}
-          {micStatus}
-          <OptionalNote />
-          {/* Dimmed until pointed at or typed in: the mic is the product, this is the extra. */}
-          <div className="-mt-5 flex w-full flex-col items-center gap-8 opacity-60 transition-opacity duration-300 focus-within:opacity-100 hover:opacity-100">
-            <label className="block w-full max-w-2xl text-left">
-              <span className="mb-2 block px-1 text-sm font-semibold text-white/80">What will you talk about?</span>
-              <Textarea
-                value={snap.brief}
-                onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
-                placeholder="A few sentences, and I get slides ready before you start. For example: how our meetup grew from 12 to 700 builders in a year."
-                className="min-h-24 resize-none rounded-2xl border-white/15 bg-white/[0.04] px-4 py-3 text-base leading-snug text-white placeholder:text-white/35 hover:border-white/25 focus-visible:border-[#ffd60a] focus-visible:ring-[#ffd60a]/20 md:text-base dark:bg-white/[0.04]"
-              />
-            </label>
-            {snap.preparing || snap.prepared.length > 0 ? (
-              <div className="w-full max-w-3xl">
-                <p className="mb-2 text-sm text-white/50">
-                  {snap.preparing ? "Getting ready" : `${snap.prepared.length} ${snap.prepared.length === 1 ? "slide" : "slides"} ready. Each one appears when you get there.`}
-                </p>
-                <div className="flex justify-center gap-2 overflow-x-auto pb-1">
-                  {snap.prepared.map((p) => (
-                    <button key={p.id} type="button" onClick={() => stage.removePrepared(p.id)} title={`Appears when you say: ${p.strong}. Click to remove.`} className="w-28 shrink-0 overflow-hidden rounded-lg outline-none transition-opacity hover:opacity-60 focus-visible:ring-2 focus-visible:ring-white/70">
-                      <SlideView slide={p.slide} still />
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {soldOut ? (
+            <SoldOut />
+          ) : (
+            <>
+            <div>
+              <p className="mb-5 text-lg font-black uppercase tracking-wide text-[#ffd60a] sm:text-xl">F*ck it, we&apos;ll do it live.</p>
+              <h1 className="text-[clamp(96px,22vw,340px)] font-black leading-[0.8] tracking-[-0.06em] [font-stretch:125%]">Talk.</h1>
+              <p className="mt-6 text-xl font-semibold text-white/60 sm:text-2xl">The slides make themselves.</p>
+            </div>
+            <TalkGlow active={canTalk && !closed && !snap.listening}>{micButton("hero")}</TalkGlow>
+            <LanguageSelect lang={snap.lang} onChange={chooseLanguage} />
+            {/* Said only where it is true: a laptop records its own shows for review, the hosted demo does not. */}
+            {snap.status.record === false ? (
+              <p className="-mt-5 flex items-center gap-1.5 text-xs font-semibold text-white/40">
+                <Lock className="size-3" strokeWidth={2.6} aria-hidden />
+                We draw what you say. We don&apos;t keep it.
+              </p>
             ) : null}
-            <MediaDropzone media={media} enabled={uploads} onBrowse={() => picker.current?.click()} />
-          </div>
-          <p className="text-sm leading-relaxed text-white/50">
-            {canTalk ? "No mic right now? " : "Voice needs Chrome, or Safari on an iPhone. "}
-            <button type="button" className="font-semibold text-white underline underline-offset-4 outline-none hover:text-[#ffd60a] focus-visible:ring-2 focus-visible:ring-white/60" onClick={() => stage.replay(SAMPLES[0].lines, 1.6)}>
-              Play the demo talk
-            </button>
-          </p>
+            {micStatus}
+            <OptionalNote />
+            {/* Dimmed until pointed at or typed in: the mic is the product, this is the extra. */}
+            <div className="-mt-5 flex w-full flex-col items-center gap-8 opacity-60 transition-opacity duration-300 focus-within:opacity-100 hover:opacity-100">
+              <label className="block w-full max-w-2xl text-left">
+                <span className="mb-2 block px-1 text-sm font-semibold text-white/80">What will you talk about?</span>
+                <Textarea
+                  value={snap.brief}
+                  onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
+                  placeholder="A few sentences, and I get slides ready before you start. For example: how our meetup grew from 12 to 700 builders in a year."
+                  className="min-h-24 resize-none rounded-2xl border-white/15 bg-white/[0.04] px-4 py-3 text-base leading-snug text-white placeholder:text-white/35 hover:border-white/25 focus-visible:border-[#ffd60a] focus-visible:ring-[#ffd60a]/20 md:text-base dark:bg-white/[0.04]"
+                />
+              </label>
+              {snap.preparing || snap.prepared.length > 0 ? (
+                <div className="w-full max-w-3xl">
+                  <p className="mb-2 text-sm text-white/50">
+                    {snap.preparing ? "Getting ready" : `${snap.prepared.length} ${snap.prepared.length === 1 ? "slide" : "slides"} ready. Each one appears when you get there.`}
+                  </p>
+                  <div className="flex justify-center gap-2 overflow-x-auto pb-1">
+                    {snap.prepared.map((p) => (
+                      <button key={p.id} type="button" onClick={() => stage.removePrepared(p.id)} title={`Appears when you say: ${p.strong}. Click to remove.`} className="w-28 shrink-0 overflow-hidden rounded-lg outline-none transition-opacity hover:opacity-60 focus-visible:ring-2 focus-visible:ring-white/70">
+                        <SlideView slide={p.slide} still />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+              <MediaDropzone media={media} enabled={uploads} onBrowse={() => picker.current?.click()} />
+            </div>
+            {/* The demo talk runs on the same models as a live one: with no minutes left it would play to no slides. */}
+            {closed ? null : (
+              <p className="text-sm leading-relaxed text-white/50">
+                {canTalk ? "No mic right now? " : "Voice needs Chrome, or Safari on an iPhone. "}
+                <button type="button" className="font-semibold text-white underline underline-offset-4 outline-none hover:text-[#ffd60a] focus-visible:ring-2 focus-visible:ring-white/60" onClick={() => stage.replay(SAMPLES[0].lines, 1.6)}>
+                  Play the demo talk
+                </button>
+              </p>
+            )}
+            </>
+          )}
           <PoweredBy />
         </main>
       )}
@@ -368,7 +404,7 @@ export function ShowPage() {
         <div
           className="fixed inset-0 z-40 touch-manipulation select-none bg-black"
           onClick={() => {
-            if (!snap.listening && canTalk) stage.toggleListening();
+            if (!snap.listening && canTalk && !closed) stage.toggleListening();
           }}
         >
           {portrait ? (
@@ -406,10 +442,10 @@ export function ShowPage() {
               <X className="size-5" />
             </button>
           </div>
-          {micWarning || !snap.listening ? (
+          {help || !snap.listening ? (
             <p className="pointer-events-none absolute inset-x-0 bottom-[max(1rem,env(safe-area-inset-bottom))] z-10 flex justify-center px-6">
               <span className={cn("rounded-full bg-black/60 px-4 py-2 text-center text-sm font-semibold", micWarning ? "text-[#ff4fa3]" : "text-white/85")}>
-                {micWarning ?? (canTalk ? (portrait ? "Tap to talk · turn the phone sideways" : "Tap to talk") : "Voice needs Chrome, or Safari on an iPhone.")}
+                {help?.title ?? (closed ? "No minutes left." : canTalk ? (portrait ? "Tap to talk · turn the phone sideways" : "Tap to talk") : "Voice needs Chrome, or Safari on an iPhone.")}
               </span>
             </p>
           ) : null}

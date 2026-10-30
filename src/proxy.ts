@@ -4,6 +4,10 @@ const COOKIE = "dil_gate";
 const MONTH_S = 60 * 60 * 24 * 30;
 // Each visitor's own media library in Blob is found by this random id (library-store.ts reads it).
 const LIBRARY_COOKIE = "dil_lib";
+// The jury link: ?jury=<JURY_CODE> on any page. budget.ts reads the cookie and checks the same hash.
+const JURY_COOKIE = "dil_jury";
+// Judging runs 9 to 23 December and winners are named late January: the pass outlives both.
+const JURY_PASS_S = 60 * 60 * 24 * 120;
 
 function withLibraryId(request: NextRequest, res: NextResponse): NextResponse {
   if (!request.cookies.get(LIBRARY_COOKIE)) {
@@ -12,10 +16,28 @@ function withLibraryId(request: NextRequest, res: NextResponse): NextResponse {
   return res;
 }
 
-/** The cookie holds a hash of the password, so the password itself never sits in the browser. */
-async function tokenFor(password: string): Promise<string> {
-  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`do-it-live:${password}`));
+const sha256 = async (text: string): Promise<string> => {
+  const bytes = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
   return Array.from(new Uint8Array(bytes), (b) => b.toString(16).padStart(2, "0")).join("");
+};
+
+/** The cookie holds a hash of the password, so the password itself never sits in the browser. */
+const tokenFor = (password: string): Promise<string> => sha256(`do-it-live:${password}`);
+
+/**
+ * A judge's link sets the jury cookie and comes back without the code, so the code is not left in
+ * the address bar, the history or a screenshot. A wrong code is ignored like any other parameter.
+ */
+async function juryEntry(request: NextRequest): Promise<NextResponse | null> {
+  const code = process.env.JURY_CODE;
+  const given = request.nextUrl.searchParams.get("jury");
+  if (!code || given === null || given !== code) return null;
+  const clean = request.nextUrl.clone();
+  clean.searchParams.delete("jury");
+  const res = NextResponse.redirect(clean, 303);
+  res.cookies.set(JURY_COOKIE, await sha256(`do-it-live-jury:${code}`), { httpOnly: true, secure: true, sameSite: "lax", path: "/", maxAge: JURY_PASS_S });
+  res.headers.set("cache-control", "no-store");
+  return withLibraryId(request, res);
 }
 
 function gatePage(wrong: boolean): NextResponse {
@@ -33,6 +55,8 @@ button{font:inherit;font-size:18px;font-weight:700;padding:14px;border:0;border-
  * credits. Only active where SITE_PASSWORD is set, so local development stays open.
  */
 export async function proxy(request: NextRequest): Promise<NextResponse> {
+  const jury = await juryEntry(request);
+  if (jury) return jury;
   const password = process.env.SITE_PASSWORD;
   if (!password) return withLibraryId(request, NextResponse.next());
   const token = await tokenFor(password);

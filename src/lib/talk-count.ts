@@ -1,7 +1,7 @@
 // How many talks the hosted demo has seen, read from the budget's own day files: no new tracking,
 // no ids, no words. Old days are reduced to their totals on the way. Server-only.
 import { get, list, put } from "@vercel/blob";
-import { budgetOn, PER_MINUTE, USAGE_PREFIX } from "@/lib/budget";
+import { budgetOn, dayOf, PER_MINUTE, USAGE_PREFIX } from "@/lib/budget";
 
 /** A visitor's day counts as a talk past about half a minute of stage time; an upload alone costs 6. */
 const TALK_UNITS = 23;
@@ -22,6 +22,8 @@ export interface TalkCount {
 interface StoredDay {
   visitors?: Record<string, number>;
   total?: number;
+  /** The judges' part of total: kept when the day is reduced, so their share stays counted. */
+  jury?: number;
   /** Present once the day has been reduced to its totals. */
   talks?: number;
 }
@@ -44,7 +46,7 @@ async function countDay(pathname: string): Promise<{ talks: number; units: numbe
   const units = day.total ?? 0;
   if (day.visitors && ageInDays(pathname) >= KEEP_VISITORS_DAYS) {
     // Forget who, keep how much. Conditional, so a write that lands in between is never lost blind.
-    await put(pathname, JSON.stringify({ total: units, talks }), {
+    await put(pathname, JSON.stringify({ total: units, jury: day.jury ?? 0, talks }), {
       access: "private",
       contentType: "application/json",
       addRandomSuffix: false,
@@ -60,7 +62,8 @@ async function countAll(): Promise<TalkCount> {
   let cursor: string | undefined;
   do {
     const page = await list({ prefix: USAGE_PREFIX, cursor });
-    for (const day of await Promise.all(page.blobs.map((b) => countDay(b.pathname).catch(() => ({ talks: 0, units: 0 }))))) {
+    const days = page.blobs.filter((b) => dayOf(b.pathname) !== null);
+    for (const day of await Promise.all(days.map((b) => countDay(b.pathname).catch(() => ({ talks: 0, units: 0 }))))) {
       talks += day.talks;
       units += day.units;
     }

@@ -10,6 +10,7 @@ import { detectSignpost, PAYLOAD_WORDS } from "@/lib/signposts";
 import { resolveVisuals } from "@/lib/visuals";
 import { StreamRecognition } from "@/lib/stream-recognition";
 import type { BudgetView } from "@/lib/budget";
+import { closedFor } from "@/lib/budget-rules";
 import type { DrawPalette } from "@/lib/draw";
 import { getLive, parseDrawing, setLive, type LiveDrawing } from "@/lib/live-store";
 import { parseTheme, THEME_KEY } from "@/lib/theme";
@@ -84,6 +85,14 @@ export interface StageSnapshot {
   quietSec: number;
   /** The browser refused the microphone: listening cannot start here. */
   micBlocked: boolean;
+  /** Who refused it: this site's own setting, or the operating system for the whole browser. */
+  micBlockedBy: "site" | "system" | null;
+  /** The browser is asking "allow the microphone?" right now, and the show waits for the answer. */
+  micAsking: boolean;
+  /** The microphone was allowed after a refusal, while the page was open: one press and it works. */
+  micAllowedNow: boolean;
+  /** Listening for a while and not one word back since the start: the take is not getting through. */
+  micNoWords: boolean;
   /** Recognition keeps ending the moment it starts: something else holds the microphone. */
   micBusy: boolean;
   /** The input the browser listens to, as the browser names it. Known before listening once the mic is allowed. */
@@ -277,6 +286,9 @@ const LEVEL_SUMMARY_MS = 5000;
 // silence from the recogniser), while Google Chrome on the same Mac transcribed the same input.
 const DEAF_MS = 9000;
 const DEAF_LEVEL = 0.03;
+// Most people start within a few seconds of pressing the mic. Past this with not one word back, the
+// page says so and shows the level, so the speaker can tell a silent mic from a slow one.
+const FIRST_WORDS_MS = 8000;
 // Sound well above the take's own floor, yet no word recognised for this long: the recogniser is stuck.
 const STUCK_MS = 6000;
 // Off: every take on 20 Oct that sent the heads-up names to the recogniser heard nothing at all (one ran
@@ -311,6 +323,10 @@ const INITIAL: StageSnapshot = {
   model: null,
   quietSec: 0,
   micBlocked: false,
+  micBlockedBy: null,
+  micAsking: false,
+  micAllowedNow: false,
+  micNoWords: false,
   micBusy: false,
   micDevice: null,
   micRate: null,
@@ -1030,6 +1046,11 @@ export function createStage() {
       emit({ lastMs: Math.round(performance.now() - t0), model: out.model ?? snap.model });
       // The meter on the hosted demo: every answer carries what is left.
       if (out.budget) emit({ status: { ...snap.status, budget: out.budget } });
+      // Out of minutes mid-talk: the mic stops, so the speech service stops costing too.
+      if (out.budget && closedFor(out.budget) && snap.listening) {
+        log("no minutes left: the mic is off");
+        stopListening();
+      }
       log(`${out.action}${out.mock ? " (mock)" : ""}: ${out.reason ?? ""}`);
       const made = out.slide as { headline?: string; layout?: string; scene?: string; library_id?: string } | undefined;
       record({
@@ -1298,6 +1319,27 @@ export function createStage() {
     };
   }
 
+  /**
+   * Whether the site may use the microphone, watched for the whole visit. A refusal from an earlier
+   * visit shows before the speaker presses anything, and allowing it in the browser's settings clears
+   * the warning at once, without a reload.
+   */
+  async function watchMicPermission(): Promise<void> {
+    try {
+      const state = await navigator.permissions.query({ name: "microphone" as PermissionName });
+      state.onchange = () => {
+        if (state.state === "denied") emit({ micBlocked: true, micBlockedBy: "site", micAllowedNow: false });
+        else if (state.state === "granted" && snap.micBlocked) {
+          emit({ micBlocked: false, micBlockedBy: null, micAllowedNow: true });
+          void readMicDevice();
+        }
+      };
+      if (state.state === "denied") emit({ micBlocked: true, micBlockedBy: "site" });
+    } catch {
+      // Firefox does not answer for the microphone: a refusal shows when the mic is pressed instead.
+    }
+  }
+
   /** Which input the browser will use, read without opening it. Only possible once the mic is allowed. */
   async function readMicDevice(): Promise<void> {
     try {
@@ -1346,6 +1388,12 @@ export function createStage() {
         return;
       }
       let stream: MediaStream;
+      // The browser's own question takes as long as the speaker does: the page says where to look.
+      const asked = await navigator.permissions
+        .query({ name: "microphone" as PermissionName })
+        .then((p) => p.state === "prompt")
+        .catch(() => false);
+      if (asked) emit({ micAsking: true });
       try {
         // Raw capture for the meter, so a live mic's noise floor is never processed down to zero.
         // The recogniser opens its own capture with its own processing; this one only measures.
@@ -1355,7 +1403,11 @@ export function createStage() {
         const name = err instanceof DOMException ? err.name : "Error";
         record({ kind: "mic", event: "preflight failed", error: name });
         log(`the microphone would not open: ${name}`);
-        if (name === "NotAllowedError" || name === "SecurityError") emit({ micBlocked: true });
+        emit({ micAsking: false });
+        // Chrome says "Permission denied by system" when macOS or Windows keeps the whole browser
+        // from the mic: the site's own setting is fine then, and changing it would not help.
+        const bySystem = err instanceof Error && /system/i.test(err.message);
+        if (name === "NotAllowedError" || name === "SecurityError") emit({ micBlocked: true, micBlockedBy: bySystem ? "system" : "site" });
         else if (name === "NotFoundError" || name === "OverconstrainedError") emit({ micMissing: true });
         else emit({ micBusy: true });
         return;
@@ -1368,7 +1420,7 @@ export function createStage() {
         .query({ name: "microphone" as PermissionName })
         .then((p) => p.state)
         .catch(() => "unknown");
-      emit({ micDevice: device, micRate: settings.sampleRate ?? null, micBlocked: false, micBusy: false, micMissing: false, micSilent: false, micDeaf: false });
+      emit({ micDevice: device, micRate: settings.sampleRate ?? null, micBlocked: false, micBlockedBy: null, micAsking: false, micAllowedNow: false, micBusy: false, micMissing: false, micSilent: false, micDeaf: false });
       record({ kind: "mic", event: "preflight", device, sampleRate: settings.sampleRate ?? null, channels: settings.channelCount ?? null, permission });
       if ((settings.sampleRate ?? 48000) <= 16000) log(`${device ?? "this input"} runs at ${settings.sampleRate} Hz: a Bluetooth headset in call mode garbles names`);
       startMeter(stream);
@@ -1402,6 +1454,7 @@ export function createStage() {
       resultCount += 1;
       watchDeadAir();
       if (snap.micDeaf) emit({ micDeaf: false });
+      if (snap.micNoWords) emit({ micNoWords: false });
       if (phraseStartedAt === 0) phraseStartedAt = lastHeardAt;
       let interim = "";
       for (let i = e.resultIndex; i < e.results.length; i += 1) {
@@ -1527,7 +1580,13 @@ export function createStage() {
       // in a real session (a browser without mic access), so stop and say so instead.
       if (e.error === "not-allowed" || e.error === "service-not-allowed" || e.error === "audio-capture") {
         stopListening();
-        emit({ micBlocked: true });
+        emit({ micBlocked: true, micBlockedBy: "site" });
+      }
+      // The speech service refused a socket because this visitor has no minutes left: retrying cannot help.
+      if (e.error.includes("token 429")) {
+        log("no minutes left: the mic is off");
+        stopListening();
+        return;
       }
       // "aborted" means something took the microphone away: a second tab running the show is the
       // usual culprit. It arrived once a second in a real session, each abort answered by a restart
@@ -1579,9 +1638,10 @@ export function createStage() {
     };
     recognition = rec;
     lastHeardAt = Date.now();
-    emit({ listening: true, quietSec: 0, micBlocked: false, micBusy: false });
+    emit({ listening: true, quietSec: 0, micBlocked: false, micBlockedBy: null, micAllowedNow: false, micNoWords: false, micBusy: false });
     watchdog = setInterval(() => {
       emit({ quietSec: Math.round((Date.now() - lastHeardAt) / 1000) });
+      if (resultCount === 0 && !snap.micNoWords && Date.now() - listenStartedAt >= FIRST_WORDS_MS) emit({ micNoWords: true });
       // Only while the speaker is talking: a pause is not dead air.
       if (Date.now() - lastHeardAt < 2000) watchDeadAir();
     }, 1000);
@@ -1607,7 +1667,7 @@ export function createStage() {
       });
       listenStartedAt = 0;
     }
-    emit({ listening: false, interim: "", quietSec: 0 });
+    emit({ listening: false, interim: "", quietSec: 0, micNoWords: false });
     if (watchdog) clearInterval(watchdog);
     watchdog = null;
     recognition?.stop();
@@ -1695,6 +1755,7 @@ export function createStage() {
       // The input's name on screen before the speaker presses anything: a wrong headset is caught
       // before the talk, not halfway into it.
       void readMicDevice();
+      void watchMicPermission();
       const support = recognitionCtor() as unknown as OnDeviceSupport | null;
       if (support && typeof support.available === "function") {
         support

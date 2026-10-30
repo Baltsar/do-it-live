@@ -1,5 +1,5 @@
 import { after } from "next/server";
-import { budgetOn, flushBudget, spend, visitorOf } from "@/lib/budget";
+import { budgetOn, flushBudget, spend } from "@/lib/budget";
 import { drawStream, safePalette, type DrawPalette, type OnScreen } from "@/lib/draw";
 import { DEFAULT_THEME, isLookKey, LOOK_COOKIE, type LookKey } from "@/lib/theme";
 
@@ -14,7 +14,7 @@ export async function POST(req: Request): Promise<Response> {
   const { line, palette, shown, current, tier, prepared } = (await req.json()) as { line?: string; palette?: Partial<DrawPalette>; shown?: string[]; current?: OnScreen | null; tier?: number; prepared?: boolean };
   if (!line?.trim() || !process.env.NEBIUS_API_KEY) return new Response("LABEL: none", { status: 200 });
   // Out of minutes: a quiet "nothing to draw", so the stage keeps running on what it has.
-  const { ok } = await spend(visitorOf(req), "draw");
+  const { ok } = await spend(req, "draw");
   if (budgetOn()) after(flushBudget);
   if (!ok) return new Response("LABEL: none", { status: 200 });
   try {
