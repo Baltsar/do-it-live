@@ -3,7 +3,7 @@
 Text for the Devpost form, field by field. Track: **Best Apps and Agents**. City: **Stockholm** (Builders & Brews).
 
 Links for the form:
-- Demo: https://do-it-live-two.vercel.app (open, no password; 15 free minutes of stage time per visitor and day)
+- Demo: https://doitlive.app (open, no password; 15 free minutes of stage time per visitor and day)
 - Code: https://github.com/Baltsar/do-it-live (MIT)
 - Video: [YOUTUBE LINK, public, 3 minutes or shorter]
 
@@ -86,7 +86,7 @@ Nebius Token Factory, NVIDIA Nemotron 3.5 Lightning, NVIDIA Nemotron 3 Ultra, NV
 
 ## Testing instructions
 
-Open https://do-it-live-two.vercel.app in Google Chrome, Edge or Safari, on a laptop or a phone with a microphone. No account, no password. Each visitor has 15 free minutes of stage time a day.
+Open https://doitlive.app in Google Chrome, Edge or Safari, on a laptop or a phone with a microphone. No account, no password. Each visitor has 15 free minutes of stage time a day.
 
 1. Pick English or Swedish under the mic, press the mic and talk for a minute about anything. Pause briefly between sentences.
 2. Say a figure ("we went from 12 to 700 people", "one in five", "80 percent") to see it land mid-sentence.

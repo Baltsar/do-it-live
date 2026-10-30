@@ -1,0 +1,49 @@
+# Do it live
+
+> Vibe presenting: a presentation with no deck. The speaker presses the mic and talks, and the slides draw themselves while they speak. Free in any browser at https://doitlive.app, open source under the MIT license, built on NVIDIA Nemotron models via Nebius Token Factory.
+
+Do it live listens to a talk and decides, every few spoken words, whether the moment deserves a slide. When it does, the slide appears mid-sentence. The speaker never builds a slide.
+
+A slide can be:
+
+- a drawing that builds on screen while it is written;
+- one of 60 large interface elements: a login that folds away, a poll, a declined card, a text message, a failing terminal;
+- a figure read from the speaker's own words: "from 12 to 700" becomes a change with its factor, "one in five" a row of figures with one lit;
+- a duel between two things, moving type, a question left hanging, or the speaker quoted back;
+- one of the speaker's own GIFs, photos or clips, shown when it fits what is being said;
+- a sourced fact, with its source on the slide, when the speaker asks the room a question with a number in it;
+- one of 80 wordless animated scenes when nothing else fits.
+
+Every slide comes in one of seven looks, chosen like a presentation theme: Scribble (marker on a whiteboard, the default), Pop, Signal, Redacted, Broadcast, Sticker and Scoreboard.
+
+## Using it
+
+- Open https://doitlive.app in Google Chrome, Edge or Safari, on a laptop or a phone with a microphone. No account and no password.
+- Each visitor gets 15 free minutes of stage time a day.
+- Speech in English or Swedish.
+- On a phone, Screen turns the phone into the audience screen: plug it into a TV and talk.
+- No microphone? "Play the demo talk" replays a scripted talk.
+- A slide shows a number only if the speaker said it or a cited source gave it. Numbers are never invented.
+
+## How it is built
+
+- Next.js app on Vercel. A stage engine in the browser reads the live transcript and decides when to ask for a slide.
+- Speech to text: AssemblyAI streaming.
+- Director: NVIDIA Nemotron 3.5 Lightning on Nebius Token Factory decides show or hold, and which layout.
+- Drawer: a race between Kimi-K3, gpt-oss-120b and NVIDIA Nemotron 3 Ultra. The first model to answer streams its drawing as HTML and CSS into a sandboxed frame.
+- Own media: NVIDIA Nemotron 3.5 Super VL watches frames of each GIF, Tavily finds what the internet calls it, and Qwen3 Embedding ranks the library against what is being said.
+- Facts: Tavily search plus NVIDIA Nemotron 3 Ultra make one slide that shows its source.
+
+## Links
+
+- [Do it live](https://doitlive.app): the app itself
+- [Source code](https://github.com/Baltsar/do-it-live): MIT licensed, with setup instructions to run it on your own Token Factory key
+- [Hackathon submission](https://github.com/Baltsar/do-it-live/blob/main/docs/submission.md): what it does, how it was built, what we learned
+
+## About
+
+Made in Stockholm by Gustaf Baltsar Garnow for the Nebius x NVIDIA Global AI Hackathon, October 2026.
+
+- [headless.design](https://headless.design): Gustaf's site
+- [@gustafgarnow on X](https://x.com/gustafgarnow)
+- [Baltsar on GitHub](https://github.com/Baltsar)

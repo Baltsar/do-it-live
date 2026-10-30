@@ -7,7 +7,7 @@
 <p><b>Vibe presenting.</b> Walk on stage, start talking, and the slides draw themselves while you speak.<br>No deck. No clicker. No rehearsal.</p>
 
 <p>
-<a href="https://do-it-live-two.vercel.app"><b>Live demo</b></a> &nbsp;·&nbsp;
+<a href="https://doitlive.app"><b>Live demo</b></a> &nbsp;·&nbsp;
 <a href="#how-it-works">How it works</a> &nbsp;·&nbsp;
 <a href="#run-it-yourself">Run it yourself</a> &nbsp;·&nbsp;
 <a href="docs/submission.md">Hackathon submission</a>
@@ -191,7 +191,7 @@ scripts/session-report.mjs     Reads a recorded show and reports what happened
 
 ## Built for
 
-Built in Stockholm by [Gustaf Garnow](https://github.com/Baltsar) for the [Nebius × NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com), **Best Apps and Agents** track.
+Made in Stockholm by Gustaf Baltsar Garnow ([headless.design](https://headless.design) · [@gustafgarnow on X](https://x.com/gustafgarnow) · [GitHub](https://github.com/Baltsar)) for the [Nebius × NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com), **Best Apps and Agents** track.
 
 The models run as a service on Nebius Token Factory, each under its own licence. Speech to text is AssemblyAI, web search is Tavily, and the interface uses shadcn/ui, Lucide and Motion.
 
