@@ -271,11 +271,15 @@ const hideMissing = (e: SyntheticEvent<HTMLImageElement | HTMLVideoElement>): vo
 };
 
 function Media({ src, className }: { src: string; className: string }) {
-  return /\.mp4(\?|$)/i.test(src) ? (
+  // A clip from the speaker's library is served as /api/library/<id>, with no extension to tell it is a
+  // video. Chrome, Edge and Firefox refuse an MP4 or WebM in an <img>, so a failed image gets a second
+  // try as a video before the slide gives up on it.
+  const [videoFor, setVideoFor] = useState<string | null>(null);
+  return /\.(mp4|webm)(\?|$)/i.test(src) || videoFor === src ? (
     <video className={className} src={src} autoPlay loop muted playsInline onError={hideMissing} />
   ) : (
     // eslint-disable-next-line @next/next/no-img-element -- third-party animated GIF or photo, not optimizable
-    <img className={className} src={src} alt="" onError={hideMissing} />
+    <img className={className} src={src} alt="" onError={() => setVideoFor(src)} />
   );
 }
 
