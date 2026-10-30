@@ -67,4 +67,84 @@ The YouTube link, public, once `video/out/live/do-it-live.mp4` is uploaded (titl
 
 ## Image gallery
 
-Up to 15 JPG or PNG, 3:2 works best. Frames to pull from the film: the mic on the Talk. screen, 700 builders landing, "forgot the word" with ???, psychosis: that's the word!, the score at 27, and the mic end card.
+Up to 15 JPG or PNG, 3:2. The set is in `HACKATHON-NETLIGHT/RECORDING/product/`, numbered in upload order.
+
+# Devpost: Additional info (for judges)
+
+- **Upload a file:** leave empty.
+- **Submitter type:** Individual.
+- **Organization name:** N/A.
+- **Country of residence:** Sweden.
+- **Canada province:** N/A.
+- **Track:** Best apps and agents.
+- **New or existing prior to August 26, 2026:** New.
+- **If existing, how updated:** leave empty.
+- **Public code repository:** https://github.com/Baltsar/do-it-live
+- **Working demo:** https://doitlive.app
+
+**Which model(s) did you use, and why that size/variant?**
+
+```
+Nemotron 3.5 Lightning as the director: it runs every few spoken words and decides show or hold and which layout, so it has to answer in well under a second, every time. Nemotron 3 Ultra (550B-A55B) where a second of latency is fine and judgement matters: turning prepared notes into slides, turning Tavily results into one sourced fact slide, naming a meme only when a page confirms it, and as the third runner in the drawing race. Nemotron 3.5 Super VL to watch six frames of each uploaded GIF or clip. Qwen3-Embedding-8B on the same endpoint ranks the speaker's library against what is being said. Kimi-K3 and gpt-oss-120b race Ultra for drawings; the first usable picture wins.
+```
+
+**Rate Nemotron's output quality (1 = Poor, 10 = Excellent)**
+
+```
+8. Lightning returned clean JSON on schedule for 132 director calls in a six-minute talk, with one timeout. Ultra is a careful editor: as our "culture desk" it refused to name a meme without evidence far more reliably than it drew pictures, so it is the dependable judge and the conservative artist. Two things to know: reasoning models return thinking text unless called with chat_template_kwargs { enable_thinking: false }, and a drawer will copy the example's numbers and set its own fonts unless the prompt forbids both.
+```
+
+**Fine-tune, prompt-engineer, or out of the box?**
+
+```
+Out of the box, with prompt engineering and rules around the model. The drawing prompt was rewritten as a simultaneous interpreter ("show it as soon as the words name something concrete"), which took one recorded conversation from 9 to 23 pictures out of the same 55 chunks. Everything that can be a rule runs outside the model: figures are parsed from the transcript, a slide may only show a number the speaker said, and an art director in code keeps two slides in a row from looking alike. No fine-tuning yet; the recorded sessions are the training set for later.
+```
+
+**How did Nemotron's performance compare to other models for similar tasks?**
+
+```
+Measured in the drawing race over a six-minute talk: first-token time for Kimi-K3 swung from 0.6 to 7.9 s and for gpt-oss-120b from 0.3 to 6.1 s within minutes, and Kimi stalled six times. Nemotron 3 Ultra held about 0.4 s and covered every stall. As a drawer it was the most conservative of the three; as a judge and an editor it was the most reliable, which is why it holds every role where being wrong costs more than being slow.
+```
+
+**Which Nebius platform capabilities were most valuable, and how?**
+
+```
+One OpenAI-compatible endpoint for every model, https://api.tokenfactory.nebius.com/v1. Racing three drawing models or moving a role to another model is a change of model id, with no new SDK and no new keys. The /models listing lets each role resolve to the best available model at runtime, with an env override per role. Embeddings (Qwen3) and vision (Super VL) live on the same API, so the whole product is one client and one key. We used inference only, no GPU instances; the app runs serverless on Vercel in Stockholm and every model call goes to Token Factory.
+```
+
+**How likely to recommend Nemotron on Nebius (1 to 10)?**
+
+```
+9. One endpoint, many models, and a model id is all it takes to try another one. For a real-time app the one thing missing is a latency promise: a published first-token signal or an interactive priority tier for shared models.
+```
+
+**Rate the experience running Nemotron inference on Nebius vs previous environments (1 to 10)**
+
+```
+8. Faster to start than any provider we have used: no SDK, no per-model keys, plain fetch. The minus is first-token variance on shared models (under a second to eight seconds within minutes), which we had to design around with a race.
+```
+
+**What additional features or improvements would have made the experience more effective?**
+
+```
+Prompt caching first: a six-minute talk is about 1.5 million tokens and 96 % is input, the same system prompt read every few seconds. Then a latency signal or an interactive tier. A speech model on Token Factory (NVIDIA Parakeet or Canary), so voice apps run entirely on Nebius; today /v1/audio/transcriptions returns 404. Native animated-GIF or short-video input for Super VL, so the frames need not be cut in the browser. A note on the model pages that reasoning models need enable_thinking: false for JSON, and consistent model id naming.
+```
+
+**What do you most hope to see from the Nemotron team next?**
+
+```
+A small, fast judge variant with a guaranteed low first-token time, for the decide-every-few-words loop that live apps run on. Speech to text in the family. Video input for the VL models. Prefix caching for long system prompts.
+```
+
+- **Did you use Tavily?** Yes. Two runtime calls: `/search` with `include_answer` for sourced fact slides on stage, and `/search` restricted with `include_domains` to meme and GIF sites so the app learns what an uploaded GIF means.
+- **Builders & Brews city:** Stockholm.
+- **Both checkboxes:** tick (age of majority; not employees of the promotion entities).
+
+**Which AI tools have you leveraged while working on this project?**
+
+```
+Cursor, Claude Code and Codex for the code and the pitch film; NVIDIA Nemotron, Kimi-K3, gpt-oss and Qwen3 on Nebius Token Factory inside the product; Tavily for facts; AssemblyAI for speech to text.
+```
+
+- **Level of learning:** the highest option offered.
+- **AI value for your career:** Yes.

@@ -5,7 +5,8 @@ Text for the Devpost form, field by field. Track: **Best Apps and Agents**. City
 Links for the form:
 - Demo: https://doitlive.app (open, no password; 15 free minutes of stage time per visitor and day)
 - Code: https://github.com/Baltsar/do-it-live (MIT)
-- Video: [YOUTUBE LINK, public, 3 minutes or shorter]
+- Video: https://youtu.be/wu6TCMwevyY (public, 1:37)
+- Devpost: https://devpost.com/software/do-it-live
 
 ## Project name
 
