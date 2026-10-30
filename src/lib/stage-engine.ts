@@ -51,6 +51,8 @@ export interface ProviderStatus {
   uploads?: boolean;
   /** Free minutes left today on the hosted demo; null or absent on a laptop. */
   budget?: BudgetView | null;
+  /** Shows are recorded to disk for review: true on a laptop, false on the hosted demo. */
+  record?: boolean;
   model: string | null;
   roles?: Record<"fast" | "quality" | "vision" | "embed", string | null>;
 }
@@ -435,9 +437,12 @@ export function createStage() {
     emit({ log: [`${new Date().toLocaleTimeString()}  ${msg}`, ...snap.log].slice(0, 40) });
   };
 
-  /** Fire-and-forget session log. Replays are not recorded again. */
+  /**
+   * Fire-and-forget session log. Replays are not recorded again, and nothing is sent until the server
+   * says it records at all: the hosted demo does not, so no spoken line ever leaves for a log.
+   */
   function record(entry: Record<string, unknown>): void {
-    if (replaying || recordingOff) return;
+    if (replaying || recordingOff || snap.status.record !== true) return;
     if (!snap.sessionId) {
       sessionStart = Date.now();
       emit({ sessionId: `s-${new Date().toISOString().replace(/[:.]/g, "-")}` });

@@ -14,6 +14,8 @@ export async function GET(req: Request): Promise<Response> {
     assemblyai: Boolean(process.env.ASSEMBLYAI_API_KEY),
     // On disk locally; hosted only with a Blob store connected.
     uploads: canUpload(),
+    // A show is recorded for review only on a laptop. The hosted demo keeps nothing anyone says.
+    record: !process.env.VERCEL,
     model: currentModel(),
     roles: await rolesStatus(),
   });

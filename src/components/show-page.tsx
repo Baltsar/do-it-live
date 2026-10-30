@@ -2,9 +2,13 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Mic, Square, X } from "lucide-react";
+import { Lock, Mic, Square, X } from "lucide-react";
 import { LANGUAGES, LanguageSelect } from "@/components/language-select";
 import { MediaDropzone } from "@/components/media-dropzone";
+import { OptionalNote } from "@/components/optional-note";
+import { PoweredBy } from "@/components/powered-by";
+import { TalkCounter } from "@/components/talk-counter";
+import { TalkGlow } from "@/components/talk-glow";
 import { SlideView } from "@/components/slide/slide-view";
 import { Textarea } from "@/components/ui/textarea";
 import { useMediaDrop } from "@/hooks/use-media-drop";
@@ -16,7 +20,7 @@ import { cn } from "@/lib/utils";
 
 const LANG_KEY = "doitlive-lang";
 
-const quiet = "rounded-full px-4 py-2 text-sm font-semibold text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60";
+const quiet = "rounded-full px-4 py-2 text-sm font-semibold max-[400px]:px-2.5 text-white/70 outline-none transition-colors hover:bg-white/10 hover:text-white focus-visible:ring-2 focus-visible:ring-white/60";
 const credit = "font-semibold text-white/60 underline-offset-4 outline-none transition-colors hover:text-[#ffd60a] hover:underline focus-visible:text-white";
 
 /**
@@ -213,10 +217,11 @@ export function ShowPage() {
 
   return (
     <div className="flex min-h-screen flex-col bg-black text-white">
-      <header className="flex items-center gap-2 px-5 py-4">
-        <span className="text-lg font-black uppercase tracking-tight [font-stretch:125%]">Do it live</span>
+      <header className="flex items-center gap-2 px-5 py-4 max-[400px]:px-3">
+        <span className="whitespace-nowrap text-lg font-black uppercase tracking-tight [font-stretch:125%] max-[400px]:text-base">Do it live</span>
         <span className="text-sm font-semibold text-white/40 max-sm:hidden">#vibepresenting</span>
         <nav className="ml-auto flex items-center gap-1">
+          <TalkCounter />
           <button type="button" className={quiet} onClick={() => (phone ? enterStage() : window.open("/screen", "doitlive-audience", "width=1280,height=720"))}>
             Screen
           </button>
@@ -271,42 +276,51 @@ export function ShowPage() {
             <h1 className="text-[clamp(96px,22vw,340px)] font-black leading-[0.8] tracking-[-0.06em] [font-stretch:125%]">Talk.</h1>
             <p className="mt-6 text-xl font-semibold text-white/60 sm:text-2xl">The slides make themselves.</p>
           </div>
-          {micButton("hero")}
+          <TalkGlow active={canTalk && !snap.listening}>{micButton("hero")}</TalkGlow>
           <LanguageSelect lang={snap.lang} onChange={chooseLanguage} />
-          {micStatus}
-          <label className="block w-full max-w-2xl text-left">
-            <span className="mb-2 flex items-baseline justify-between gap-3 px-1">
-              <span className="text-sm font-semibold text-white/80">What will you talk about?</span>
-              <span className="text-xs font-semibold uppercase tracking-wide text-white/35">Optional</span>
-            </span>
-            <Textarea
-              value={snap.brief}
-              onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
-              placeholder="A few sentences, and I get slides ready before you start. For example: how our meetup grew from 12 to 700 builders in a year."
-              className="min-h-24 resize-none rounded-2xl border-white/15 bg-white/[0.04] px-4 py-3 text-base leading-snug text-white placeholder:text-white/35 hover:border-white/25 focus-visible:border-[#ffd60a] focus-visible:ring-[#ffd60a]/20 md:text-base dark:bg-white/[0.04]"
-            />
-          </label>
-          {snap.preparing || snap.prepared.length > 0 ? (
-            <div className="w-full max-w-3xl">
-              <p className="mb-2 text-sm text-white/50">
-                {snap.preparing ? "Getting ready" : `${snap.prepared.length} ${snap.prepared.length === 1 ? "slide" : "slides"} ready. Each one appears when you get there.`}
-              </p>
-              <div className="flex justify-center gap-2 overflow-x-auto pb-1">
-                {snap.prepared.map((p) => (
-                  <button key={p.id} type="button" onClick={() => stage.removePrepared(p.id)} title={`Appears when you say: ${p.strong}. Click to remove.`} className="w-28 shrink-0 overflow-hidden rounded-lg outline-none transition-opacity hover:opacity-60 focus-visible:ring-2 focus-visible:ring-white/70">
-                    <SlideView slide={p.slide} still />
-                  </button>
-                ))}
-              </div>
-            </div>
+          {/* Said only where it is true: a laptop records its own shows for review, the hosted demo does not. */}
+          {snap.status.record === false ? (
+            <p className="-mt-5 flex items-center gap-1.5 text-xs font-semibold text-white/40">
+              <Lock className="size-3" strokeWidth={2.6} aria-hidden />
+              We draw what you say. We don&apos;t keep it.
+            </p>
           ) : null}
-          <MediaDropzone media={media} enabled={uploads} onBrowse={() => picker.current?.click()} />
+          {micStatus}
+          <OptionalNote />
+          {/* Dimmed until pointed at or typed in: the mic is the product, this is the extra. */}
+          <div className="-mt-5 flex w-full flex-col items-center gap-8 opacity-60 transition-opacity duration-300 focus-within:opacity-100 hover:opacity-100">
+            <label className="block w-full max-w-2xl text-left">
+              <span className="mb-2 block px-1 text-sm font-semibold text-white/80">What will you talk about?</span>
+              <Textarea
+                value={snap.brief}
+                onChange={(e) => stage.setBrief(e.target.value.slice(0, MAX_BRIEF))}
+                placeholder="A few sentences, and I get slides ready before you start. For example: how our meetup grew from 12 to 700 builders in a year."
+                className="min-h-24 resize-none rounded-2xl border-white/15 bg-white/[0.04] px-4 py-3 text-base leading-snug text-white placeholder:text-white/35 hover:border-white/25 focus-visible:border-[#ffd60a] focus-visible:ring-[#ffd60a]/20 md:text-base dark:bg-white/[0.04]"
+              />
+            </label>
+            {snap.preparing || snap.prepared.length > 0 ? (
+              <div className="w-full max-w-3xl">
+                <p className="mb-2 text-sm text-white/50">
+                  {snap.preparing ? "Getting ready" : `${snap.prepared.length} ${snap.prepared.length === 1 ? "slide" : "slides"} ready. Each one appears when you get there.`}
+                </p>
+                <div className="flex justify-center gap-2 overflow-x-auto pb-1">
+                  {snap.prepared.map((p) => (
+                    <button key={p.id} type="button" onClick={() => stage.removePrepared(p.id)} title={`Appears when you say: ${p.strong}. Click to remove.`} className="w-28 shrink-0 overflow-hidden rounded-lg outline-none transition-opacity hover:opacity-60 focus-visible:ring-2 focus-visible:ring-white/70">
+                      <SlideView slide={p.slide} still />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <MediaDropzone media={media} enabled={uploads} onBrowse={() => picker.current?.click()} />
+          </div>
           <p className="text-sm leading-relaxed text-white/50">
             {canTalk ? "No mic right now? " : "Voice needs Chrome, or Safari on an iPhone. "}
             <button type="button" className="font-semibold text-white underline underline-offset-4 outline-none hover:text-[#ffd60a] focus-visible:ring-2 focus-visible:ring-white/60" onClick={() => stage.replay(SAMPLES[0].lines, 1.6)}>
               Play the demo talk
             </button>
           </p>
+          <PoweredBy />
         </main>
       )}
 

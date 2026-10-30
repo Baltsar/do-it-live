@@ -189,6 +189,12 @@ scripts/session-report.mjs     Reads a recorded show and reports what happened
 - English and Swedish are supported. Each other language AssemblyAI knows is one line in the language picker.
 - Your own media: on a laptop the library is a folder on disk. Hosted, each visitor gets a private library in Vercel Blob, kept theirs by a random cookie; files go from the browser straight to Blob, up to 40 MB each.
 
+## Privacy
+
+The hosted demo keeps nothing anyone says. Speech streams to AssemblyAI to become words, the words go to NVIDIA Nemotron and the other models on Nebius Token Factory to decide and draw the slides, and fact and GIF lookups go to Tavily. None of it is logged or stored on our side.
+
+What is kept: stage minutes per visitor per day, to hand out the free minutes, keyed by a random cookie or a salted hash of the address that changes every day. After two days only the day's totals remain. The talk counter in the header is read from those totals: a number, nothing about who. Files a visitor uploads stay in their own private library. Run on a laptop, a show is recorded to `sessions/` on that laptop for review.
+
 ## Built for
 
 Made in Stockholm by Gustaf Baltsar Garnow ([headless.design](https://headless.design) · [@gustafgarnow on X](https://x.com/gustafgarnow) · [GitHub](https://github.com/Baltsar)) for the [Nebius × NVIDIA Global AI Hackathon](https://nebiusglobalaihackathon.devpost.com), **Best Apps and Agents** track.

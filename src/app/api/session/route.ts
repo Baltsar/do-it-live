@@ -10,10 +10,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!id || !ID.test(id) || entry === undefined) {
     return Response.json({ error: "bad request" }, { status: 400 });
   }
-  // Vercel's disk is read-only, so a hosted show writes each entry to the runtime log instead,
-  // one line per entry, where `vercel logs` can read a take back.
+  // The hosted demo keeps nothing a visitor says: only a browser crash report reaches the runtime log,
+  // since a crash on a phone cannot be watched in a console. Talk entries are dropped unread.
   if (process.env.VERCEL) {
-    console.log(`SESSION ${id} ${JSON.stringify(entry)}`);
+    if ((entry as { kind?: unknown }).kind === "client-error") console.log(`CLIENT-ERROR ${JSON.stringify(entry)}`);
     return Response.json({ ok: true });
   }
   await mkdir(DIR, { recursive: true });

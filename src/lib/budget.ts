@@ -12,7 +12,7 @@ export const FREE_MINUTES = Number(process.env.FREE_MINUTES ?? 15);
 const DAILY_MINUTES = Number(process.env.DAILY_STAGE_MINUTES ?? 180);
 
 // One minute of talking costs about 12 director calls and 34 drawing requests (measured 29 Oct 2026).
-const PER_MINUTE = 46;
+export const PER_MINUTE = 46;
 /** What each thing costs, in the same unit. An upload runs vision, a text model, two searches and an embedding. */
 export const COST = { director: 1, draw: 1, upload: 6 } as const;
 export type Spend = keyof typeof COST;
@@ -31,12 +31,16 @@ export interface BudgetView {
 /** The budget runs only on the hosted demo, where the credits are ours and the door is open. */
 export const budgetOn = (): boolean => Boolean(process.env.VERCEL) && Boolean(process.env.BLOB_READ_WRITE_TOKEN) && FREE_MINUTES > 0;
 
-/** Who is asking: the library cookie, or a hash of the address for callers without one. */
+// A plain hash of an IPv4 address can be reversed by trying them all. Salted with a secret and the
+// day, it holds one visitor together for one day's budget and links nothing across days.
+const SALT = process.env.VISITOR_SALT ?? process.env.BLOB_READ_WRITE_TOKEN ?? "";
+
+/** Who is asking: the library cookie, or a salted hash of the address for callers without one. */
 export function visitorOf(req: Request): string {
   const cookie = (req.headers.get("cookie") ?? "").match(new RegExp(`(?:^|;\\s*)${BUDGET_COOKIE}=([a-z0-9-]{8,64})`, "i"))?.[1];
   if (cookie) return cookie;
   const address = req.headers.get("x-forwarded-for")?.split(",")[0].trim() || req.headers.get("x-real-ip") || "nobody";
-  return `ip-${createHash("sha256").update(address).digest("hex").slice(0, 16)}`;
+  return `ip-${createHash("sha256").update(`${today()}|${SALT}|${address}`).digest("hex").slice(0, 16)}`;
 }
 
 interface Day {
@@ -44,8 +48,9 @@ interface Day {
   total: number;
 }
 
+export const USAGE_PREFIX = "usage/";
 const today = (): string => new Date().toISOString().slice(0, 10);
-const blobPath = (day: string): string => `usage/${day}.json`;
+const blobPath = (day: string): string => `${USAGE_PREFIX}${day}.json`;
 
 // This instance's view: what Blob said last, and what this instance has spent since.
 let seenDay = "";
